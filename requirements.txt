@@ -1,0 +1,25 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🧬 TITAN BIOINFORMATICS - DEPENDENCIES
+# 👑 Managed by Shivay Singh (CTO: AI Assistant)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Core Web Framework
+streamlit>=1.31.0
+
+# Bioinformatics Core
+biopython>=1.83
+
+# Data Processing & Math
+pandas>=2.2.0
+numpy>=1.26.0
+
+# API & Networking (For ClinVar, PubChem, Dr. Titan)
+requests>=2.31.0
+google-generativeai>=0.3.0
+
+# Visualization & Graphing
+matplotlib>=3.8.0
+plotly>=5.18.0
+
+# PDF Generation (For Free Tier Exports)
+fpdf2>=2.7.0
