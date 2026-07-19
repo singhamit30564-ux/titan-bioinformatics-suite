@@ -15,7 +15,7 @@
 
 **Titan Bioinformatics** is a modern, mobile-first, and AI-powered bioinformatics platform designed to make genomic analysis accessible to everyone, everywhere. 
 
-While legacy tools (like Benchling, NCBI, and ExPASy) are often desktop-bound, laggy, expensive, and limited to English, **Titan is built for the future**. It brings 50+ professional-grade tools to your pocket, supports multiple languages, and provides a clean, zero-ad experience.
+While legacy tools are often desktop-bound, laggy, expensive, and limited to English, **Titan is built for the future**. It brings 50+ professional-grade tools to your pocket, supports multiple languages, and provides a clean, zero-ad experience.
 
 Whether you are a high school student, a university researcher, or a field biologist, Titan gives you the power to analyze DNA, RNA, and proteins in seconds.
 
