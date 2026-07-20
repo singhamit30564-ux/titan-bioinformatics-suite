@@ -69,3 +69,92 @@
 63	`6_03_NCBI_PubMed_Search.py`	Search scientific papers by keyword	`Entrez.esearch` + `esummary`	
 64	`6_04_NCBI_Taxonomy_Lookup.py`	Get taxonomy lineage for any species	`Entrez.efetch` (taxonomy)	
 65	`6_05_NCBI_SNP_Lookup.py`	Look up SNP details by rsID	`Entrez.efetch` (snp)	
+### 🌾 **CATEGORY 8: AGRICULTURE BIOINFORMATICS (15 Tools)**
+*Focus: Crop improvement, soil health, aur disease resistance.*
+
+1. **Crop Disease Resistance (R-Gene) Finder**
+2. **Drought Tolerance Marker (SSR/SNP) Analyzer**
+3. **Soil Microbiome Diversity Plotter (16S rRNA)**
+4. **Nitrogen Fixation Gene (nifH) Identifier**
+5. **Pesticide/Herbicide Resistance Mutation Detector**
+6. **Photosynthesis Efficiency Gene Analyzer (RuBisCO)**
+7. **Seed Storage Protein Profiler**
+8. **Plant Transcription Factor (TF) Family Classifier**
+9. **GMO (Transgene) Sequence Detector**
+10. **Pollen Allergen Protein Predictor**
+11. **Post-Harvest Ripening Gene Tracker (Ethylene pathway)**
+12. **Phytophthora (Pathogen) Effector Gene Matcher**
+13. **Crop Phylogenetic Tree Builder (Variety tracing)**
+14. **Plant Promoter Motif (Cis-element) Finder**
+15. **Yield Trait GWAS Basic Visualizer**
+### 🌊 **CATEGORY 9: MARINE BIOINFORMATICS (15 Tools)**
+*Focus: Ocean health, extremophiles, aur marine ecology.*
+
+1. **Marine Metagenome Binner (Basic)**
+2. **Coral Bleaching Stress Gene Analyzer**
+3. **Deep-Sea Extremophile Protein Predictor (Thermostable)**
+4. **Marine Bioluminescence Gene (Luciferase) Finder**
+5. **Fish Stock Population Genetics Analyzer (Fst, Heterozygosity)**
+6. **Microplastic Ingestion DNA Barcode Matcher**
+7. **Algal Bloom Toxin Gene Detector (Cyanotoxins)**
+8. **Marine Antibiotic Resistance Gene (ARG) Scanner**
+9. **Sponge Secondary Metabolite Pathway Predictor**
+10. **Salinity Adaptation Gene Expression Simulator**
+11. **Marine Viral Phage Host Predictor**
+12. **Ocean Acidification Calcification Gene Tracker**
+13. **Marine Invasive Species eDNA Detector**
+14. **Fish Sex-Determination Gene Marker Analyzer**
+15. **Marine Food Web Trophic Level DNA Analyzer**###
+ 🌐 **CATEGORY 10: NCBI API SUITE (15 Real-World Database Tools)**
+*Focus: Direct connection to the world's largest biological databases.*
+
+1. **NCBI Nucleotide Search & Fetcher** (Entrez API)
+2. **NCBI Protein Sequence Fetcher** (Entrez API)
+3. **NCBI Gene ID to Sequence Mapper** (Entrez API)
+4. **NCBI Taxonomy Lineage Browser** (Species evolution tree)
+5. **NCBI 3D Structure (MMDB) Viewer** (Protein structures)
+6. **NCBI PubMed Literature Search** (Research papers by keyword)
+7. **NCBI ClinVar Variant Fetcher** (Disease mutations)
+8. **NCBI dbSNP (rsID) Lookup** (Single nucleotide polymorphisms)
+9. **NCBI BLASTn Search** (DNA vs DNA database)
+10. **NCBI BLASTp Search** (Protein vs Protein database)
+11. **NCBI BLASTx Search** (Translated DNA vs Protein)
+12. **NCBI tBLASTn Search** (Protein vs Translated DNA)
+13. **NCBI GEO Data Fetcher** (Gene expression datasets)
+14. **NCBI SRA Metadata Extractor** (Next-Gen Sequencing runs)
+15. **NCBI OMIM Disease-Gene Linker** (Medical genetics)### 🤖 **CATEGORY 11: AI & AUTOMATION SUITE (15 Gemini-Powered Tools)**
+*Focus: Making complex biology easy, fast, and intelligent.*
+
+1. **Dr. Titan: Sequence Explainer** (Hindi/English mein DNA/RNA ka matlab samjhaye)
+2. **Protein Function Predictor** (AI based on amino acid properties)
+3. **Mutation Pathogenicity Scorer** (AI predicts if a mutation is harmful)
+4. **Primer Design Optimizer** (AI suggests best primer pairs)
+5. **CRISPR gRNA Efficiency Predictor** (AI scores cut efficiency)
+6. **Literature Review Summarizer** (PubMed abstracts ko 1 page mein summarize kare)
+7. **Lab Protocol Generator** (AI writes step-by-step PCR/Cloning protocol)
+8. **Gene Nomenclature Resolver** (Confused by gene names? AI finds the official symbol)
+9. **Biological Pathway Explainer** (AI text-to-diagram for KEGG pathways)
+10. **Codon Optimization Recommender** (AI suggests best codons for E.coli/Human expression)
+11. **3D Protein Structure Explainer** (AI explains what a PDB file means)
+12. **Bioinformatics Career/Course Recommender** (AI guides students)
+13. **Lab Error Troubleshooter** ("Mera PCR fail ho gaya, kyun?" - AI answers)
+14. **Research Hypothesis Generator** (AI suggests new experiment ideas based on data)
+15. **"Explain Like I'm 5" (ELI5) Concept Generator** (Complex biology to simple analogies)
+### 🤖 **CATEGORY 11: AI & AUTOMATION SUITE (15 Gemini-Powered Tools)**
+*Focus: Making complex biology easy, fast, and intelligent.*
+
+1. **Dr. Titan: Sequence Explainer** (Hindi/English mein DNA/RNA ka matlab samjhaye)
+2. **Protein Function Predictor** (AI based on amino acid properties)
+3. **Mutation Pathogenicity Scorer** (AI predicts if a mutation is harmful)
+4. **Primer Design Optimizer** (AI suggests best primer pairs)
+5. **CRISPR gRNA Efficiency Predictor** (AI scores cut efficiency)
+6. **Literature Review Summarizer** (PubMed abstracts ko 1 page mein summarize kare)
+7. **Lab Protocol Generator** (AI writes step-by-step PCR/Cloning protocol)
+8. **Gene Nomenclature Resolver** (Confused by gene names? AI finds the official symbol)
+9. **Biological Pathway Explainer** (AI text-to-diagram for KEGG pathways)
+10. **Codon Optimization Recommender** (AI suggests best codons for E.coli/Human expression)
+11. **3D Protein Structure Explainer** (AI explains what a PDB file means)
+12. **Bioinformatics Career/Course Recommender** (AI guides students)
+13. **Lab Error Troubleshooter** ("Mera PCR fail ho gaya, kyun?" - AI answers)
+14. **Research Hypothesis Generator** (AI suggests new experiment ideas based on data)
+15. **"Explain Like I'm 5" (ELI5) Concept Generator** (Complex biology to simple analogies)
