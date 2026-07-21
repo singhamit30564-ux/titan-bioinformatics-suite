@@ -122,24 +122,7 @@
 12. **NCBI tBLASTn Search** (Protein vs Translated DNA)
 13. **NCBI GEO Data Fetcher** (Gene expression datasets)
 14. **NCBI SRA Metadata Extractor** (Next-Gen Sequencing runs)
-15. **NCBI OMIM Disease-Gene Linker** (Medical genetics)### 🤖 **CATEGORY 11: AI & AUTOMATION SUITE (15 Gemini-Powered Tools)**
-*Focus: Making complex biology easy, fast, and intelligent.*
-
-1. **Dr. Titan: Sequence Explainer** (Hindi/English mein DNA/RNA ka matlab samjhaye)
-2. **Protein Function Predictor** (AI based on amino acid properties)
-3. **Mutation Pathogenicity Scorer** (AI predicts if a mutation is harmful)
-4. **Primer Design Optimizer** (AI suggests best primer pairs)
-5. **CRISPR gRNA Efficiency Predictor** (AI scores cut efficiency)
-6. **Literature Review Summarizer** (PubMed abstracts ko 1 page mein summarize kare)
-7. **Lab Protocol Generator** (AI writes step-by-step PCR/Cloning protocol)
-8. **Gene Nomenclature Resolver** (Confused by gene names? AI finds the official symbol)
-9. **Biological Pathway Explainer** (AI text-to-diagram for KEGG pathways)
-10. **Codon Optimization Recommender** (AI suggests best codons for E.coli/Human expression)
-11. **3D Protein Structure Explainer** (AI explains what a PDB file means)
-12. **Bioinformatics Career/Course Recommender** (AI guides students)
-13. **Lab Error Troubleshooter** ("Mera PCR fail ho gaya, kyun?" - AI answers)
-14. **Research Hypothesis Generator** (AI suggests new experiment ideas based on data)
-15. **"Explain Like I'm 5" (ELI5) Concept Generator** (Complex biology to simple analogies)
+15. **NCBI OMIM Disease-Gene Linker** (Medical genetics)
 ### 🤖 **CATEGORY 11: AI & AUTOMATION SUITE (15 Gemini-Powered Tools)**
 *Focus: Making complex biology easy, fast, and intelligent.*
 
