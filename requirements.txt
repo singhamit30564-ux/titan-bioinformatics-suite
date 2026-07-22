@@ -1,6 +1,6 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🧬 TITAN BIOINFORMATICS - DEPENDENCIES
-# 👑 Managed by Shivay Singh (CTO: AI Assistant)
+# 👑 Managed by Shivay Singh 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Core Web Framework
