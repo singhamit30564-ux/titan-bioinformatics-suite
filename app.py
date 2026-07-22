@@ -190,7 +190,7 @@ with st.sidebar:
     # Note: These links will activate once we create the files in the 'pages' folder
     st.page_link("pages/1_DNA_RNA_Conversion.py", label="🧬 DNA ↔ RNA", icon="🔄")
     st.page_link("pages/2_GC_Content.py", label="📊 GC Content", icon="📈")
-    st.page_link("pages/3_Translation.py", label="🔬 Translation", icon="🧪")
+    ##st.page_link("pages/3_Translation.py", label="🔬 Translation", icon="🧪")
     
     st.markdown("---")
     st.info("🚧 **More tools coming soon!**\n\n50+ tools under development")
