@@ -1,11 +1,4 @@
 import streamlit as st
-from datetime import datetime
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🧬 TITAN BIOINFORMATICS - MAIN DASHBOARD
-# 👑 Built by Shivay Singh (Founder & CEO)
-# 📱 Mobile-First | 🌍 Multilingual | ⚡ Lightning Fast
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Page Configuration
 st.set_page_config(
@@ -15,200 +8,219 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🎨 TITAN PREMIUM THEME (Black, Gold, Crimson, White)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Custom CSS for Titan Theme
 st.markdown("""
 <style>
-    /* Main Background */
+    .main {
+        background-color: #0a0e17;
+    }
     .stApp {
         background-color: #0a0e17;
-        color: #e0e0e0;
     }
-    
-    /* Sidebar Styling */
-    [data-testid="stSidebar"] {
-        background-color: #1a1f2e;
-        border-right: 2px solid #d4af37;
-    }
-    
-    /* Gold Buttons */
-    .stButton>button {
-        background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
-        color: #0a0e17;
-        font-weight: bold;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 24px;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #f4d03f 0%, #d4af37 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-    }
-    
-    /* Headers - Gold Color */
     h1, h2, h3 {
         color: #d4af37 !important;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    /* Text Input & Areas */
-    .stTextInput>div>div>input,
-    .stTextArea>div>div>textarea {
+    .sidebar .sidebar-content {
         background-color: #1a1f2e;
-        color: #66fcf1;
-        border: 1px solid #45a29e;
-        border-radius: 5px;
     }
-    
-    /* Success Messages */
-    .stSuccess {
-        background-color: #1a4d2e;
-        color: #90EE90;
-        border-left: 4px solid #2ecc71;
-    }
-    
-    /* Warning/Locked Messages */
-    .stWarning {
-        background-color: #4d2e1a;
-        color: #ffd700;
-        border-left: 4px solid #d4af37;
-    }
-    
-    /* Custom Badge */
-    .titan-badge {
-        background: linear-gradient(135deg, #d4af37, #f4d03f);
+    .stButton>button {
+        background-color: #d4af37;
         color: #0a0e17;
-        padding: 5px 15px;
-        border-radius: 20px;
+        border: none;
         font-weight: bold;
-        display: inline-block;
-        margin: 5px 0;
     }
-    
-    /* Hide Streamlit Branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    .css-1d391kg {
+        background-color: #0a0e17;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  MAIN DASHBOARD UI
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-# Header Section
-col_logo, col_title = st.columns([1, 4])
-with col_logo:
-    st.markdown("<div style='font-size: 50px;'>🧬</div>", unsafe_allow_html=True)
-with col_title:
-    st.title("TITAN BIOINFORMATICS")
-    st.caption("Next-Generation AI-Powered Bioinformatics Platform")
-
-# Status Bar
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.markdown('<div class="titan-badge">⚡ Fast</div>', unsafe_allow_html=True)
-with col2:
-    st.markdown('<div class="titan-badge">🔒 Secure</div>', unsafe_allow_html=True)
-with col3:
-    st.markdown('<div class="titan-badge">🌍 Multilingual</div>', unsafe_allow_html=True)
-with col4:
-    st.markdown('<div class="titan-badge">🎓 Student-Friendly</div>', unsafe_allow_html=True)
-
-st.markdown("---")
-
-# Welcome Section
-st.markdown("""
-## 🚀 Welcome to the Future of Biology
-
-**Built by Shivay Singh** - A 12-year-old founder on a mission to make bioinformatics 
-accessible to everyone, everywhere.
-
-### Why Choose Titan?
-✅ **50+ Professional Tools** - From DNA analysis to Clinical Genomics  
-✅ **Mobile-First Design** - Works perfectly on your phone/tablet  
-✅ **Multilingual Support** - Hindi, Spanish, Arabic & more (Coming Soon)  
-✅ **Zero Ads** - Clean, distraction-free experience  
-✅ **AI-Powered Assistant** - Dr. Titan helps you 24/7  
-✅ **Free for Students** - First 100 students get lifetime access  
-
----
-""")
-
-# Features Grid
-st.markdown("### 🧪 Available Tool Categories")
-
-col_feat1, col_feat2, col_feat3 = st.columns(3)
-
-with col_feat1:
-    st.info("**🧬 Sequence Analysis**\n\nDNA/RNA Conversion, Translation, ORF Finder, GC Content")
+# Sidebar Navigation
+with st.sidebar:
+    st.title("🧬 TITAN BIOINFORMATICS")
+    st.markdown("---")
     
-with col_feat2:
-    st.warning("**🏥 Clinical Genomics**\n\nClinVar Integration, Variant Analysis, Disease Mapping")
+    # Main Navigation
+    st.markdown("### 📍 Main Menu")
+    page = st.radio(
+        "Navigate to:",
+        ["Home", "Category 1: DNA/RNA Basics", "Category 2: Protein Analysis", 
+         "Category 3: Genomics & QC", "Category 4: Alignment & Phylogeny",
+         "Category 5: Lab & Pipeline"],
+        label_visibility="collapsed"
+    )
     
-with col_feat3:
-    st.error("**💊 Chemoinformatics**\n\nPubChem Search, Drug Design, Molecular Properties")
+    st.markdown("---")
+    st.info("Built by Shivay Singh\n\nAge 12 | Future CEO")
 
-st.markdown("---")
+# Home Page
+if page == "Home":
+    st.title("🧬 TITAN BIOINFORMATICS")
+    st.subheader("Next-Generation AI-Powered Bioinformatics Platform")
+    st.markdown("---")
+    
+    # Features
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("### ⚡ Fast")
+    with col2:
+        st.markdown("### 🔒 Secure")
+    with col3:
+        st.markdown("### 🌍 Multilingual")
+    with col4:
+        st.markdown("### 🎓 Student-Friendly")
+    
+    st.markdown("---")
+    st.markdown("## 🚀 Welcome to the Future of Biology")
+    st.markdown("Built by **Shivay Singh** - A 12-year-old founder on a mission to make bioinformatics accessible to everyone, everywhere.")
+    
+    st.markdown("---")
+    st.markdown("### Why Choose Titan?")
+    st.markdown("""
+    ✅ **50+ Professional Tools** - From DNA analysis to Clinical Genomics  
+    ✅ **Mobile-First Design** - Works perfectly on your phone/tablet  
+    ✅ **Free & Open Source** - No hidden charges  
+    ✅ **Built with Love** - By a young bioinformatics enthusiast
+    """)
+    
+    st.markdown("---")
+    st.success("👈 **Select a category from the sidebar to get started!**")
 
-# Founder's Message
-st.markdown("""
-### 👑 Founder's Note
+# Category 1
+elif page == "Category 1: DNA/RNA Basics":
+    st.title("🧬 Category 1: DNA/RNA Basics")
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("1️ DNA ↔ RNA Converter", use_container_width=True):
+            st.switch_page("pages/1_DNA_RNA_Converter.py")
+        if st.button("2️⃣ GC Content Calculator", use_container_width=True):
+            st.switch_page("pages/2_GC_Content.py")
+        if st.button("3️⃣ Reverse Complement", use_container_width=True):
+            st.switch_page("pages/1_03_Reverse_Complement.py")
+        if st.button("4️⃣ GC Content Advanced", use_container_width=True):
+            st.switch_page("pages/1_04_GC_Content.py")
+        if st.button("5️⃣ Mutation Simulator", use_container_width=True):
+            st.switch_page("pages/1_05_Mutation.py")
+        if st.button("6️⃣ ORF Finder", use_container_width=True):
+            st.switch_page("pages/1_06_ORF_Finder.py")
+        if st.button("7️ Motif Pattern Search", use_container_width=True):
+            st.switch_page("pages/1_07_Motif_Pattern.py")
+        if st.button("8️⃣ Restriction Enzyme Analyzer", use_container_width=True):
+            st.switch_page("pages/1_08_Restriction.py")
+        if st.button("9️ Codon Usage Table", use_container_width=True):
+            st.switch_page("pages/1_09_Codon_Usage.py")
+        if st.button("🔟 Hamming Distance", use_container_width=True):
+            st.switch_page("pages/1_10_Hamming.py")
+        if st.button("1️⃣1️ Nucleotide Frequency", use_container_width=True):
+            st.switch_page("pages/1_11_Nucleotide.py")
+        if st.button("1️⃣2️ Central Dogma Visualizer", use_container_width=True):
+            st.switch_page("pages/1_12_Central_Dogma.py")
 
-> *"I'm building Titan because I believe every student, regardless of their location or 
-> language, deserves access to world-class bioinformatics tools. This is just the beginning."*
+# Category 2
+elif page == "Category 2: Protein Analysis":
+    st.title("🥩 Category 2: Protein Analysis")
+    st.markdown("---")
+    
+    st.info("🚧 Protein Analysis tools coming soon! (Category 2 expansion)")
+    st.markdown("Current tools in other categories can handle protein translation.")
 
-**— Shivay Singh** (Founder & CEO, Titan Bioinformatics)
+# Category 3
+elif page == "Category 3: Genomics & QC":
+    st.title(" Category 3: Genomics & QC")
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("3_01 FASTA/FASTQ Parser", use_container_width=True):
+            st.switch_page("pages/3_01_FASTA_FA.py")
+        if st.button("3_02 K-mer Frequency", use_container_width=True):
+            st.switch_page("pages/3_02_Kmer_Frequency.py")
+        if st.button("3_03 N-grams Analysis", use_container_width=True):
+            st.switch_page("pages/3_03_Ngrams_Analysis.py")
+        if st.button("3_04 CpG Island Detector", use_container_width=True):
+            st.switch_page("pages/3_04_CpG_Island_Detector.py")
+        if st.button("3_06 Chaos Game Representation", use_container_width=True):
+            st.switch_page("pages/3_06_Chaos_Game_Representation.py")
+        if st.button("3_07 DNA Shape Analysis", use_container_width=True):
+            st.switch_page("pages/3_07_DNA_Shape_Analysis.py")
+        if st.button("3_09 VCF Variant Viewer", use_container_width=True):
+            st.switch_page("pages/3_09_VCF_Variant_Viewer.py")
+        if st.button("3_10 Read Quality Control", use_container_width=True):
+            st.switch_page("pages/3_10_Read_Quality_Control.py")
+        if st.button("3_11 Gene Ontology GO", use_container_width=True):
+            st.switch_page("pages/3_11_Gene_Ontology_GO_Enrichment.py")
+        if st.button("3_12 KEGG Pathway Mapper", use_container_width=True):
+            st.switch_page("pages/3_12_KEGG_Pathway_Mapper.py")
 
----
-""")
+# Category 4
+elif page == "Category 4: Alignment & Phylogeny":
+    st.title("🔄 Category 4: Alignment & Phylogeny")
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("4_01 Pairwise Alignment", use_container_width=True):
+            st.switch_page("pages/4_01_Pairwise_Alignment.py")
+        if st.button("4_02 Smith-Waterman Local", use_container_width=True):
+            st.switch_page("pages/4_02_Local_Alignment_SmithWaterman.py")
+        if st.button("4_03 Needleman-Wunsch Global", use_container_width=True):
+            st.switch_page("pages/4_03_Global_Alignment_NeedlemanWunsch.py")
+        if st.button("4_04 Overlap Alignment", use_container_width=True):
+            st.switch_page("pages/4_04_Overlap_Alignment.py")
+        if st.button("4_05 MSA Basic", use_container_width=True):
+            st.switch_page("pages/4_05_Multiple_Sequence_Alignment_MSA.py")
+        if st.button("4_06 ClustalW Style", use_container_width=True):
+            st.switch_page("pages/4_06_MSA_ClustalW_Style.py")
+        if st.button("4_07 Phylogenetic Tree", use_container_width=True):
+            st.switch_page("pages/4_07_Phylogenetic_Tree_Builder.py")
+        if st.button("4_08 Distance Matrix", use_container_width=True):
+            st.switch_page("pages/4_08_Distance_Matrix_Calculator.py")
+        if st.button("4_09 Sequence Logo", use_container_width=True):
+            st.switch_page("pages/4_09_Sequence_Logo_Generator.py")
+        if st.button("4_11 Dot Plot", use_container_width=True):
+            st.switch_page("pages/4_11_Dot_Plot_Similarity.py")
+        if st.button("4_12 Consensus Generator", use_container_width=True):
+            st.switch_page("pages/4_12_Consensus_Sequence_Generator.py")
+
+# Category 5
+elif page == "Category 5: Lab & Pipeline":
+    st.title("🧪 Category 5: Lab & Pipeline")
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("5_01 CRISPR gRNA Designer", use_container_width=True):
+            st.switch_page("pages/5_01_CRISPR_Cas9_gRNA_Designer.py")
+        if st.button("5_02 Primer Design Advanced", use_container_width=True):
+            st.switch_page("pages/5_02_Primer_Design_Tm_GC_Hairpin.py")
+        if st.button("5_03 PCR Product Calculator", use_container_width=True):
+            st.switch_page("pages/5_03_PCR_Primer_Product_Length.py")
+        if st.button("5_04 Oligo Tm Calculator", use_container_width=True):
+            st.switch_page("pages/5_04_Oligo_Tm_Annealing_Temp.py")
+        if st.button("5_05 DNA Melting Curve", use_container_width=True):
+            st.switch_page("pages/5_05_DNA_Melting_Curve_Simulation.py")
+        if st.button("5_06 SNP Detection", use_container_width=True):
+            st.switch_page("pages/5_06_SNP_Detection_Frequency.py")
+        if st.button("5_07 InDel Detection", use_container_width=True):
+            st.switch_page("pages/5_07_InDel_Detection.py")
+        if st.button("5_08 BLAST Search", use_container_width=True):
+            st.switch_page("pages/5_08_BLAST_Local_Search_Mock.py")
+        if st.button("5_09 Full Pipeline Dashboard", use_container_width=True):
+            st.switch_page("pages/5_09_Full_Pipeline_DNA_RNA_Protein_Graph.py")
 
 # Footer
+st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: #66fcf1; padding: 20px;'>
-    <p><b>🧬 Titan Bioinformatics</b> | Built with ❤️ by Shivay Singh</p>
-    <p style='font-size: 12px; color: #95a5a6;'>
-        Version 1.0.0 | © 2026 | Zero Data Retention Policy | Enterprise-Grade Security
-    </p>
-</div>
+<center>
+
+**🧬 Titan Bioinformatics Suite**  
+Built with ❤️ by Shivay Singh | Age 12
+
+</center>
 """, unsafe_allow_html=True)
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 📱 SIDEBAR NAVIGATION
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-with st.sidebar:
-    st.markdown("## 🛠️ TITAN TOOLS")
-    st.markdown("---")
-    
-    # Navigation Menu
-    st.markdown("### 📂 Categories")
-    
-    # Note: These links will activate once we create the files in the 'pages' folder
-    st.page_link("pages/1_DNA_RNA_Conversion.py", label="🧬 DNA ↔ RNA", icon="🔄")
-    st.page_link("pages/2_GC_Content.py", label="📊 GC Content", icon="📈")
-    ##st.page_link("pages/3_Translation.py", label="🔬 Translation", icon="🧪")
-    
-    st.markdown("---")
-    st.info("🚧 **More tools coming soon!**\n\n50+ tools under development")
-    
-    st.markdown("---")
-    
-    # User Status
-    st.markdown("### 👤 Account")
-    st.success("🎓 **Free Student Plan**\n\n✅ Unlimited Analysis\n❌ CSV Export (Locked)")
-    
-    st.markdown("---")
-    
-    # Language Selector (Future Feature)
-    st.markdown("### 🌍 Language")
-    lang = st.selectbox("Select Language", ["🇬🇧 English", "🇮🇳 हिंदी", "🇪🇸 Español", "🇸🇦 العربية"])
-    
-    st.markdown("---")
-    
-    # Contact
-    st.markdown("### 📞 Support")
-    st.markdown("[💬 Report Issue](#) | [📚 Documentation](#)")
