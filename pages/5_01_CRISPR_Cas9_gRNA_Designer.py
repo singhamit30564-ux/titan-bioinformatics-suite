@@ -78,7 +78,9 @@ if st.button("🎯 Design gRNAs", type="primary", use_container_width=True):
                     if val == "Medium": return 'background-color: #4a3b00; color: #d4af37' # Goldish
                     return 'background-color: #4a0000; color: #ff0055' # Reddish
 
-                st.dataframe(df.style.applymap(color_risk, subset=['Risk Level']), use_container_width=True, hide_index=True)
+                # Alternative styling approach
+styled_df = df.style.applymap(color_risk, subset=['Risk Level'])
+st.dataframe(styled_df, use_container_width=True, hide_index=True)
                 
                 # Visualization: GC Content Distribution
                 st.markdown("### 📊 gRNA GC Content Distribution")
