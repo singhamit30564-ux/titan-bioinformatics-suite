@@ -1,16 +1,16 @@
 import streamlit as st
-from Bio.Align import MultipleSeqAlignment
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.Phylo.TreeConstruction import DistanceCalculator
-import plotly.figure_factory as ff
+import pandas as pd
 import numpy as np
+import plotly.express as px
 
-st.title("📊 Module 4.08: Distance Matrix Calculator")
-st.markdown("Calculate p-distance between sequences and visualize as a heatmap.")
+st.set_page_config(page_title="Distance Matrix", page_icon="📏", layout="wide")
+st.title("📏 Module 4.08: Distance Matrix Calculator")
+st.markdown("Calculate p-distance between aligned sequences and visualize as a heatmap.")
 st.markdown("---")
 
-fasta_input = st.text_area("Enter Sequences in FASTA format", 
+# --- INPUT ---
+fasta_input = st.text_area(
+    "Enter Sequences in FASTA format",
     """>Human
 ATGCGTACGT
 >Chimp
@@ -18,53 +18,102 @@ ATGCGTACGA
 >Gorilla
 ATGCGTACCT
 >Orangutan
-ATGCGTACGG""", height=200)
+ATGCGTACGG""",
+    height=180
+)
 
-if st.button(" Calculate Distance Matrix", type="primary", use_container_width=True):
-    try:
-        records = []
-        current_id = ""
-        current_seq = ""
-        for line in fasta_input.strip().split('\n'):
-            if line.startswith('>'):
-                if current_id:
-                    records.append(SeqRecord(Seq(current_seq), id=current_id))
-                current_id = line[1:].strip()
-                current_seq = ""
+if st.button("🧮 Calculate Distance Matrix", type="primary", use_container_width=True):
+    if not fasta_input.strip():
+        st.error("⚠️ Please enter at least one sequence in FASTA format.")
+    else:
+        try:
+            # --- ROBUST FASTA PARSER ---
+            lines = fasta_input.strip().splitlines()
+            seqs, names = [], []
+            current_name, current_seq_parts = "", []
+            
+            for line in lines:
+                clean = line.strip()
+                if not clean: continue
+                if clean.startswith(">"):
+                    if current_name:
+                        names.append(current_name)
+                        seqs.append("".join(current_seq_parts).upper())
+                    current_name = clean[1:].split()[0]
+                    current_seq_parts = []
+                else:
+                    current_seq_parts.append(clean)
+            if current_name:
+                names.append(current_name)
+                seqs.append("".join(current_seq_parts).upper())
+                
+            # --- VALIDATION ---
+            if len(seqs) < 2:
+                st.error("⚠️ Need at least 2 sequences to calculate a matrix.")
             else:
-                current_seq += line.strip()
-        if current_id:
-            records.append(SeqRecord(Seq(current_seq), id=current_id))
-            
-        if len(records) < 2:
-            st.error("❌ Need at least 2 sequences!")
-        else:
-            alignment = MultipleSeqAlignment(records)
-            calculator = DistanceCalculator('identity')
-            dm = calculator.get_distance(alignment)
-            
-            # Convert to numpy array for heatmap
-            labels = dm.names
-            matrix = np.array(dm.matrix)
-            
-            st.markdown("### 🔥 Genetic Distance Heatmap")
-            fig = ff.create_annotated_heatmap(
-                z=matrix, x=labels, y=labels,
-                colorscale='Viridis',
-                annotation_text=np.round(matrix, 3).tolist(),
-                showscale=True
-            )
-            fig.update_layout(
-                paper_bgcolor='#0a0e17',
-                plot_bgcolor='#1a1f2e',
-                font=dict(color='#e0e0e0')
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown("### 📋 Raw Distance Matrix")
-            st.dataframe(pd.DataFrame(matrix, columns=labels, index=labels))
-            
-            st.info("💡 **Dr. Titan's Tip:** A distance matrix shows how genetically different species are. 0.0 means identical, 1.0 means completely different. This matrix is the input for building Phylogenetic Trees!")
-            
-    except Exception as e:
-        st.error(f"❌ Error: {e}")
+                lengths = [len(s) for s in seqs]
+                if len(set(lengths)) > 1:
+                    st.error(f"🚨 Sequences must be EQUAL length! Found: {lengths}. Align them first.")
+                else:
+                    valid_chars = set("ATCG-")
+                    for i, s in enumerate(seqs):
+                        invalid = set(s) - valid_chars
+                        if invalid:
+                            st.error(f" Invalid chars in '{names[i]}': {invalid}. Use only A,T,C,G,-")
+                            break
+                    else:
+                        # --- CALCULATE P-DISTANCE ---
+                        with st.spinner(" Calculating pairwise distances..."):
+                            n = len(seqs)
+                            L = lengths[0]
+                            dist_matrix = np.zeros((n, n))
+                            
+                            for i in range(n):
+                                for j in range(i + 1, n):
+                                    diffs = sum(1 for a, b in zip(seqs[i], seqs[j]) if a != b and a != '-' and b != '-')
+                                    dist = diffs / L
+                                    dist_matrix[i, j] = dist
+                                    dist_matrix[j, i] = dist
+                            
+                            # --- DISPLAY ---
+                            df_dist = pd.DataFrame(dist_matrix, index=names, columns=names)
+                            
+                            st.markdown("###  Distance Matrix")
+                            st.dataframe(df_dist.style.background_gradient(cmap="YlOrRd", vmin=0, vmax=1), use_container_width=True)
+                            
+                            fig = px.imshow(
+                                df_dist.values,
+                                x=names, y=names,
+                                text_auto=".3f",
+                                aspect="auto",
+                                color_continuous_scale="Viridis",
+                                title="Pairwise p-Distance Heatmap"
+                            )
+                            fig.update_layout(template="plotly_dark", paper_bgcolor='#0a0e17', plot_bgcolor='#1a1f2e')
+                            st.plotly_chart(fig, use_container_width=True)
+                            
+                            st.success(f"✅ Matrix calculated for {n} sequences (Length: {L} bp)")
+                            
+        except Exception as e:
+            st.error(f"🚨 Unexpected Error: {str(e)}")
+
+# --- SIDEBAR ---
+with st.sidebar:
+    st.markdown("### ℹ️ How It Works")
+    st.markdown("""
+    1. Paste **aligned** sequences in FASTA format
+    2. All sequences MUST be same length
+    3. Tool calculates **p-distance** (proportional difference)
+    4. Heatmap shows evolutionary divergence
+    """)
+    st.info("💡 **Tip:** Use MSA tools (Clustal, MUSCLE) before this step!")
+# --- DR. TITAN'S TIP ---
+st.markdown("""
+---
+💡 **Dr. Titan's Tip:** 
+p-distance of 0.01 = 1% sequence divergence. For reference:
+- **Human vs Chimp**: ~0.012 (1.2% different)
+- **Human vs Gorilla**: ~0.018 (1.8% different)
+- Values >0.10 indicate distant evolutionary relationship
+- Always use **aligned sequences** (MSA) before calculating distances!
+""")
