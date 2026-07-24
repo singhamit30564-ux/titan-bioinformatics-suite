@@ -38,8 +38,7 @@ Whether you are a high school student, a university researcher, or a field biolo
 * **Core Logic:** Biopython, Pandas, NumPy
 * **AI Integration:** Google Gemini API (for Dr. Titan Assistant)
 * **Database:** Supabase / Firebase (Upcoming)
-* **Deployment:** Streamlit Cloud / AWS (Upcoming)
-
+* **Deployment:** Streamlit Cloud / AWS
 ---
 
 ##  Core Features (v1.0)
@@ -105,3 +104,4 @@ This project is dual-licensed.
 - **AGPLv3** for commercial/enterprise use. 
 
 © 2026 Titan Bioinformatics. All Rights Reserved.
+Streamlit app link = https://titan-bioinformatics-suite-qeutqh2pcxgsmh6aui9zxg.streamlit.app/
