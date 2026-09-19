@@ -11,6 +11,11 @@ from .sequence import (
     validate_protein,
     revcomp,
     gc_fraction_safe,
+    gc_content_percent,
+    at_content_percent,
+    nucleotide_counts,
+    find_orfs_simple,
+    bulk_revcomp,
     CODON_TABLE_STANDARD,
     REVERSE_CODON_TABLE_STANDARD,
     translate,
@@ -18,8 +23,8 @@ from .sequence import (
     ALLOWED_DNA_IUPAC,
 )
 from .theme import TITAN_THEME_CSS, THEME
-from .ui import smart_lock, dr_titan_tip, titan_title, sequence_metrics_row
-from .io import safe_csv_download, safe_fasta_download
+from .ui import smart_lock, dr_titan_tip, titan_title, sequence_metrics_row, apply_theme
+from .io import safe_csv_download, safe_fasta_download, df_to_csv_bytes
 
 __all__ = [
     "clean_sequence",
@@ -28,6 +33,11 @@ __all__ = [
     "validate_protein",
     "revcomp",
     "gc_fraction_safe",
+    "gc_content_percent",
+    "at_content_percent",
+    "nucleotide_counts",
+    "find_orfs_simple",
+    "bulk_revcomp",
     "CODON_TABLE_STANDARD",
     "REVERSE_CODON_TABLE_STANDARD",
     "translate",
@@ -39,6 +49,8 @@ __all__ = [
     "dr_titan_tip",
     "titan_title",
     "sequence_metrics_row",
+    "apply_theme",
     "safe_csv_download",
     "safe_fasta_download",
+    "df_to_csv_bytes",
 ]

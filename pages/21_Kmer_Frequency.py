@@ -2,8 +2,11 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 from collections import Counter
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🧩 Module 3.02: K-mer Frequency Analyzer")
+titan_title("🧩", "🧩 Module 3.02: K-mer Frequency Analyzer", "Refactored with Titan validation & export.")
 st.markdown("Count and visualize the frequency of all possible K-mers (subsequences of length K) in a DNA sequence.")
 st.markdown("---")
 

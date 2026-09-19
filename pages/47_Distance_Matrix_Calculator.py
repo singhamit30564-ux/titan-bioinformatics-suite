@@ -2,8 +2,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("📏 Module 4.08: Distance Matrix Calculator")
+titan_title("📏", "📏 Module 4.08: Distance Matrix Calculator", "Refactored with Titan validation & export.")
 st.markdown("Calculate p-distance between aligned sequences and visualize as a heatmap.")
 st.markdown("---")
 

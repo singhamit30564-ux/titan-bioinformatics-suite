@@ -1,6 +1,10 @@
 import streamlit as st
+import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🔄 Module 27: Bulk Reverse Complement")
+titan_title("🔄", "Bulk Reverse Complement", "Refactored with Titan validation & export.")
 st.markdown("Process multiple DNA sequences at once (one per line).")
 st.markdown("---")
 

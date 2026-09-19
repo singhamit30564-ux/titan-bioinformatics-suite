@@ -1,4 +1,5 @@
-"""Reusable Streamlit UI fragments: header, paywall stub, Dr. Titan tip."""
+"""Reusable Streamlit UI fragments: header, export, Dr. Titan tip."""
+
 from __future__ import annotations
 
 import streamlit as st
@@ -23,11 +24,11 @@ def titan_title(emoji: str, title: str, subtitle: str = "") -> None:
 def smart_lock(csv_data: bytes | None = None,
                csv_filename: str = "titan_results.csv",
                pdf_label: str = "📄 Download PDF Report (Free)") -> None:
-    """Render the export row.
+    """Render the export row — **fully free**, no paywall.
 
-    The PDF button still produces an "in development" notice (PDF generation
-    is listed as v1.1 in the masterplan). When `csv_data` is provided, a
-    working CSV download button is rendered instead of the fake gating.
+    - PDF button shows a friendly "use Print → Save as PDF" tip (v1.1 placeholder).
+    - If csv_data is provided, a working CSV download button is shown.
+    - If csv_data is None, show an info note instead of a fake gated button.
     """
     st.markdown("---")
     st.markdown("### 📥 Export Results")
@@ -48,14 +49,7 @@ def smart_lock(csv_data: bytes | None = None,
                 key=f"_csv_{id(csv_data)}",
             )
         else:
-            if st.button("📊 Download CSV (🔒 Explorer Plan)",
-                         use_container_width=True,
-                         key=f"_csvgate_{id(csv_data)}"):
-                st.warning(
-                    "🔒 **Titan Explorer Plan Required.** "
-                    "Upgrade to unlock CSV exports, batch processing, "
-                    "and advanced analytics."
-                )
+            st.caption("ℹ️ Run an analysis above to enable CSV export — no paywall, all exports are free.")
 
 
 def dr_titan_tip(text: str) -> None:

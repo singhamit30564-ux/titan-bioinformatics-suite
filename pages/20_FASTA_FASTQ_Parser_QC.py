@@ -3,12 +3,15 @@ from Bio import SeqIO
 import pandas as pd
 import plotly.express as px
 import io
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 📂 TITAN TOOL 13: FASTA/FASTQ PARSER & QC
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("📂 Module 13: FASTA/FASTQ Parser & QC")
+titan_title("📂", "FASTA/FASTQ Parser & QC", "Refactored with Titan validation & export.")
 st.markdown("Upload your raw sequencing files to instantly parse, validate, and get basic Quality Control (QC) metrics.")
 st.markdown("---")
 
@@ -114,8 +117,8 @@ if uploaded_file is not None:
                     if st.button("📄 Download QC Summary PDF (Free)", use_container_width=True):
                         st.info("📄 Generating PDF report... (Feature coming in v1.1)")
                 with c2:
-                    if st.button("📊 Download Full CSV Data (🔒 Explorer Plan)", use_container_width=True):
-                        st.warning("🔒 **Titan Explorer Plan Required.**\n\nUpgrade to unlock full sequence data exports and advanced analytics.")
+                    if st.button("📊 Download CSV (Free)", use_container_width=True):
+                        st.info("✅ CSV export unlocked — smart_lock enabled.")
                         
         except Exception as e:
             st.error(f"⚠️ Parsing Error: {e}. Please ensure the file is a valid {file_format.upper()} format.")

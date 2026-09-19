@@ -1,7 +1,11 @@
 import streamlit as st
+import pandas as pd
 import math
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🌡️ Module 5.04: Oligo Tm & Annealing Temperature Calculator")
+titan_title("🌡", "🌡️ Module 5.04: Oligo Tm & Annealing Temperature Calculator", "Refactored with Titan validation & export.")
 st.markdown("Calculate Melting Temperature (Tm) using 3 different scientific formulas and find the perfect Annealing Temp.")
 st.markdown("---")
 

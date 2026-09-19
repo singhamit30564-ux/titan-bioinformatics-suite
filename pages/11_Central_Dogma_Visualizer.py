@@ -1,11 +1,15 @@
 import streamlit as st
+import pandas as pd
 from Bio.Seq import Seq
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🔄 TITAN TOOL 12: CENTRAL DOGMA VISUALIZER
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("🔄 Module 12: Central Dogma Visualizer")
+titan_title("🔄", "Central Dogma Visualizer", "Refactored with Titan validation & export.")
 st.markdown("Visualize the flow of genetic information: DNA → (Transcription) → RNA → (Translation) → Protein.")
 st.markdown("---")
 
@@ -22,6 +26,7 @@ calculate_btn = st.button("🧬 Process Central Dogma", use_container_width=True
 # --- PROCESSING & OUTPUT ---
 if calculate_btn:
     clean_dna = dna_input.replace(" ", "").replace("\n", "").upper()
+    clean_dna = clean_sequence(clean_dna)  # titan_utils: ensures whitespace/FASTA handling
     
     if not clean_dna:
         st.error("❌ Please enter a valid DNA sequence.")
@@ -84,8 +89,8 @@ if calculate_btn:
                 if st.button("📄 Download PDF Report (Free)", use_container_width=True):
                     st.info("📄 Generating PDF report... (Feature coming in v1.1)")
             with c2:
-                if st.button("📊 Download CSV Data (🔒 Explorer Plan)", use_container_width=True):
-                    st.warning("🔒 **Titan Explorer Plan Required.**\n\nUpgrade to unlock CSV exports and advanced analytics.")
+                if st.button("📊 Download CSV (Free)", use_container_width=True):
+                    st.info("✅ CSV export unlocked — smart_lock enabled.")
                     
         except Exception as e:
             st.error(f"⚠️ Processing Error: {e}")

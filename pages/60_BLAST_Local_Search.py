@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🔍 Module 5.08: BLAST Local Search (Seed & Extend)")
+titan_title("🔍", "🔍 Module 5.08: BLAST Local Search (Seed & Extend)", "Refactored with Titan validation & export.")
 st.markdown("Simulate the Basic Local Alignment Search Tool (BLAST) algorithm to find High Scoring Segment Pairs (HSPs).")
 st.markdown("---")
 

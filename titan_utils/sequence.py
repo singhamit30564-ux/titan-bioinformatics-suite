@@ -119,3 +119,66 @@ def translate(dna_seq: str, *, to_stop: bool = False) -> str:
             break
         protein.append(aa)
     return "".join(protein)
+
+# ---- Extended helpers centralized from page duplicates ----
+
+def gc_content_percent(seq: str) -> float:
+    """GC% (0-100) using gc_fraction_safe, rounded to 2 decimals for UI."""
+    return round(gc_fraction_safe(seq) * 100, 2)
+
+
+def at_content_percent(seq: str) -> float:
+    """AT% complement of GC%."""
+    return round(100 - gc_content_percent(seq), 2)
+
+
+def nucleotide_counts(seq: str) -> dict:
+    """Return counts of A/T/C/G for a DNA sequence (upper-cased)."""
+    s = clean_sequence(seq)
+    return {base: s.count(base) for base in "ATCG"}
+
+
+def find_orfs_simple(seq: str, min_len: int = 0) -> list[dict]:
+    """Find ORFs on both strands (like pages/05_ORF_Finder) — centralized.
+
+    Returns list of dicts sorted longest-first: Strand, Frame, Start_Pos,
+    End_Pos, Length_bp, Length_aa, DNA_Sequence, Protein_Sequence.
+    """
+    from Bio.Seq import Seq as BioSeq
+    s = clean_sequence(seq)
+    if not s:
+        return []
+    bio_seq = BioSeq(s)
+    orfs = []
+    stops = {"TAA", "TAG", "TGA"}
+    for strand, nuc in [(1, bio_seq), (-1, bio_seq.reverse_complement())]:
+        nuc_str = str(nuc)
+        for frame in range(3):
+            idx = frame
+            while idx <= len(nuc_str) - 3:
+                if nuc_str[idx:idx+3] == "ATG":
+                    for j in range(idx+3, len(nuc_str)-2, 3):
+                        codon = nuc_str[j:j+3]
+                        if codon in stops:
+                            orf_seq = nuc_str[idx:j+3]
+                            orfs.append({
+                                "Strand": "+" if strand == 1 else "-",
+                                "Frame": frame+1,
+                                "Start_Pos": idx+1,
+                                "End_Pos": j+3,
+                                "Length_bp": len(orf_seq),
+                                "Length_aa": len(orf_seq)//3,
+                                "DNA_Sequence": orf_seq,
+                                "Protein_Sequence": str(BioSeq(orf_seq).translate(to_stop=True)),
+                            })
+                            break
+                idx += 3
+    orfs.sort(key=lambda x: x["Length_bp"], reverse=True)
+    if min_len:
+        orfs = [o for o in orfs if o["Length_bp"] >= min_len]
+    return orfs
+
+
+def bulk_revcomp(sequences: list[str]) -> list[str]:
+    """Reverse complement a list of sequences via revcomp."""
+    return [revcomp(clean_sequence(s)) for s in sequences]

@@ -1,9 +1,13 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import math
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("️ Module 5.05: DNA Melting Curve Simulation (qPCR)")
+titan_title("️", "️ Module 5.05: DNA Melting Curve Simulation (qPCR)", "Refactored with Titan validation & export.")
 st.markdown("Simulate the dissociation of double-stranded DNA as temperature increases, just like a real-time PCR machine.")
 st.markdown("---")
 

@@ -2,8 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import io
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title(" Module 3.09: VCF Variant Viewer")
+titan_title("🧬", "Module 3.09: VCF Variant Viewer", "Refactored with Titan validation & export.")
 st.markdown("Parse and visualize Variant Call Format (VCF) files to analyze SNPs and Indels.")
 st.markdown("---")
 

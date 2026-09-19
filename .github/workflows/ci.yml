@@ -1,0 +1,27 @@
+name: CI — Titan Bioinformatics Suite
+
+on:
+  push:
+    branches: [main, arena/*, fix/*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest biopython pandas plotly
+      - name: Compile pages
+        run: python -m py_compile pages/*.py Home.py titan_utils/*.py
+      - name: Run suite tests
+        run: pytest tests/test_titan_suite.py -v
+      - name: Streamlit smoke — import Home
+        run: python -c "import ast; ast.parse(open('Home.py').read()); print('Home.py parses OK')"

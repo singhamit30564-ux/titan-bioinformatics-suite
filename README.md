@@ -115,3 +115,26 @@ The app will also work instantly inside GitHub Codespaces — just open the repo
 This project is released under the **GNU AGPLv3** (see `LICENSE`). If you deploy a modified version over a network you must share your changes.
 
 © 2026 Titan Bioinformatics.
+
+---
+
+## 🔧 Recent Refactor — Titan Utils Unification (2026-09)
+
+**PR #2 — `refactor: unify 49 pages on titan_utils`**
+
+This PR removes the last hollow duplication in the codebase:
+
+- **49/62 pages now import `titan_utils`** (was 3/62) — `clean_sequence`, `validate_dna/rna`, `revcomp`, `gc_fraction_safe`, `titan_title`, `smart_lock`, `dr_titan_tip`, `df_to_csv_bytes`.
+- **Paywall removed** — the fake "🔒 Explorer Plan Required" gating on every tool is now a free `smart_lock` CSV download. `titan_utils/ui.py:smart_lock` now shows a caption instead of a gated button when no data is ready.
+- **Centralized sequence helpers** — new `titan_utils/sequence.py` functions: `gc_content_percent`, `at_content_percent`, `nucleotide_counts`, `find_orfs_simple`, `bulk_revcomp` (shared by ORF Finder, Bulk RC, GC pages).
+- **Theme & export unified** — `titan_title` + `apply_theme` + `sequence_metrics_row` used consistently; Plotly dark theme stays intact.
+- **Tests & CI** — new `tests/test_titan_suite.py` (11 tests: validation, revcomp, ORF, compile, navigation coverage, paywall absence) + `.github/workflows/ci.yml` + `pytest.ini`.
+
+Validation:
+
+```bash
+python -m py_compile pages/*.py Home.py titan_utils/*.py
+pytest tests/test_titan_suite.py -v   # 11 passed
+```
+
+See `titan_utils/__init__.py` for the public API.

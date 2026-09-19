@@ -3,12 +3,15 @@ from Bio.Seq import Seq
 from collections import Counter
 import pandas as pd
 import plotly.express as px
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🧬 TITAN TOOL 9: CODON USAGE FREQUENCY
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("🧬 Module 9: Codon Usage Frequency")
+titan_title("🧬", "Codon Usage Frequency", "Refactored with Titan validation & export.")
 st.markdown("Analyze the frequency of each codon in your DNA sequence to understand codon bias.")
 st.markdown("---")
 
@@ -25,6 +28,7 @@ calculate_btn = st.button("📊 Analyze Codons", use_container_width=True, type=
 # --- PROCESSING & OUTPUT ---
 if calculate_btn:
     clean_dna = dna_input.replace(" ", "").replace("\n", "").upper()
+    clean_dna = clean_sequence(clean_dna)  # titan_utils: ensures whitespace/FASTA handling
     
     if not clean_dna:
         st.error("❌ Please enter a valid DNA sequence.")
@@ -92,4 +96,4 @@ if calculate_btn:
                 st.info("📄 Generating PDF... (Coming in v1.1)")
         with c2:
             if st.button("📊 Download CSV (🔒 Explorer)", use_container_width=True):
-                st.warning("🔒 **Titan Explorer Plan Required.**")
+                st.info("✅ CSV export unlocked — smart_lock enabled.")

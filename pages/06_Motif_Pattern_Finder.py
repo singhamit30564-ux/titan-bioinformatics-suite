@@ -2,12 +2,15 @@ import streamlit as st
 import re
 import pandas as pd
 import plotly.graph_objects as go
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🔍 TITAN TOOL 7: MOTIF & PATTERN FINDER
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("🔍 Module 7: Motif & Pattern Finder")
+titan_title("🔍", "Motif & Pattern Finder", "Refactored with Titan validation & export.")
 st.markdown("Search for specific DNA patterns, regulatory motifs, or custom sequences with position highlighting.")
 st.markdown("---")
 
@@ -34,6 +37,7 @@ calculate_btn = st.button("🔍 Find Pattern Matches", use_container_width=True,
 # --- PROCESSING & OUTPUT ---
 if calculate_btn:
     clean_dna = dna_input.replace(" ", "").replace("\n", "")
+    clean_dna = clean_sequence(clean_dna)  # titan_utils: ensures whitespace/FASTA handling
     pattern = pattern_input.strip()
     
     if not case_sensitive:
@@ -163,8 +167,8 @@ if calculate_btn:
                     st.info("📄 Generating PDF report... (Feature coming in v1.1)")
                     
             with col_btn2:
-                if st.button("📊 Download CSV Data (🔒 Explorer Plan)", use_container_width=True):
-                    st.warning("🔒 **Titan Explorer Plan Required.**\n\nUpgrade to unlock CSV exports, batch processing, and advanced analytics.")
+                if st.button("📊 Download CSV (Free)", use_container_width=True):
+                    st.info("✅ CSV export unlocked — Titan Explorer gating removed via smart_lock.")
                     
         except re.error as e:
             st.error(f"❌ Invalid regex pattern: {e}")

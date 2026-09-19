@@ -1,6 +1,9 @@
 import streamlit as st
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("⚖️ Module 20: Molecular Weight Calculator")
+titan_title("⚖", "Molecular Weight Calculator", "Refactored with Titan validation & export.")
 st.markdown("Calculate molecular weight of DNA, RNA, or Protein sequences.")
 st.markdown("---")
 
