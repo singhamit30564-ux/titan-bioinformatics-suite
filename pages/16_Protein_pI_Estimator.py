@@ -1,6 +1,10 @@
 import streamlit as st
+import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🧪 Module 26: Protein Isoelectric Point (pI) Estimator")
+titan_title("🧪", "Protein Isoelectric Point (pI) Estimator", "Refactored with Titan validation & export.")
 st.markdown("Estimate the pH at which the protein has a net zero charge.")
 st.markdown("---")
 

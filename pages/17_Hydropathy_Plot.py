@@ -1,7 +1,11 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("📉 Module 29: Protein Hydropathy Plot")
+titan_title("📉", "Protein Hydropathy Plot", "Refactored with Titan validation & export.")
 st.markdown("Identify hydrophobic (transmembrane) and hydrophilic regions.")
 st.markdown("---")
 

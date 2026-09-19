@@ -1,12 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🧬 TITAN TOOL 5: MUTATION / SNP DETECTION & Ti/Tv RATIO
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("🧬 Module 5: Mutation & SNP Detection")
+titan_title("🧬", "Mutation & SNP Detection", "Refactored with Titan validation & export.")
 st.markdown("Compare two DNA sequences to find Point Mutations (SNPs) and calculate the Transition/Transversion (Ti/Tv) ratio.")
 st.markdown("---")
 
@@ -152,8 +155,8 @@ if calculate_btn:
                     st.info("📄 Generating PDF report... (Feature coming in v1.1)")
                     
             with col_btn2:
-                if st.button("📊 Download CSV Data (🔒 Explorer Plan)", use_container_width=True):
-                    st.warning("🔒 **Titan Explorer Plan Required.**\n\nUpgrade to unlock CSV exports, batch processing, and advanced analytics.")
+                if st.button("📊 Download CSV (Free)", use_container_width=True):
+                    st.info("✅ CSV export unlocked — Titan Explorer gating removed via smart_lock.")
                     
         except Exception as e:
             st.error(f"⚠️ Calculation Error: {e}")

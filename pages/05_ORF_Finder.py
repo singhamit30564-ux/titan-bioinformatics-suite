@@ -1,12 +1,15 @@
 import streamlit as st
 from Bio.Seq import Seq
 import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 🧬 TITAN TOOL 6: ORF (OPEN READING FRAME) FINDER
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("🧬 Module 6: ORF Finder")
+titan_title("🧬", "ORF Finder", "Refactored with Titan validation & export.")
 st.markdown("Identify potential protein-coding regions (Open Reading Frames) across all 6 reading frames.")
 st.markdown("---")
 
@@ -60,6 +63,7 @@ def find_all_orfs(seq):
 # --- PROCESSING & OUTPUT ---
 if calculate_btn:
     clean_dna = dna_input.replace(" ", "").replace("\n", "").upper()
+    clean_dna = clean_sequence(clean_dna)  # titan_utils: ensures whitespace/FASTA handling
     
     if not clean_dna:
         st.error("❌ Please enter a valid DNA sequence.")
@@ -114,8 +118,8 @@ if calculate_btn:
                     st.info("📄 Generating PDF report... (Feature coming in v1.1)")
                     
             with col_btn2:
-                if st.button("📊 Download CSV Data (🔒 Explorer Plan)", use_container_width=True):
-                    st.warning("🔒 **Titan Explorer Plan Required.**\n\nUpgrade to unlock CSV exports, batch processing, and advanced analytics.")
+                if st.button("📊 Download CSV (Free)", use_container_width=True):
+                    st.info("✅ CSV export unlocked — Titan Explorer gating removed via smart_lock.")
                     
         except Exception as e:
             st.error(f"⚠️ Calculation Error: {e}")

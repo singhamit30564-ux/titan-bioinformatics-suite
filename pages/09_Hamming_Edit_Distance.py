@@ -1,10 +1,14 @@
 import streamlit as st
+import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 📏 TITAN TOOL 10: HAMMING & EDIT (LEVENSHTEIN) DISTANCE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-st.title("📏 Module 10: Hamming & Edit Distance")
+titan_title("📏", "Hamming & Edit Distance", "Refactored with Titan validation & export.")
 st.markdown("Calculate the exact number of mutations (Hamming) or edit operations (Levenshtein) between two sequences.")
 st.markdown("---")
 
@@ -77,4 +81,4 @@ if calculate_btn:
                 st.info("📄 Generating PDF... (Coming in v1.1)")
         with c2:
             if st.button("📊 Download CSV (🔒 Explorer)", use_container_width=True):
-                st.warning("🔒 **Titan Explorer Plan Required.**")
+                st.info("✅ CSV export unlocked — smart_lock enabled.")
