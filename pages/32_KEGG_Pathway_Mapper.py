@@ -2,8 +2,11 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🗺️ Module 3.12: KEGG Pathway Mapper & Visualizer")
+titan_title("🗺", "🗺️ Module 3.12: KEGG Pathway Mapper & Visualizer", "Refactored with Titan validation & export.")
 st.markdown("Map your gene list to biological pathways and visualize the interactions using a network graph.")
 st.markdown("---")
 

@@ -3,8 +3,11 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 from collections import Counter
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🔬 Module 3.03: N-grams Over/Under-Representation Analysis")
+titan_title("🔬", "🔬 Module 3.03: N-grams Over/Under-Representation Analysis", "Refactored with Titan validation & export.")
 st.markdown("Find statistically over-represented or under-represented motifs (N-grams) in your DNA sequence.")
 st.markdown("---")
 

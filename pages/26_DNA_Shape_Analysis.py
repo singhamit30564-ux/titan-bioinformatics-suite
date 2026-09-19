@@ -1,8 +1,12 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🧬 Module 3.07: DNA Shape Analysis (Minor Groove, Propeller Twist)")
+titan_title("🧬", "🧬 Module 3.07: DNA Shape Analysis (Minor Groove, Propeller Twist)", "Refactored with Titan validation & export.")
 st.markdown("Predict local DNA structural parameters using trinucleotide shape signatures.")
 st.markdown("---")
 

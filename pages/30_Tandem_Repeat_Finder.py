@@ -1,6 +1,10 @@
 import streamlit as st
+import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🔁 Module 23: Tandem Repeat Finder (STRs)")
+titan_title("🔁", "Tandem Repeat Finder (STRs)", "Refactored with Titan validation & export.")
 st.markdown("Find Short Tandem Repeats (Microsatellites) in your DNA sequence.")
 st.markdown("---")
 

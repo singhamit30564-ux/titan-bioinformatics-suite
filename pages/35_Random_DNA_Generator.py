@@ -1,7 +1,11 @@
 import streamlit as st
+import pandas as pd
 import random
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🎲 Module 28: Random DNA Sequence Generator")
+titan_title("🎲", "Random DNA Sequence Generator", "Refactored with Titan validation & export.")
 st.markdown("Generate synthetic DNA with specific length and GC content.")
 st.markdown("---")
 

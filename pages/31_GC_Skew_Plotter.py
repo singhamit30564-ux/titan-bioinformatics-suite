@@ -1,8 +1,11 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("📉 Module 24: GC Skew & Cumulative GC Skew")
+titan_title("📉", "GC Skew & Cumulative GC Skew", "Refactored with Titan validation & export.")
 st.markdown("Analyze strand asymmetry to find the Origin of Replication (OriC) in bacterial genomes.")
 st.markdown("---")
 
