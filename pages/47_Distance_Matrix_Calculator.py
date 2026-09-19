@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-st.set_page_config(page_title="Distance Matrix", page_icon="📏", layout="wide")
 st.title("📏 Module 4.08: Distance Matrix Calculator")
 st.markdown("Calculate p-distance between aligned sequences and visualize as a heatmap.")
 st.markdown("---")
