@@ -95,29 +95,29 @@ elif page == "Category 1: DNA/RNA Basics":
     
     with col1:
         if st.button("1️ DNA ↔ RNA Converter", use_container_width=True):
-            st.switch_page("pages/1_DNA_RNA_Converter.py")
+            st.switch_page("pages/1_DNA_RNA_Conversion.py")
         if st.button("2️⃣ GC Content Calculator", use_container_width=True):
             st.switch_page("pages/2_GC_Content.py")
         if st.button("3️⃣ Reverse Complement", use_container_width=True):
-            st.switch_page("pages/1_03_Reverse_Complement.py")
+            st.switch_page("pages/1_03_Reverse_Complement_Stats.py")
         if st.button("4️⃣ GC Content Advanced", use_container_width=True):
-            st.switch_page("pages/1_04_GC_Content.py")
+            st.switch_page("pages/1_04_GC_Content_Melting_Temp.py")
         if st.button("5️⃣ Mutation Simulator", use_container_width=True):
-            st.switch_page("pages/1_05_Mutation.py")
+            st.switch_page("pages/1_05_Mutation_SNP_Detection.py")
         if st.button("6️⃣ ORF Finder", use_container_width=True):
             st.switch_page("pages/1_06_ORF_Finder.py")
         if st.button("7️ Motif Pattern Search", use_container_width=True):
-            st.switch_page("pages/1_07_Motif_Pattern.py")
+            st.switch_page("pages/1_07_Motif_Pattern_Finder.py")
         if st.button("8️⃣ Restriction Enzyme Analyzer", use_container_width=True):
-            st.switch_page("pages/1_08_Restriction.py")
+            st.switch_page("pages/1_08_Restriction_Enzyme_Cutter.py")
         if st.button("9️ Codon Usage Table", use_container_width=True):
-            st.switch_page("pages/1_09_Codon_Usage.py")
+            st.switch_page("pages/1_09_Codon_Usage_Frequency.py")
         if st.button("🔟 Hamming Distance", use_container_width=True):
-            st.switch_page("pages/1_10_Hamming.py")
+            st.switch_page("pages/1_10_Hamming_Edit_Distance.py")
         if st.button("1️⃣1️ Nucleotide Frequency", use_container_width=True):
-            st.switch_page("pages/1_11_Nucleotide.py")
+            st.switch_page("pages/1_11_Nucleotide_Frequency_Entropy.py")
         if st.button("1️⃣2️ Central Dogma Visualizer", use_container_width=True):
-            st.switch_page("pages/1_12_Central_Dogma.py")
+            st.switch_page("pages/1_12_Central_Dogma_Visualizer.py")
 
 # Category 2
 elif page == "Category 2: Protein Analysis":
@@ -136,7 +136,7 @@ elif page == "Category 3: Genomics & QC":
     
     with col1:
         if st.button("3_01 FASTA/FASTQ Parser", use_container_width=True):
-            st.switch_page("pages/3_01_FASTA_FA.py")
+            st.switch_page("pages/3_01_FASTA_FASTQ_Parser_QC.py")
         if st.button("3_02 K-mer Frequency", use_container_width=True):
             st.switch_page("pages/3_02_Kmer_Frequency.py")
         if st.button("3_03 N-grams Analysis", use_container_width=True):
