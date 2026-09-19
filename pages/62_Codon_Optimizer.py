@@ -9,8 +9,6 @@ from datetime import datetime
 import io
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Codon Optimizer", page_icon="", layout="wide")
-
 # --- CODON FREQUENCY TABLES (Relative per amino acid, sum=1.0) ---
 # Adapted from NCBI Codon Usage Database (Standard Genetic Code)
 CODON_FREQS = {
