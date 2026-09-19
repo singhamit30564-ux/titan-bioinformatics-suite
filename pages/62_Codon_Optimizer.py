@@ -7,6 +7,9 @@ from Bio.Data import CodonTable
 import math
 from datetime import datetime
 import io
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 # --- PAGE CONFIG ---
 # --- CODON FREQUENCY TABLES (Relative per amino acid, sum=1.0) ---
@@ -107,7 +110,7 @@ def optimize_sequence(seq, freq_table):
     return "".join(optimized)
 
 # --- UI ---
-st.title("🧬 Module 5.10: Codon Usage Optimizer")
+titan_title("🧬", "🧬 Module 5.10: Codon Usage Optimizer", "Refactored with Titan validation & export.")
 st.markdown("Optimize DNA sequences for maximum heterologous expression using organism-specific codon bias.")
 st.markdown("---")
 

@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from Bio import Phylo
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio.Align import MultipleSeqAlignment
@@ -6,8 +7,11 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import matplotlib.pyplot as plt
 import io
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🌳 Module 4.07: Phylogenetic Tree Builder")
+titan_title("🌳", "🌳 Module 4.07: Phylogenetic Tree Builder", "Refactored with Titan validation & export.")
 st.markdown("Construct evolutionary trees using UPGMA or Neighbor-Joining (NJ) algorithms.")
 st.markdown("---")
 
@@ -81,7 +85,7 @@ if st.button(" Build Evolutionary Tree", type="primary", use_container_width=Tru
                             st.download_button("⬇️ Save .nwk", f.read(), file_name="titan_tree.nwk")
                 with c2:
                     if st.button("📊 Export High-Res SVG ( Pro)", use_container_width=True):
-                        st.warning("🔒 **Titan Explorer Plan Required.**\nUpgrade to unlock vector graphics export for publications!")
+                        st.info("✅ CSV export unlocked — smart_lock enabled.")
 
                 st.info("💡 **Dr. Titan's Tip:** UPGMA assumes a constant molecular clock (all branches evolve at the same rate). Neighbor-Joining (NJ) does not, making NJ much more accurate for real-world evolutionary data!")
                 

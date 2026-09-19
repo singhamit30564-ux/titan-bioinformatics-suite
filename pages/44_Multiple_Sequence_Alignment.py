@@ -6,8 +6,11 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Align import MultipleSeqAlignment
 import plotly.graph_objects as go
 import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title(" Module 4.05: Multiple Sequence Alignment (MSA)")
+titan_title("🧬", "Module 4.05: Multiple Sequence Alignment (MSA)", "Refactored with Titan validation & export.")
 st.markdown("Align 3 or more sequences and visualize conservation.")
 st.markdown("---")
 

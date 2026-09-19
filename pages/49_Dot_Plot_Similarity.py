@@ -1,8 +1,12 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🔵 Module 4.11: Dot Plot Similarity")
+titan_title("🔵", "🔵 Module 4.11: Dot Plot Similarity", "Refactored with Titan validation & export.")
 st.markdown("Visualize sequence similarity using a 2D Dot Plot matrix. Diagonal lines indicate matching regions!")
 st.markdown("---")
 

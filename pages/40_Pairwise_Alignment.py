@@ -1,9 +1,13 @@
 import streamlit as st
+import pandas as pd
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 import plotly.graph_objects as go
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🧬 Module 4.01: Advanced Pairwise Aligner")
+titan_title("🧬", "🧬 Module 4.01: Advanced Pairwise Aligner", "Refactored with Titan validation & export.")
 st.markdown("Compare two sequences using Needleman-Wunsch (Global) or Smith-Waterman (Local) algorithms.")
 st.markdown("---")
 

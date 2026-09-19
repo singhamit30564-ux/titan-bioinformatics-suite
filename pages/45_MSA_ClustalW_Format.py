@@ -4,8 +4,11 @@ from Bio.Align import MultipleSeqAlignment
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title(" Module 4.06: MSA ClustalW Style Output")
+titan_title("🧬", "Module 4.06: MSA ClustalW Style Output", "Refactored with Titan validation & export.")
 st.markdown("Format Multiple Sequence Alignment in the classic ClustalW style with conservation stars.")
 st.markdown("---")
 

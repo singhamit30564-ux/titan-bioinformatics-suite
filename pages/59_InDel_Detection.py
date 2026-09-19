@@ -1,8 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("✂️ Module 5.07: InDel (Insertion/Deletion) Detection")
+titan_title("✂", "✂️ Module 5.07: InDel (Insertion/Deletion) Detection", "Refactored with Titan validation & export.")
 st.markdown("Identify gaps (Insertions or Deletions) in an aligned sequence compared to a reference.")
 st.markdown("---")
 

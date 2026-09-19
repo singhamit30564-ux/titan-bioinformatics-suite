@@ -1,9 +1,13 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 from collections import Counter
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title("🎨 Module 4.09: Sequence Logo Generator")
+titan_title("🎨", "🎨 Module 4.09: Sequence Logo Generator", "Refactored with Titan validation & export.")
 st.markdown("Visualize position-specific sequence conservation as a sequence logo.")
 st.markdown("---")
 

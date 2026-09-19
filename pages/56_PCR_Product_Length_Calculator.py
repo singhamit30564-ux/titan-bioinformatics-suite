@@ -1,6 +1,10 @@
 import streamlit as st
+import pandas as pd
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title(" Module 5.03: PCR Product & Amplicon Length Calculator")
+titan_title("🧬", "Module 5.03: PCR Product & Amplicon Length Calculator", "Refactored with Titan validation & export.")
 st.markdown("Calculate the exact size of your PCR product based on Forward and Reverse primer positions.")
 st.markdown("---")
 

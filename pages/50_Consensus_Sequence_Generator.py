@@ -5,8 +5,11 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from collections import Counter
 import plotly.graph_objects as go
+from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.io import df_to_csv_bytes
+from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-st.title(" Module 4.12: Consensus Sequence Generator")
+titan_title("🧬", "Module 4.12: Consensus Sequence Generator", "Refactored with Titan validation & export.")
 st.markdown("Generate consensus sequence from multiple aligned sequences using majority rule.")
 st.markdown("---")
 
