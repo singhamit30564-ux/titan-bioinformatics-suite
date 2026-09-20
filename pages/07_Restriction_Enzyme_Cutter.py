@@ -132,7 +132,7 @@ if calculate_btn:
                 return ''
                 
             st.dataframe(
-                df_results.style.applymap(highlight_cuts, subset=['Cut_Count']),
+                df_results.style.map(highlight_cuts, subset=['Cut_Count']),
                 use_container_width=True,
                 hide_index=True
             )

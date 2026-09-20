@@ -73,8 +73,11 @@ if st.button(" Detect CpG Islands", type="primary", use_container_width=True):
             # Threshold Lines
             fig.add_hline(y=oe_threshold, line_dash="dash", line_color="#ff0055", 
                          annotation_text=f"O/E Threshold ({oe_threshold})")
-            fig.add_hline(y=gc_threshold, line_dash="dash", line_color="#ffffff", 
-                         annotation_text=f"GC Threshold ({gc_threshold}%)", yaxis="y2")
+            # Second trace lives on the y2 axis, so its threshold line must too.
+            # (`add_hline` forwards kwargs to layout.Shape, where the property is
+            # `yref`; passing `yaxis` raises ValueError on plotly 5.x and 7.x.)
+            fig.add_hline(y=gc_threshold, line_dash="dash", line_color="#ffffff",
+                         annotation_text=f"GC Threshold ({gc_threshold}%)", yref="y2")
             
             fig.update_layout(
                 title="CpG Island Detection Analysis",

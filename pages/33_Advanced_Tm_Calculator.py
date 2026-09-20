@@ -1,3 +1,5 @@
+import math
+
 import streamlit as st
 import pandas as pd
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe

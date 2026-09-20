@@ -18,10 +18,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest biopython pandas plotly
+          pip install pytest pyflakes biopython pandas plotly
       - name: Compile pages
         run: python -m py_compile pages/*.py Home.py titan_utils/*.py
-      - name: Run suite tests
-        run: pytest tests/test_titan_suite.py -v
-      - name: Streamlit smoke — import Home
-        run: python -c "import ast; ast.parse(open('Home.py').read()); print('Home.py parses OK')"
+      - name: Unit tests — utils, shared helpers, page regressions
+        run: pytest tests/test_titan_suite.py tests/test_ui_helpers.py -v
+      - name: Interaction tests — every page renders and every button works
+        run: pytest tests/test_page_interactions.py -v
