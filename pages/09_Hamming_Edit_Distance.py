@@ -70,7 +70,7 @@ if calculate_btn:
         if hamming_dist is not None:
             st.success(f"✅ **Hamming Distance:** `{hamming_dist}` *(Sequences are of equal length)*")
         else:
-            st.warning(f"⚠️ **Hamming Distance:** `N/A` *(Sequences must be of equal length to calculate Hamming distance. Use Edit Distance instead.)*")
+            st.warning("⚠️ **Hamming Distance:** `N/A` *(Sequences must be of equal length to calculate Hamming distance. Use Edit Distance instead.)*")
             
         # --- THE "SMART LOCK" ---
         st.markdown("---")

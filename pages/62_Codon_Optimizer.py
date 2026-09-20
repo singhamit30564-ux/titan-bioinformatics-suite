@@ -7,7 +7,10 @@ from Bio.Data import CodonTable
 import math
 from datetime import datetime
 import io
-from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+# NB: this page deliberately defines its own `validate_dna` below, because CDS
+# validation additionally requires a multiple-of-3 length — so the shared one is
+# not imported here (importing it would be shadowed anyway).
+from titan_utils import clean_sequence, validate_rna, revcomp, gc_fraction_safe
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
@@ -115,7 +118,9 @@ st.markdown("Optimize DNA sequences for maximum heterologous expression using or
 st.markdown("---")
 
 # INPUTS
-dna_input = st.text_area("Enter Coding DNA Sequence (CDS, 5'→3')", height=120, placeholder="e.g., ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG")
+dna_input = st.text_area("Enter Coding DNA Sequence (CDS, 5'→3')", height=120,
+                         value="ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG",
+                         placeholder="e.g., ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG")
 organism = st.selectbox("🌍 Target Organism", list(CODON_FREQS.keys()))
 show_advanced = st.checkbox("📊 Show Detailed Codon Comparison")
 

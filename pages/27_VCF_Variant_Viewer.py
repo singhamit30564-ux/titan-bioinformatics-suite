@@ -41,7 +41,11 @@ if st.button("🔬 Parse VCF Data", type="primary", use_container_width=True):
                 
                 for line in lines:
                     if line.startswith('#CHROM'):
-                        header_line = line[2:] # Remove ##
+                        # The column header line begins with a single '#'.
+                        # Slicing [2:] used to eat two characters and rename the
+                        # first column to 'HROM', which made df['CHROM'] below
+                        # raise KeyError and killed the whole chromosome chart.
+                        header_line = line.lstrip('#')
                     elif not line.startswith('#'):
                         data_lines.append(line)
                 

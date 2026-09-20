@@ -64,7 +64,7 @@ if st.button("🔬 Detect InDels", type="primary", use_container_width=True):
         def color_type(val):
             return 'background-color: #1a472a; color: #66fcf1' if 'Insertion' in val else 'background-color: #4a0000; color: #ff0055'
             
-        st.dataframe(df.style.applymap(color_type, subset=['Type']), use_container_width=True, hide_index=True)
+        st.dataframe(df.style.map(color_type, subset=['Type']), use_container_width=True, hide_index=True)
         
         # Visualization
         fig = go.Figure()

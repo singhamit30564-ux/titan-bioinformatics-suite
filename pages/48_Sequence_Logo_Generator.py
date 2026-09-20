@@ -70,12 +70,14 @@ if st.button("🎨 Generate Sequence Logo", type="primary", use_container_width=
             colors = {'A': '#00CC00', 'T': '#FF0000', 'C': '#0000CC', 'G': '#FFA500'}
             
             for base in bases:
+                # NB: `stackgroup` is a scatter-only property — passing it to
+                # go.Bar raised a ValueError, so the logo never rendered.
+                # Stacking is controlled by barmode='stack' in update_layout.
                 fig.add_trace(go.Bar(
                     x=positions,
                     y=logo_data[base],
                     name=base,
                     marker_color=colors[base],
-                    stackgroup='one'
                 ))
             
             fig.update_layout(

@@ -3,7 +3,6 @@ from Bio import AlignIO
 from Bio.Align import MultipleSeqAlignment
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio.Align import MultipleSeqAlignment
 import plotly.graph_objects as go
 import pandas as pd
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe

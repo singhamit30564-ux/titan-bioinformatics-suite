@@ -106,7 +106,7 @@ if calculate_btn:
                         return 'background-color: #66fcf1; color: #000' # Cyan
                         
                 st.dataframe(
-                    df_mutations.style.applymap(highlight_type, subset=['Mutation Type']),
+                    df_mutations.style.map(highlight_type, subset=['Mutation Type']),
                     use_container_width=True,
                     hide_index=True
                 )

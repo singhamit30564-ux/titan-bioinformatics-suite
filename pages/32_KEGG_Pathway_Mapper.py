@@ -110,8 +110,12 @@ if st.button("️ Map to KEGG Pathways", type="primary", use_container_width=Tru
                 
                 fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
-                        title='KEGG Pathway Interaction Network',
-                        titlefont_size=16,
+                        # `titlefont_size` was removed in plotly 6 — the font must
+                        # be nested inside `title` instead.
+                        title=dict(
+                            text='KEGG Pathway Interaction Network',
+                            font=dict(size=16),
+                        ),
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20,l=5,r=5,t=40),
