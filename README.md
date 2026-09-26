@@ -1,36 +1,48 @@
 # 🧬 Titan Bioinformatics Suite
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-brightgreen)
-![Version](https://img.shields.io/badge/Version-2.0.0-blue)
+![Version](https://img.shields.io/badge/Version-3.0.0-blue)
 ![Built By](https://img.shields.io/badge/Built_By-Shivay_Singh-red)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-≥1.37-ff4b4b)
+![Total Tools](https://img.shields.io/badge/Total_Tools-260_Tools-gold)
 
-### 🚀 Next-Generation Bioinformatics Platform for Everyone
-**Built by a 12-year-old Founder. Designed to make bioinformatics accessible on any device.**
+### 🚀 Next-Generation AI-Powered Multi-Domain Bioinformatics Platform
+**Built by a 12-year-old Founder. Designed to make bioinformatics and genomics accessible, intuitive, and interactive for students and researchers everywhere.**
 
 ---
 
 ## 🌍 About Titan Bioinformatics
 
-**Titan Bioinformatics** is a modern, mobile-first, and open-source bioinformatics platform built entirely in Python + Streamlit. It packages **50+ professional-grade tools** — DNA/RNA basics, protein analysis, genomics QC, alignment & phylogeny, and a molecular-biology lab pipeline — into a single zero-install web app.
-
-While legacy tools are often desktop-bound, laggy, or expensive, Titan is designed to run anywhere: in your browser, on a phone, in GitHub Codespaces, or deployed for free on Streamlit Community Cloud.
+**Titan Bioinformatics Suite (v3.0)** is an enterprise-grade, mobile-first, and open-source computational biology platform built in Python + Streamlit. It packages **260 specialized professional bioinformatics tools** across **15 biological domains** — from foundational DNA/RNA, protein biophysics, and phylogenetic alignment to agriculture, marine ecology, clinical precision oncology, metagenomics, epigenetics, synthetic biology, population dynamics, NCBI APIs, and Dr. Titan conversational AI copilots.
 
 ---
 
-## ✨ Highlights
+## ✨ Key Highlights
 
-- 📱 **Mobile-first UI** with a consistent dark "Titan" theme
-- 🧬 **50+ validated tools** spanning DNA, RNA, protein, alignment, phylogeny and the lab bench
-- 🔬 **Real algorithms** — Biopython-backed pairwise/MSA, UPGMA/NJ trees, Nearest-Neighbour Tm, codon adaptation index (CAI), CRISPR PAM scanning for SpCas9/SaCas9/Cas12a, BLAST-style seed-and-extend, Shannon entropy, Chaos Game Representation, etc.
-- 📊 **Interactive Plotly charts** everywhere (pie, bar, heatmap, scatter, dendrograms)
-- 📥 **Working CSV/FASTA downloads** on analysis pages
-- 🏗️ **Clean architecture** — shared `titan_utils/` package for sequences, validation, I/O and UI
-- 🧪 **Fully tested** — every one of the 52 pages is rendered *and every button is clicked* in CI (`streamlit.testing`), so a broken tool fails the build instead of failing in front of a user
-- 🆓 **Free & open source** (see LICENSE)
-
-> ⚠️ Educational note: the **GO Enrichment** and **KEGG Pathway Mapper** pages currently ship with *curated demo data* to illustrate the visualisations; they do not yet call live external APIs (QuickGO, KEGG REST, Ensembl). Calling out to these services is on the roadmap.
+- 🎛️ **Master Tool Palette & Hub (`00_Tool_Palette_and_Hub.py`)**: Search, filter, and run any of the 260 tools interactively with live input controls, Plotly charts, dataframes, and instant CSV/JSON exports.
+- 🎓 **Dr. Titan AI Student Tutor & Concept Lab**: Interactive teaching assistant explaining complex biology concepts step-by-step with real-world analogies (ELI5), multilingual instruction (English, Hindi, Hinglish), interactive practice quizzes, and wet-lab guidance.
+- 🧬 **260 Validated Tools Across 15 Domains**:
+  1. **Master Tool Palette Hub** (Global search & execution matrix)
+  2. **DNA / RNA Basics** (Tools 1–11: conversions, GC & Tm, reverse complement, ORFs, motifs, restriction cuts)
+  3. **Protein Analysis** (Tools 12–17: 6-frame translation, molecular weight, pI, hydropathy, in-silico mutagenesis)
+  4. **Genomics & QC** (Tools 18–33: FASTA/FASTQ QC, k-mers, CpG islands, CGR fractal, VCF, FastQC, GO, repeats)
+  5. **Alignment & Phylogeny** (Tools 34–44: NW/SW/overlap pairwise, MSA, ClustalW, UPGMA/NJ trees, logos, dot plots)
+  6. **Lab & Pipeline** (Tools 45–52: CRISPR-Cas9 gRNA, PCR length, oligo Tm, melting curves, BLAST, codon optimizer)
+  7. **Agriculture & Plant Genomics** (Tools 53–72: Chloroplast IR junctions, CBF/DREB stress, NBS-LRR R-genes, crop SSR/SNPs)
+  8. **Marine & Extremophile Genomics** (Tools 73–92: Coral bleaching, hydrothermal vent SoxB, AFGP antifreeze, piezophiles, Lux operon)
+  9. **Clinical Genomics & Precision Medicine** (Tools 93–112: ACMG tiering, cancer hotspots, PGx star-alleles, HLA affinity, ctDNA)
+  10. **Metagenomics & Microbiome** (Tools 113–132: 16S in-silico PCR, alpha/beta diversity PCoA, F/B ratio, CARD resistomes)
+  11. **Structural Biology & Biophysics** (Tools 133–152: Ramachandran dihedrals, B-factors, salt bridges, AlphaFold pLDDT, docking ΔG)
+  12. **Epigenetics & Epitranscriptomics** (Tools 153–172: Bisulfite methylation, ATAC-seq FRiP, m6A motifs, alternative splicing PSI)
+  13. **Synthetic Biology & Metabolic Engineering** (Tools 173–192: Gibson assembly, Golden Gate fidelity, RBS kinetics, toggle switches)
+  14. **Population Genetics & Evolutionary Dynamics** (Tools 193–212: Hardy-Weinberg exact, LD matrix, Wright-Fisher drift, Fst, Tajima's D)
+  15. **NCBI & Global Bioinformatics APIs** (Tools 213–232: GenBank, RefSeq, Entrez Gene, Taxonomy, dbSNP, PubMed, ClinVar, UniProt, KEGG)
+  16. **Dr. Titan AI & Bio-Copilot** (Tools 233–260: Multilingual sequence explainer, protocol generator, cloning solver, buffer calculator)
+- 📊 **Interactive Plotly Visualizations Everywhere**: Dynamic Manhattan plots, volcano plots, contact maps, PCoA scatters, phylogenetic trees, and ROC/FSC curves.
+- 📥 **Zero Paywalls**: 100% free CSV and JSON downloads across all tools.
+- 🏗️ **Modular Central Registry**: `titan_utils/registry.py` indexes all 260 tools with parameter typing, defaults, and category metadata; `titan_tools/runner.py` powers universal execution.
+- 🧪 **Fully Tested CI**: Renders all 63 pages and clicks every button in `streamlit.testing` AppTest; passes pyflakes static analysis.
 
 ---
 
