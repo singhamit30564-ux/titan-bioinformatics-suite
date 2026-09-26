@@ -108,3 +108,67 @@ def test_no_paywall_gating():
         txt = p.read_text()
         assert "Explorer Plan Required" not in txt, f"{p.name} still has paywall gating"
         assert "🔒 Explorer Plan" not in txt, f"{p.name} still has locked CSV button"
+
+
+def test_master_registry_completeness():
+    from titan_utils.registry import get_all_tools, get_tool_by_id, search_tools, CATEGORIES
+    tools = get_all_tools()
+    assert len(tools) == 260, f"expected 260 tools in registry, got {len(tools)}"
+    assert len(CATEGORIES) == 15, f"expected 15 categories, got {len(CATEGORIES)}"
+    
+    # Check bounds
+    assert get_tool_by_id(1) is not None
+    assert get_tool_by_id(260) is not None
+    assert get_tool_by_id(261) is None
+
+    # Search check
+    crispr_hits = search_tools("CRISPR")
+    assert len(crispr_hits) >= 3
+
+
+def test_dr_titan_ai_student_tutor():
+    from titan_tools.student_tutor import tool_dr_titan_ai_student_tutor
+    res_en = tool_dr_titan_ai_student_tutor(topic="Central Dogma", language="English")
+    assert "Central Dogma" in res_en.title
+    assert res_en.dataframe is not None
+    assert len(res_en.metrics) >= 3
+
+    res_hi = tool_dr_titan_ai_student_tutor(topic="CRISPR-Cas9", language="Hinglish")
+    assert res_hi.figure is not None
+    assert len(res_hi.notes) >= 3
+
+
+def test_domain_representative_tools_execute():
+    import titan_tools as tt
+    
+    # Sample from each domain
+    agri_res = tt.tool_chloroplast_ir_junction_mapper()
+    assert "Chloroplast" in agri_res.title
+    
+    marine_res = tt.tool_coral_bleaching_stress()
+    assert "Coral" in marine_res.title
+
+    clin_res = tt.tool_acmg_pathogenicity_classifier()
+    assert "ACMG" in clin_res.title
+
+    meta_res = tt.tool_alpha_diversity_estimator()
+    assert "Alpha Diversity" in meta_res.title
+
+    struct_res = tt.tool_ramachandran_validator()
+    assert "Ramachandran" in struct_res.title
+
+    epi_res = tt.tool_bisulfite_conversion_rate()
+    assert "Bisulfite" in epi_res.title
+
+    syn_res = tt.tool_golden_gate_fidelity()
+    assert "Golden Gate" in syn_res.title
+
+    pop_res = tt.tool_hardy_weinberg_exact()
+    assert "Hardy-Weinberg" in pop_res.title
+
+    ncbi_res = tt.tool_ncbi_nucleotide_fetch()
+    assert "NCBI" in ncbi_res.title
+
+    copilot_res = tt.tool_dr_titan_eli5_generator()
+    assert "Explain Like I'm 5" in copilot_res.title or "ELI5" in copilot_res.title
+
