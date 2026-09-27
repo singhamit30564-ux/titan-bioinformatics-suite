@@ -2,7 +2,9 @@
 
 Search, filter, inspect, and execute any of the 260 bioinformatics tools
 with live interactive execution, Plotly figures, CSV/JSON exports, and
-Dr. Titan's AI Student Tutor & Learning Lab.
+Dr. Titan's AI Student Tutor & Learning Lab. Also hosts the 3D Molecular
+Viewer, Titan Flow / Arena / ELN studio shortcuts, and the Zero Data
+Retention session sanitizer.
 """
 from __future__ import annotations
 
@@ -13,6 +15,8 @@ import streamlit as st
 from titan_tools.common import titan_plot_layout, TITAN_TEAL, TITAN_GOLD, TITAN_CORAL, TITAN_BLUE
 from titan_tools.runner import render_tool_runner
 from titan_tools.student_tutor import tool_dr_titan_ai_student_tutor
+from titan_utils.mol3d import MOL3D_PRESETS, MOL3D_STYLES, list_presets, render_mol3d_viewer
+from titan_utils.privacy import ZDR_POLICY, memory_snapshot, sanitize_session_memory
 from titan_utils.registry import (
     CATEGORIES,
     get_all_tools,
@@ -27,7 +31,9 @@ titan_title(
     "Unified interactive search and execution engine across all 260 specialized bioinformatics tools.",
 )
 
-tab_hub, tab_tutor, tab_stats = st.tabs(["🔍 Search & Execute Tools", "🎓 Dr. Titan AI Student Tutor", "📈 Suite Analytics"])
+tab_hub, tab_tutor, tab_studio, tab_stats = st.tabs(
+    ["🔍 Search & Execute Tools", "🎓 Dr. Titan AI Student Tutor", "🚀 Studio · 3D · Privacy", "📈 Suite Analytics"]
+)
 
 with tab_hub:
     c_search, c_cat = st.columns([2, 1])
@@ -115,6 +121,60 @@ with tab_tutor:
         with st.expander("📖 Detailed Teaching Notes & Dr. Titan Insights", expanded=True):
             for note in tutor_result.notes:
                 st.markdown(note)
+
+with tab_studio:
+    st.markdown("### 🚀 Titan Studio — Workflows, 3D Viewer & Zero Data Retention")
+    st.write(
+        "The studio consoles extend the 260-tool suite with automated workflow packaging "
+        "(Titan Flow), a gamified practice arena, high-throughput batch archives, and a "
+        "GLP electronic lab notebook — all under 100% ephemeral in-RAM execution."
+    )
+
+    # Quick links to the studio consoles.
+    studio_pages = [
+        ("🚀", "Titan Flow Pipeline Builder", "Multi-tool workflows → consolidated .ZIP (PDF + CSV/TSV + manifest.json)", "pages/75_Titan_Flow_Pipeline_Builder.py"),
+        ("🏆", "Bio-Olympiad & Practice Arena", "Multi-tier Rosalind challenges, instant grading, XP, Groq Llama-8B hints", "pages/76_Bio_Olympiad_and_Practice_Arena.py"),
+        ("🧬", "Batch Processor & Archive", "Multi-FASTA batch runs with consolidated ZIP archives", "pages/77_Batch_Processor_and_Archive.py"),
+        ("📓", "Electronic Lab Notebook & Audit", "Session run tracking, SHA-256 digests, 1-click GLP exports", "pages/78_Electronic_Lab_Notebook_Audit.py"),
+    ]
+    for i in range(0, len(studio_pages), 2):
+        c1, c2 = st.columns(2)
+        for col, (emoji, name, desc, path) in zip((c1, c2), studio_pages[i:i + 2]):
+            with col:
+                with st.container(border=True):
+                    st.markdown(f"#### {emoji} {name}")
+                    st.caption(desc)
+                    try:
+                        st.page_link(path, label=f"Open {name} →", icon=emoji)
+                    except Exception:
+                        st.caption(f"➡️ Open **{name}** from the sidebar (🚀 16 · Flow · Arena · ELN).")
+
+    st.markdown("---")
+    st.markdown("#### 🧬 In-Browser 3D Molecular Viewer (3Dmol.js WebGL)")
+    c_preset, c_style = st.columns([2, 1])
+    with c_preset:
+        preset_map = {f"{p['name']} — {p['citation']}": pid for pid, p in
+                      ((pid, p.as_dict()) for pid, p in MOL3D_PRESETS.items())}
+        preset_label = st.selectbox("Preset structure:", options=list(preset_map.keys()), key="hub_mol3d_preset")
+    with c_style:
+        mol_style = st.selectbox("Render style:", options=list(MOL3D_STYLES), key="hub_mol3d_style")
+    preset = MOL3D_PRESETS[preset_map[preset_label]]
+    st.caption(f"ℹ️ {preset.description} · {preset.residue_count} residues · rendered client-side only (ZDR).")
+    render_mol3d_viewer(preset.pdb, style=mol_style, preset_id=preset.id, height=420)
+    st.dataframe(pd.DataFrame(list_presets()), use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+    st.markdown("#### 🛡️ Zero Data Retention — 1-Click Session Memory Sanitizer")
+    snap = memory_snapshot()
+    s1, s2, s3 = st.columns(3)
+    s1.metric("Live Ephemeral Vaults", str(snap["live_vaults"]))
+    s2.metric("Genomic Bytes in RAM", f"{snap['bytes_in_ram']:,}")
+    s3.metric("Disk Retention", "0 bytes")
+    if st.button("🧽 Sanitize Session Memory Now", type="primary", use_container_width=True, key="hub_sanitize_btn"):
+        report = sanitize_session_memory(st.session_state)
+        st.success(f"🧽 {report.summary()}")
+        st.json(report.as_dict())
+    st.caption(ZDR_POLICY)
 
 with tab_stats:
     st.markdown("### 📈 Titan Bioinformatics Suite Composition (260 Tools)")

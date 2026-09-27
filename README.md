@@ -189,3 +189,29 @@ pytest tests/test_titan_suite.py -v   # 11 passed
 ```
 
 See `titan_utils/__init__.py` for the public API.
+
+---
+
+## 🧩 Feature Expansion — ZDR Privacy, 3D Viewer, Titan Flow, Arena, ELN (2026-09)
+
+A major capability expansion across eight pillars, all wired into the runner, hub, and navigation:
+
+1. **Zero Data Retention architecture** — `titan_utils/privacy.py` enforces 100% ephemeral in-RAM execution for all genomic data (`EphemeralVault` byte buffers with byte-level scrubbing, `guard_disk_write` persistence guard), SHA-256 provenance hashing (`provenance_record`, chained manifests), and a 1-click session memory sanitizer (`sanitize_session_memory`).
+2. **In-browser 3D molecular viewer** — `titan_utils/mol3d.py` renders preset structures (CRISPR-Cas9 5AXW-inspired, Hemoglobin 1HHO-inspired, Insulin 4INS-inspired) in a 3Dmol.js WebGL canvas with Cartoon / Stick / Sphere / Surface styles, fully client-side.
+3. **Titan Flow workflow builder** — `pages/75_Titan_Flow_Pipeline_Builder.py` + `titan_utils/titan_flow.py` chain 5-tool pipelines (Central Dogma, Crop Resilience, Clinical Oncology, Metagenomics) with consolidated `.ZIP` packages: `report.pdf` + `results.csv`/`.tsv` + `manifest.json` (SHA-256 per file) + per-step tables.
+4. **Bio-Olympiad & Rosalind practice arena** — `pages/76_Bio_Olympiad_and_Practice_Arena.py` + `titan_utils/olympiad.py`: 12 graded challenges across Foundational / Intermediate / Olympiad tiers, instant algorithmic grading, XP progression, and Groq Llama-8B hints (offline fallback included).
+5. **High-throughput batch processor** — `pages/77_Batch_Processor_and_Archive.py` + `titan_utils/batch_processor.py`: multi-FASTA batch runs with 9 analyses per record and consolidated ZIP archives (CSV + TSV + summary JSON + FASTA + manifest).
+6. **Electronic lab notebook & GLP audit trail** — `pages/78_Electronic_Lab_Notebook_Audit.py` + `titan_utils/eln.py`: session run tracking with SHA-256 sequence digests, ALCOA+ audit tables, 1-click Markdown/PDF GLP compliance exports.
+7. **Multi-format export center & PDF generation** — `titan_utils/export.py` (CSV, TSV, JSON, FASTA, FASTQ byte encoders) + `titan_utils/pdf_generator.py` (ReportLab scientific layout: title block, sectioned tables, monospace sequence blocks, running headers/footers).
+8. **Publication Studio & Voice of Dr. Titan** — `titan_utils/publication_studio.py` (Nature / Science / Cell journal styling + Okabe-Ito colorblind-safe palettes for Plotly & matplotlib) + `titan_utils/voice_assistant.py` (client-side Web Speech API narration — no audio ever uploaded or stored).
+
+**Wiring:** `titan_tools/runner.py` now renders an Advanced Export Center on every tool (TSV/JSON/FASTA/PDF downloads, input/output SHA-256 provenance, 1-click ELN logging, narration); `pages/00_Tool_Palette_and_Hub.py` gains a Studio tab (3D viewer, ZDR sanitizer, console shortcuts); `Home.py` adds the `🚀 16 · Flow · Arena · ELN` navigation group.
+
+**Validation:**
+
+```bash
+python -m py_compile pages/*.py Home.py titan_utils/*.py
+pytest tests/ -q   # 208 passed, 1 skipped (page without buttons)
+```
+
+New test coverage in `tests/test_feature_expansion.py` (48 tests) spans the ZDR guarantees, viewer presets, flow packaging, grader correctness (incl. canonical Rosalind answers), batch archives, GLP exports, publication palettes, and navigation wiring.

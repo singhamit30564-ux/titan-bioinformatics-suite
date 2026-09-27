@@ -136,6 +136,12 @@ cat14_ncbi = [
 cat15_dr_titan = [
     "74_Dr_Titan_AI_Bio_Copilot.py",
 ]
+cat16_studio = [
+    "75_Titan_Flow_Pipeline_Builder.py",
+    "76_Bio_Olympiad_and_Practice_Arena.py",
+    "77_Batch_Processor_and_Archive.py",
+    "78_Electronic_Lab_Notebook_Audit.py",
+]
 
 
 def _render_home():
@@ -145,7 +151,7 @@ def _render_home():
         st.caption("Next-Gen Multi-Domain Bioinformatics Platform")
         st.markdown("---")
         st.info("Built by **Shivay Singh**\n\nAge 12 · Future CEO")
-        st.caption("v3.0 — 260 Tools Master Suite & AI Student Tutor")
+        st.caption("v3.1 — 260 Tools · Titan Flow · Practice Arena · ELN · Zero Data Retention")
 
     # Hero
     st.title("🧬 TITAN BIOINFORMATICS SUITE")
@@ -158,8 +164,8 @@ def _render_home():
         [
             ("⚡", "260 Tools", "Comprehensive multi-domain analytical depth"),
             ("🎓", "AI Student Tutor", "ELI5, Hindi/Hinglish, and interactive quizzes"),
-            ("🔒", "100% Free & Open", "No subscriptions, paywalls, or feature locks"),
-            ("🚀", "Interactive Consoles", "Plotly visuals, CSV/JSON exports, and Dr. Titan tips"),
+            ("🛡️", "Zero Data Retention", "100% ephemeral in-RAM genomics with SHA-256 provenance"),
+            ("🚀", "Studio Consoles", "Titan Flow workflows, 3D viewer, practice arena, GLP ELN"),
         ],
     ):
         with col:
@@ -194,6 +200,7 @@ def _render_home():
         ("👥", "13 · Population & Evolution", "Hardy-Weinberg test, LD matrix, Wright-Fisher drift, Fst subdivision, Tajima's D, archaic ABBA-BABA.", "20 tools (193–212)"),
         ("🌐", "14 · NCBI & Global APIs", "GenBank nucleotide, RefSeq protein, Entrez Gene, Taxonomy, dbSNP, PubMed, ClinVar, UniProt, KEGG.", "20 tools (213–232)"),
         ("🤖", "15 · Dr. Titan AI Copilot", "Multilingual explainer, protocol generator, cloning solver, student tutor, buffer calculator, audit.", "28 tools (233–260)"),
+        ("🚀", "16 · Titan Flow, Arena & ELN", "Workflow builder with ZIP packages, bio-olympiad practice arena, batch processor archive, GLP lab notebook, 3D viewer, ZDR privacy.", "4 studio consoles"),
     ]
     for i in range(0, len(categories), 2):
         c1, c2 = st.columns(2)
@@ -244,12 +251,13 @@ try:
             "👥 13 · Population & Evolution": [_page(f) for f in cat13_population],
             "🌐 14 · NCBI & Global APIs":   [_page(f) for f in cat14_ncbi],
             "🤖 15 · Dr. Titan AI Copilot": [_page(f) for f in cat15_dr_titan],
+            "🚀 16 · Flow · Arena · ELN":   [_page(f) for f in cat16_studio],
         }
     )
     nav.run()
 except Exception:  # pragma: no cover — older Streamlit
     _render_home()
     st.markdown("### Quick Links")
-    for group in (cat0_hub, cat1_dna, cat2_prot, cat3_genome, cat4_align, cat5_lab, cat6_agri, cat7_marine, cat8_clinical, cat9_metagenomics, cat10_structural, cat11_epigenetics, cat12_synthetic, cat13_population, cat14_ncbi, cat15_dr_titan):
+    for group in (cat0_hub, cat1_dna, cat2_prot, cat3_genome, cat4_align, cat5_lab, cat6_agri, cat7_marine, cat8_clinical, cat9_metagenomics, cat10_structural, cat11_epigenetics, cat12_synthetic, cat13_population, cat14_ncbi, cat15_dr_titan, cat16_studio):
         for fname in group[:2]:
             st.page_link(str(PAGES_DIR / fname))
