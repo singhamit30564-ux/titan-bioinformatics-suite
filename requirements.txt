@@ -15,3 +15,6 @@ numpy>=1.26.0
 # Visualization
 matplotlib>=3.8.0
 plotly>=5.18.0
+
+# Scientific PDF report generation (ReportLab)
+reportlab>=4.0.0
