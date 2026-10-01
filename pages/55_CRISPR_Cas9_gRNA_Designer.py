@@ -6,6 +6,7 @@ import plotly.express as px
 import streamlit as st
 
 from titan_utils import clean_sequence, validate_dna
+from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
@@ -53,24 +54,25 @@ PAMS = {
     },
 }
 
-st.markdown("### 📥 Input Sequence")
+st.markdown(t("### 📥 Input Sequence"))
 target_seq = st.text_area(
-    "Enter Target DNA Sequence (5' → 3')",
+    t("Enter Target DNA Sequence (5' → 3')"),
     "ATGCGTACGTAGCTAGCTAGCATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGGGATCGATCG",
     height=150,
 )
-pam_type = st.radio(
-    "Select Cas protein / PAM type",
-    list(PAMS.keys()),
+pam_labels = {t(option): option for option in PAMS}
+pam_type = pam_labels[st.radio(
+    t("Select Cas protein / PAM type"),
+    list(pam_labels),
     horizontal=True,
-)
+)]
 
-if st.button("🎯 Design gRNAs", type="primary", use_container_width=True):
+if st.button(t("🎯 Design gRNAs"), type="primary", use_container_width=True):
     seq = clean_sequence(target_seq)
     seq_ok, err = validate_dna(seq, allow_iupac=False)
     # validate_dna returns a cleaned sequence AND an error message
     if err:
-        st.error(err)
+        st.error(t(err))
     else:
         cfg = PAMS[pam_type]
         grna_len = cfg["grna_len"]
@@ -78,10 +80,9 @@ if st.button("🎯 Design gRNAs", type="primary", use_container_width=True):
         pam_anchor = 0 if cfg["pam_side"] == "5prime" else grna_len
         required_len = grna_len + cfg["pam_len"]
         if len(seq) < required_len:
-            st.error(f"Sequence too short — need at least {required_len} bp for "
-                     f"gRNA + PAM ({cfg['pam']}).")
+            st.error(t("Sequence too short — need at least {length} bp for gRNA + PAM ({pam}).", length=required_len, pam=cfg['pam']))
         else:
-            with st.spinner("🧮 Scanning for PAM sites & extracting gRNAs..."):
+            with st.spinner(t("🧮 Scanning for PAM sites & extracting gRNAs...")):
                 grnas = []
                 total_scan = len(seq) - required_len + 1
                 for i in range(total_scan):
@@ -120,56 +121,59 @@ if st.button("🎯 Design gRNAs", type="primary", use_container_width=True):
                     })
 
             if not grnas:
-                st.warning("⚠️ No valid gRNA targets found with the selected PAM in this sequence.")
+                st.warning(t("⚠️ No valid gRNA targets found with the selected PAM in this sequence."))
             else:
                 df = pd.DataFrame(grnas)
-                st.markdown(f"### 🎯 Found {len(df)} potential gRNA targets")
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.markdown(t("### 🎯 Found {count} potential gRNA targets", count=len(df)))
+                df_display = df.rename(columns=lambda column: t(column)).copy()
+                risk_column = t("Risk")
+                df_display[risk_column] = df_display[risk_column].map(t)
+                st.dataframe(df_display, use_container_width=True, hide_index=True)
 
-                st.markdown("### 📊 gRNA GC-content distribution")
+                st.markdown(t("### 📊 gRNA GC-content distribution"))
                 fig = px.histogram(
                     df, x="GC %", nbins=12,
                     color_discrete_sequence=["#d4af37"],
-                    title=f"Distribution of gRNA GC% — {pam_type}",
+                    title=t("Distribution of gRNA GC% — {pam}", pam=pam_type),
                 )
                 fig.add_vrect(
                     x0=40, x1=60, fillcolor="#66fcf1", opacity=0.2,
-                    line_width=0, annotation_text="Ideal range (40–60%)",
+                    line_width=0, annotation_text=t("Ideal range (40–60%)"),
                 )
                 fig.update_layout(
                     template="plotly_dark",
                     paper_bgcolor="#0a0e17",
                     plot_bgcolor="#1a1f2e",
                     font=dict(color="#e0e0e0"),
-                    xaxis_title="GC Content (%)",
-                    yaxis_title="Number of gRNAs",
+                    xaxis_title=t("GC Content (%)"),
+                    yaxis_title=t("Number of gRNAs"),
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                st.markdown("### 📈 Summary statistics")
+                st.markdown(t("### 📈 Summary statistics"))
                 low_risk = (df["Risk"] == "Low").sum()
                 c1, c2, c3 = st.columns(3)
-                c1.metric("Total gRNAs", len(df))
-                c2.metric("Average GC%", f"{df['GC %'].mean():.1f}%")
-                c3.metric("Low-risk", int(low_risk))
+                c1.metric(t("Total gRNAs"), len(df))
+                c2.metric(t("Average GC%"), f"{df['GC %'].mean():.1f}%")
+                c3.metric(t("Low-risk"), int(low_risk))
 
                 smart_lock(csv_data=df_to_csv_bytes(df), csv_filename="crispr_grnas.csv")
 
 with st.sidebar:
-    st.markdown("### ℹ️ How to use")
-    st.markdown(
-        "1. Paste your DNA sequence (5' → 3')  \n"
-        "2. Select a Cas protein  \n"
-        "3. Click **Design gRNAs**  \n"
-        "4. Pick Low-risk gRNAs with 40–60% GC  \n"
-        "5. Download candidates as CSV."
-    )
-    st.markdown("### 🎯 PAM sequences")
-    st.markdown(
-        "- **SpCas9**: NGG (3' of spacer)  \n"
-        "- **SaCas9**: NNGRRT (3' of spacer)  \n"
-        "- **Cas12a**: TTTV (5' of spacer)"
-    )
+    st.markdown(t("### ℹ️ How to use"))
+    st.markdown("\n".join([
+        t("1. Paste your DNA sequence (5' → 3')"),
+        t("2. Select a Cas protein"),
+        t("3. Click **Design gRNAs**"),
+        t("4. Pick Low-risk gRNAs with 40–60% GC"),
+        t("5. Download candidates as CSV."),
+    ]))
+    st.markdown(t("### 🎯 PAM sequences"))
+    st.markdown("\n".join([
+        t("- **SpCas9**: NGG (3' of spacer)"),
+        t("- **SaCas9**: NNGRRT (3' of spacer)"),
+        t("- **Cas12a**: TTTV (5' of spacer)"),
+    ]))
 
 dr_titan_tip(
     "SpCas9 gRNAs are 20 nt long, immediately followed by an NGG PAM. "

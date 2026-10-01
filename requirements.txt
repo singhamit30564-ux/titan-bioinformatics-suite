@@ -5,6 +5,10 @@
 # Core web framework
 streamlit>=1.37.0
 
+# Optional developer API (separate lightweight ASGI process)
+fastapi>=0.110.0
+uvicorn>=0.29.0
+
 # Bioinformatics core
 biopython>=1.83
 

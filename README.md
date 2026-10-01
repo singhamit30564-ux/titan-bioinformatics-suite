@@ -98,6 +98,22 @@ streamlit run Home.py
 Then open the URL printed by Streamlit (defaults to `http://localhost:8501`).
 The app will also work instantly inside GitHub Codespaces — just open the repo in a Codespace and port-forward 8501.
 
+## 🌐 Hindi UI, Classroom Quiz & Optional Tool API
+
+- Use the **English / हिंदी** selector in the sidebar. Home, every sidebar navigation title, and ten popular tool pages have Hindi copy; other tool bodies remain in English with a translation-coming note.
+- Open **17 · Classroom Quiz** from the sidebar to host a five-question classroom quiz. Built-in topics include CRISPR, DNA, GC Content, PCR, and Central Dogma. Students join without accounts using a four-character code. The room coordinator is bounded, in-process RAM (six-hour expiry; no database or external service) so separate phones can see a live leaderboard. Keep the Streamlit app on one worker/process for shared rooms. Student nickname and room code are stored in that browser's localStorage; answers stay ephemeral.
+- The optional API is a separate FastAPI process:
+
+  ```bash
+  python -m titan_utils.api --host 0.0.0.0 --port 8000
+  curl 'http://localhost:8000/api/run?tool=gc_content&seq=ATGC'
+  curl -X POST 'http://localhost:8000/api/run' \
+    -H 'Content-Type: application/json' \
+    -d '{"tool":"gc_content","seq":"ATGC"}'
+  ```
+
+  Supported IDs are `gc_content`, `dna_complement`, `dna_rna_conversion`, `crispr_designer`, `orf_finder`, `dna_to_protein`, `nucleotide_frequency`, `kmer_frequency`, `hamming_distance`, and `motif_finder`. `POST /api/run` accepts JSON (recommended for sequence inputs so they do not appear in URL history). Responses include SHA-256 input/output provenance, `Cache-Control: no-store`, and educational-use labeling. The optional API applies a 60-request/minute/IP in-RAM limit; its launcher disables request access logs. For strict ZDR deployments, also disable sequence logging in upstream proxies and prefer POST (GET query strings can be retained by browsers or intermediaries).
+
 ---
 
 ## 📦 Deploying
