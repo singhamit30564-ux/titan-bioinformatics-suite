@@ -11,6 +11,7 @@ import io
 # validation additionally requires a multiple-of-3 length — so the shared one is
 # not imported here (importing it would be shadowed anyway).
 from titan_utils import clean_sequence, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
@@ -114,22 +115,23 @@ def optimize_sequence(seq, freq_table):
 
 # --- UI ---
 titan_title("🧬", "🧬 Module 5.10: Codon Usage Optimizer", "Refactored with Titan validation & export.")
-st.markdown("Optimize DNA sequences for maximum heterologous expression using organism-specific codon bias.")
+st.markdown(t("Optimize DNA sequences for maximum heterologous expression using organism-specific codon bias."))
 st.markdown("---")
 
 # INPUTS
-dna_input = st.text_area("Enter Coding DNA Sequence (CDS, 5'→3')", height=120,
+dna_input = st.text_area(t("Enter Coding DNA Sequence (CDS, 5'→3')"), height=120,
                          value="ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG",
                          placeholder="e.g., ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG")
-organism = st.selectbox("🌍 Target Organism", list(CODON_FREQS.keys()))
-show_advanced = st.checkbox("📊 Show Detailed Codon Comparison")
+organism_labels = {t(name): name for name in CODON_FREQS}
+organism = organism_labels[st.selectbox(t("🌍 Target Organism"), list(organism_labels))]
+show_advanced = st.checkbox(t("📊 Show Detailed Codon Comparison"))
 
-if st.button("🚀 Optimize & Analyze", type="primary", use_container_width=True):
+if st.button(t("🚀 Optimize & Analyze"), type="primary", use_container_width=True):
     seq, error = validate_dna(dna_input)
     if error:
-        st.error(error)
+        st.error(t(error))
     else:
-        with st.spinner("🧮 Calculating CAI, GC%, and optimizing codons..."):
+        with st.spinner(t("🧮 Calculating CAI, GC%, and optimizing codons...")):
             org_data = CODON_FREQS[organism]
             
             # Metrics
@@ -153,57 +155,76 @@ if st.button("🚀 Optimize & Analyze", type="primary", use_container_width=True
             comp_df = comp_df.sort_values('Original Count', ascending=False)
             
             # DISPLAY
-            st.markdown("### 📈 Optimization Results")
+            st.markdown(t("### 📈 Optimization Results"))
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Original CAI", f"{cai_orig:.3f}")
-            m2.metric("Optimized CAI", f"{cai_opt:.3f}", delta=f"+{cai_opt-cai_orig:.3f}")
-            m3.metric("Original GC%", f"{gc_orig:.1f}%")
-            m4.metric("Optimized GC%", f"{gc_opt:.1f}%")
+            m1.metric(t("Original CAI"), f"{cai_orig:.3f}")
+            m2.metric(t("Optimized CAI"), f"{cai_opt:.3f}", delta=f"+{cai_opt-cai_orig:.3f}")
+            m3.metric(t("Original GC%"), f"{gc_orig:.1f}%")
+            m4.metric(t("Optimized GC%"), f"{gc_opt:.1f}%")
             
-            st.success(f"✅ CAI improved by **{((cai_opt-cai_orig)/cai_orig)*100:.1f}%** for {organism}")
+            st.success(t(
+                "✅ CAI improved by **{percent}%** for {organism}",
+                percent=f"{((cai_opt-cai_orig)/cai_orig)*100:.1f}",
+                organism=t(organism),
+            ))
             
             # VISUALIZATION
             if show_advanced:
-                st.markdown("### 📊 Codon Usage Shift")
-                fig = px.bar(comp_df, x='Codon', y=['Original Count', 'Optimized Count'],
-                             barmode='group', title="Original vs Optimized Codon Frequencies",
-                             color_discrete_sequence=['#66fcf1', '#d4af37'])
-                fig.update_layout(template="plotly_dark", paper_bgcolor='#0a0e17', plot_bgcolor='#1a1f2e',
-                                  font=dict(color='#e0e0e0'), xaxis_title="Codon", yaxis_title="Frequency")
+                st.markdown(t("### 📊 Codon Usage Shift"))
+                display_columns = {column: t(column) for column in comp_df.columns}
+                display_df = comp_df.rename(columns=display_columns)
+                codon_column = t("Codon")
+                original_count_column = t("Original Count")
+                optimized_count_column = t("Optimized Count")
+                fig = px.bar(
+                    display_df,
+                    x=codon_column,
+                    y=[original_count_column, optimized_count_column],
+                    barmode='group',
+                    title=t("Original vs Optimized Codon Frequencies"),
+                    color_discrete_sequence=['#66fcf1', '#d4af37'],
+                )
+                fig.update_layout(
+                    template="plotly_dark", paper_bgcolor='#0a0e17', plot_bgcolor='#1a1f2e',
+                    font=dict(color='#e0e0e0'), xaxis_title=codon_column, yaxis_title=t("Frequency"),
+                )
                 st.plotly_chart(fig, use_container_width=True)
-                
-                st.dataframe(comp_df.style.highlight_max(subset=['Optimized Count'], color='#66fcf133'), use_container_width=True)
+
+                st.dataframe(
+                    display_df.style.highlight_max(subset=[optimized_count_column], color='#66fcf133'),
+                    use_container_width=True,
+                )
             
             # SEQUENCE OUTPUT
-            st.markdown("### 🧬 Optimized Sequence")
+            st.markdown(t("### 🧬 Optimized Sequence"))
             st.code(optimized_seq, language="dna")
             
             # EXPORT
             st.markdown("---")
-            st.markdown("### 📥 Export Results")
+            st.markdown(t("### 📥 Export Results"))
             col1, col2 = st.columns(2)
             
             csv = comp_df.to_csv(index=False).encode('utf-8')
-            col1.download_button("📄 Download Codon Table (CSV)", data=csv, file_name="codon_optimization.csv", mime="text/csv", use_container_width=True)
+            col1.download_button(t("📄 Download Codon Table (CSV)"), data=csv, file_name="codon_optimization.csv", mime="text/csv", use_container_width=True)
             
             fasta = f">Optimized_CDS_{organism.replace(' ','_')}\n{optimized_seq}\n"
-            col2.download_button("🧬 Download Optimized FASTA", data=fasta, file_name="optimized_sequence.fasta", mime="text/plain", use_container_width=True)
+            col2.download_button(t("🧬 Download Optimized FASTA"), data=fasta, file_name="optimized_sequence.fasta", mime="text/plain", use_container_width=True)
             
-            st.info("💡 **Dr. Titan's Tip:** CAI > 0.8 indicates excellent adaptation to the host's tRNA pool. Avoid optimizing regulatory motifs (Kozak, Shine-Dalgarno) or restriction sites unless explicitly required!")
+            st.info(t("💡 **Dr. Titan's Tip:** CAI > 0.8 indicates excellent adaptation to the host's tRNA pool. Avoid optimizing regulatory motifs (Kozak, Shine-Dalgarno) or restriction sites unless explicitly required!"))
 
 # SIDEBAR
 with st.sidebar:
-    st.markdown("### ℹ️ How It Works")
-    st.markdown("""
-    1. **Paste CDS** (must be multiple of 3)
-    2. **Select organism** to load its codon bias table
-    3. **Algorithm** replaces rare codons with host-preferred synonyms
-    4. **CAI** (Codon Adaptation Index) measures adaptation quality
-    5. **Export** CSV/FASTA for cloning or synthesis
-    """)
-    st.markdown("### 🎯 Target CAI Values")
-    st.markdown("""
-    - **< 0.5**: Poor adaptation
-    - **0.5–0.8**: Moderate
-    - **> 0.8**: Excellent for high expression
-    """)
+    st.markdown(t("### ℹ️ How It Works"))
+    st.markdown("\n".join([
+        t("1. **Paste CDS** (must be multiple of 3)"),
+        t("2. **Select organism** to load its codon bias table"),
+        t("3. **Algorithm** replaces rare codons with host-preferred synonyms"),
+        t("4. **CAI** (Codon Adaptation Index) measures adaptation quality"),
+        t("5. **Export** CSV/FASTA for cloning or synthesis"),
+    ]))
+    st.markdown(t("### 🎯 Target CAI Values"))
+    st.markdown("\n".join([
+        t("- **< 0.5**: Poor adaptation"),
+        t("- **0.5–0.8**: Moderate"),
+        t("- **> 0.8**: Excellent for high expression"),
+    ]))

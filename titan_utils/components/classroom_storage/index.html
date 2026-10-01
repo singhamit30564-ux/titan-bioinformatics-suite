@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Titan classroom local profile</title>
+  <style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style>
+</head>
+<body>
+<script>
+(() => {
+  let initialized = false;
+  let lastProfile = "";
+
+  function post(type, payload) {
+    window.parent.postMessage(
+      {isStreamlitMessage: true, type, ...payload},
+      "*"
+    );
+  }
+
+  function safeProfile(value) {
+    const profile = value && typeof value === "object" ? value : {};
+    return {
+      name: String(profile.name || "").slice(0, 32),
+      code: String(profile.code || "").toUpperCase().replace(/[^A-Z2-9]/g, "").slice(0, 4),
+    };
+  }
+
+  function onRender(data) {
+    if (!data || data.type !== "streamlit:render") return;
+    const args = data.args || {};
+    const storageKey = String(args.storage_key || "titan_classroom_profile_v1");
+    let stored = {};
+    try {
+      stored = safeProfile(JSON.parse(window.localStorage.getItem(storageKey) || "{}"));
+    } catch (_error) {
+      stored = {};
+    }
+
+    const incoming = safeProfile(args.profile || {});
+    if (incoming.name || incoming.code) {
+      stored = {
+        name: incoming.name || stored.name,
+        code: incoming.code || stored.code,
+      };
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(stored));
+      } catch (_error) {
+        // Private browsing or a disabled storage policy: session_state still works.
+      }
+    }
+
+    const serialized = JSON.stringify(stored);
+    if (!initialized) {
+      initialized = true;
+      let alreadyReturned = false;
+      try {
+        alreadyReturned = window.localStorage.getItem(storageKey + ":returned") === serialized;
+        if (!alreadyReturned) window.localStorage.setItem(storageKey + ":returned", serialized);
+      } catch (_error) {
+        alreadyReturned = lastProfile === serialized;
+      }
+      if (!alreadyReturned) {
+        lastProfile = serialized;
+        post("streamlit:setComponentValue", {value: stored, dataType: "json"});
+      }
+    }
+    post("streamlit:setFrameHeight", {height: 1});
+  }
+
+  window.addEventListener("message", (event) => onRender(event.data));
+  window.parent.postMessage(
+    {isStreamlitMessage: true, type: "streamlit:componentReady", apiVersion: 1},
+    "*"
+  );
+  window.parent.postMessage(
+    {isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: 1},
+    "*"
+  );
+})();
+</script>
+</body>
+</html>

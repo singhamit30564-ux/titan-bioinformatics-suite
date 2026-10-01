@@ -6,6 +6,7 @@ import streamlit as st
 from Bio.Seq import Seq
 
 from titan_utils import revcomp, validate_dna, gc_fraction_safe
+from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title, sequence_metrics_row
 
@@ -15,17 +16,17 @@ titan_title(
     "Generate the reverse complement and get a full statistical breakdown using validated Titan utilities.",
 )
 
-dna_input = st.text_area("Enter DNA Sequence (5' to 3'):", "ATGCGCTAGCTAGCTAGCTAGCTAGCATCGATCG", height=150, key="rev_comp_input")
+dna_input = st.text_area(t("Enter DNA Sequence (5' to 3'):"), "ATGCGCTAGCTAGCTAGCTAGCTAGCATCGATCG", height=150, key="rev_comp_input")
 
 col1, col2 = st.columns([3, 1])
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)
-    calculate_btn = st.button("🔄 Analyze Sequence", use_container_width=True, type="primary")
+    calculate_btn = st.button(t("🔄 Analyze Sequence"), use_container_width=True, type="primary")
 
 if calculate_btn:
     seq, err = validate_dna(dna_input)
     if err:
-        st.error(err)
+        st.error(t(err))
     else:
         try:
             # Use titan_utils revcomp (handles IUPAC correctly) + Biopython for display
@@ -40,7 +41,7 @@ if calculate_btn:
             count_g = seq.count('G')
             gc_percent = gc_fraction_safe(seq) * 100
 
-            st.markdown("### 📊 Sequence Statistics")
+            st.markdown(t("### 📊 Sequence Statistics"))
             sequence_metrics_row({
                 "📏 Length": f"{length} bp",
                 "🧬 GC Content": f"{gc_percent:.2f}%",
@@ -49,26 +50,32 @@ if calculate_btn:
             })
 
             st.markdown("---")
-            st.markdown("### 🔄 Reverse Complement")
+            st.markdown(t("### 🔄 Reverse Complement"))
             st.code(rev_comp, language="text")
 
             st.markdown("---")
-            st.markdown("### 🥧 Nucleotide Composition")
+            st.markdown(t("### 🥧 Nucleotide Composition"))
 
+            nucleotide_label = t("Nucleotide")
+            count_label = t("Count")
+            adenine_label = t("Adenine (A)")
+            thymine_label = t("Thymine (T)")
+            cytosine_label = t("Cytosine (C)")
+            guanine_label = t("Guanine (G)")
             df_chart = pd.DataFrame({
-                'Nucleotide': ['Adenine (A)', 'Thymine (T)', 'Cytosine (C)', 'Guanine (G)'],
-                'Count': [count_a, count_t, count_c, count_g]
+                nucleotide_label: [adenine_label, thymine_label, cytosine_label, guanine_label],
+                count_label: [count_a, count_t, count_c, count_g]
             })
 
             fig = px.pie(
                 df_chart,
-                values='Count',
-                names='Nucleotide',
+                values=count_label,
+                names=nucleotide_label,
                 color_discrete_map={
-                    'Adenine (A)': '#ff6b6b',
-                    'Thymine (T)': '#feca57',
-                    'Cytosine (C)': '#48dbfb',
-                    'Guanine (G)': '#1dd1a1'
+                    adenine_label: '#ff6b6b',
+                    thymine_label: '#feca57',
+                    cytosine_label: '#48dbfb',
+                    guanine_label: '#1dd1a1'
                 },
                 hole=0.4
             )
@@ -91,6 +98,6 @@ if calculate_btn:
             smart_lock(csv_data=df_to_csv_bytes(df_export), csv_filename="revcomp_stats.csv")
 
         except Exception as e:
-            st.error(f"⚠️ Calculation Error: {e}")
+            st.error(t("⚠️ Calculation Error: {error}", error=str(e)))
 
 dr_titan_tip("The reverse complement is crucial for the opposite strand — DNA is anti-parallel. A 5'→3' strand's reverse complement gives you the correct 3'→5' strand, handling IUPAC ambiguity codes via titan_utils.revcomp.")

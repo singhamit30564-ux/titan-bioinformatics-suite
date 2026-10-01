@@ -4,6 +4,7 @@ from Bio.SeqUtils import gc_fraction, MeltingTemp
 import pandas as pd
 import plotly.graph_objects as go
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
@@ -12,16 +13,16 @@ from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 titan_title("🧬", "GC Content, Tm & Sliding Window", "Refactored with Titan validation & export.")
-st.markdown("Advanced analysis: Nearest Neighbor Tm calculation and GC% distribution across your sequence.")
+st.markdown(t("Advanced analysis: Nearest Neighbor Tm calculation and GC% distribution across your sequence."))
 st.markdown("---")
 
 # --- INPUT SECTION ---
-dna_input = st.text_area("Enter DNA Sequence (5' to 3'):", "ATGCGCTAGCTAGCTAGCTAGCTAGCATCGATCGATCGATCGATCGATCG", height=150, key="gc_melting_input")
+dna_input = st.text_area(t("Enter DNA Sequence (5' to 3'):"), "ATGCGCTAGCTAGCTAGCTAGCTAGCATCGATCGATCGATCGATCGATCG", height=150, key="gc_melting_input")
 
 col1, col2 = st.columns([3, 1])
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)
-    calculate_btn = st.button("📈 Analyze Sequence", use_container_width=True, type="primary")
+    calculate_btn = st.button(t("📈 Analyze Sequence"), use_container_width=True, type="primary")
 
 # --- PROCESSING & OUTPUT ---
 if calculate_btn:
@@ -29,9 +30,9 @@ if calculate_btn:
     clean_dna = clean_sequence(clean_dna)  # titan_utils: ensures whitespace/FASTA handling
     
     if not clean_dna:
-        st.error("❌ Please enter a valid DNA sequence.")
+        st.error(t("❌ Please enter a valid DNA sequence."))
     elif any(char not in "ATCG" for char in clean_dna):
-        st.error("❌ Invalid DNA! Only A, T, C, G are allowed.")
+        st.error(t("❌ Invalid DNA! Only A, T, C, G are allowed."))
     else:
         try:
             seq = Seq(clean_dna)
@@ -44,23 +45,23 @@ if calculate_btn:
             # We use Tm_NN for high accuracy, falling back to Wallace if sequence is too short/complex
             try:
                 tm_nn = MeltingTemp.Tm_NN(seq)
-                tm_method = "Nearest Neighbor (High Accuracy)"
+                tm_method = t("Nearest Neighbor (High Accuracy)")
             except Exception:
                 tm_nn = MeltingTemp.Tm_Wallace(seq)
-                tm_method = "Wallace Rule (Basic)"
+                tm_method = t("Wallace Rule (Basic)")
 
             # --- DISPLAY METRICS ---
-            st.markdown("### 📈 Analysis Results")
+            st.markdown(t("### 📈 Analysis Results"))
             met_col1, met_col2, met_col3 = st.columns(3)
-            met_col1.metric(label="🧬 Overall GC Content", value=f"{gc_content:.2f}%")
-            met_col2.metric(label="🌡️ Melting Temp (Tm)", value=f"{tm_nn:.2f} °C", delta=tm_method)
-            met_col3.metric(label="📏 Sequence Length", value=f"{length} bp")
+            met_col1.metric(label=t("🧬 Overall GC Content"), value=f"{gc_content:.2f}%")
+            met_col2.metric(label=t("🌡️ Melting Temp (Tm)"), value=f"{tm_nn:.2f} °C", delta=tm_method)
+            met_col3.metric(label=t("📏 Sequence Length"), value=f"{length} bp")
             
             st.markdown("---")
             
             # 3. SLIDING WINDOW PLOT (The Pro Feature)
-            st.markdown("### 🌊 GC% Sliding Window Analysis")
-            st.caption("Shows how GC content varies across different regions of your sequence.")
+            st.markdown(t("### 🌊 GC% Sliding Window Analysis"))
+            st.caption(t("Shows how GC content varies across different regions of your sequence."))
             
             if length >= 20:
                 window_size = 20
@@ -86,12 +87,12 @@ if calculate_btn:
                 ))
                 
                 # Add a reference line at 50%
-                fig.add_hline(y=50, line_dash="dash", line_color="gray", annotation_text="50% Reference")
+                fig.add_hline(y=50, line_dash="dash", line_color="gray", annotation_text=t("50% Reference"))
                 
                 fig.update_layout(
-                    title="GC% Distribution (Window: 20bp, Step: 5bp)",
-                    xaxis_title="Position (bp)",
-                    yaxis_title="GC Content (%)",
+                    title=t("GC% Distribution (Window: 20bp, Step: 5bp)"),
+                    xaxis_title=t("Position (bp)"),
+                    yaxis_title=t("GC Content (%)"),
                     yaxis=dict(range=[0, 100]),
                     paper_bgcolor='#0a0e17',
                     plot_bgcolor='#1a1f2e',
@@ -101,26 +102,26 @@ if calculate_btn:
                 
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.warning("⚠️ Sequence is too short (< 20bp) for Sliding Window analysis. Try a longer sequence!")
+                st.warning(t("⚠️ Sequence is too short (< 20bp) for Sliding Window analysis. Try a longer sequence!"))
             
             # --- THE "SMART LOCK" ---
             st.markdown("---")
-            st.markdown("### 📥 Export Data")
+            st.markdown(t("### 📥 Export Data"))
             
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
-                if st.button("📄 Download PDF Report (Free)", use_container_width=True):
-                    st.info("📄 Generating PDF report... (Feature coming in v1.1)")
+                if st.button(t("📄 Download PDF Report (Free)"), use_container_width=True):
+                    st.info(t("📄 Generating PDF report... (Feature coming in v1.1)"))
                     
             with col_btn2:
-                if st.button("📊 Download CSV (Free)", use_container_width=True):
-                    st.info("✅ CSV export unlocked — Titan Explorer gating removed via smart_lock.")
+                if st.button(t("📊 Download CSV (Free)"), use_container_width=True):
+                    st.info(t("✅ CSV export unlocked — Titan Explorer gating removed via smart_lock."))
                     
         except Exception as e:
-            st.error(f"️ Calculation Error: {e}")
+            st.error(t("️ Calculation Error: {error}", error=str(e)))
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  Dr. Titan AI Tip
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 st.markdown("---")
-st.info("💡 **Dr. Titan's Tip:** The **Nearest Neighbor (NN)** method calculates Tm by looking at how adjacent base pairs stack together. It's much more accurate than the simple Wallace rule, especially for sequences longer than 14bp!")
+st.info(t("💡 **Dr. Titan's Tip:** The **Nearest Neighbor (NN)** method calculates Tm by looking at how adjacent base pairs stack together. It's much more accurate than the simple Wallace rule, especially for sequences longer than 14bp!"))

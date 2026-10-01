@@ -7,6 +7,7 @@ import hashlib
 import streamlit as st
 
 from .theme import TITAN_THEME_CSS
+from .i18n import t
 
 
 def _widget_key(prefix: str, payload: bytes | None, discriminant: str = "") -> str:
@@ -32,9 +33,9 @@ def apply_theme() -> None:
 def titan_title(emoji: str, title: str, subtitle: str = "") -> None:
     """Render a consistent page header (emoji + bold title + divider)."""
     apply_theme()
-    st.markdown(f"# {emoji} {title}")
+    st.markdown(f"# {emoji} {t(title)}")
     if subtitle:
-        st.markdown(subtitle)
+        st.markdown(t(subtitle))
     st.markdown("---")
 
 
@@ -52,18 +53,19 @@ def smart_lock(csv_data: bytes | None = None,
     twice on one page (e.g. two tables with identical content).
     """
     st.markdown("---")
-    st.markdown("### 📥 Export Results")
+    st.markdown(t("### 📥 Export Results"))
     c1, c2 = st.columns(2)
     with c1:
-        if st.button(pdf_label, use_container_width=True,
+        localized_pdf_label = t(pdf_label)
+        if st.button(localized_pdf_label, use_container_width=True,
                      key=key or _widget_key("pdf", csv_data, pdf_label)):
-            st.info("📄 PDF report generation is planned for v1.1. "
-                    "For now use your browser's Print → Save as PDF, or use "
-                    "the CSV export below.")
+            st.info(t("📄 PDF report generation is planned for v1.1. "
+                      "For now use your browser's Print → Save as PDF, or use "
+                      "the CSV export below."))
     with c2:
         if csv_data is not None:
             st.download_button(
-                "📊 Download CSV (Free)",
+                t("📊 Download CSV (Free)"),
                 data=csv_data,
                 file_name=csv_filename,
                 mime="text/csv",
@@ -71,13 +73,13 @@ def smart_lock(csv_data: bytes | None = None,
                 key=key or _widget_key("csv", csv_data, csv_filename),
             )
         else:
-            st.caption("ℹ️ Run an analysis above to enable CSV export — no paywall, all exports are free.")
+            st.caption(t("ℹ️ Run an analysis above to enable CSV export — no paywall, all exports are free."))
 
 
 def dr_titan_tip(text: str) -> None:
     """Render a consistent 'Dr. Titan' educational tip."""
     st.markdown("---")
-    st.info(f"💡 **Dr. Titan's Tip:** {text}")
+    st.info(t(f"💡 **Dr. Titan's Tip:** {text}"))
 
 
 def sequence_metrics_row(metrics: dict) -> None:
@@ -95,4 +97,4 @@ def sequence_metrics_row(metrics: dict) -> None:
             # NB: unpack in one step — reading elements off the *rebound* value
             # would slice characters out of value[0] instead of the tuple.
             value, delta, help_text = (list(value) + [None, None])[:3]
-        col.metric(label, value, delta=delta, help=help_text)
+        col.metric(t(label), value, delta=delta, help=t(help_text) if help_text else None)

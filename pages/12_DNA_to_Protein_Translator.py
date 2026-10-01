@@ -1,21 +1,22 @@
 import streamlit as st
 import pandas as pd
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 titan_title("🧬", "DNA to Protein Translator", "Refactored with Titan validation & export.")
-st.markdown("Translate DNA sequences to protein with all 6 reading frames.")
+st.markdown(t("Translate DNA sequences to protein with all 6 reading frames."))
 st.markdown("---")
 
-dna_seq = st.text_area("Enter DNA Sequence (5' to 3')", 
+dna_seq = st.text_area(t("Enter DNA Sequence (5' to 3')"),
     "ATGGCGTACGTAATCGATCGATCGATCTAA", height=150)
 
-if st.button("🔄 Translate All Frames", use_container_width=True, type="primary"):
+if st.button(t("🔄 Translate All Frames"), use_container_width=True, type="primary"):
     seq = dna_seq.replace(" ", "").upper()
-    
+
     if any(c not in "ATCG" for c in seq):
-        st.error("❌ Invalid DNA! Only A, T, C, G allowed.")
+        st.error(t("❌ Invalid DNA! Only A, T, C, G allowed."))
     else:
         codon_table = {
             'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
@@ -35,27 +36,27 @@ if st.button("🔄 Translate All Frames", use_container_width=True, type="primar
             'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
             'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W',
         }
-        
+
         def translate(seq, frame):
             protein = ""
             for i in range(frame, len(seq) - 2, 3):
                 codon = seq[i:i+3]
                 protein += codon_table.get(codon, 'X')
             return protein
-        
-        st.markdown("### 📊 All 6 Reading Frames")
-        
+
+        st.markdown(t("### 📊 All 6 Reading Frames"))
+
         # Forward frames
         for frame in range(3):
             protein = translate(seq, frame)
-            st.success(f"**Frame +{frame+1}:** `{protein}`")
-        
+            st.success(t("**Frame +{frame}:** `{protein}`", frame=frame + 1, protein=protein))
+
         # Reverse complement
         complement = str.maketrans('ATCG', 'TAGC')
         rev_seq = seq.translate(complement)[::-1]
-        
+
         for frame in range(3):
             protein = translate(rev_seq, frame)
-            st.warning(f"**Frame -{frame+1}:** `{protein}`")
-        
-        st.info("💡 **Dr. Titan's Tip:** Frame +1 starts at position 0, +2 at position 1, +3 at position 2. Negative frames are on the reverse complement strand. Look for the longest ORF without stop codons (*)!")
+            st.warning(t("**Frame -{frame}:** `{protein}`", frame=frame + 1, protein=protein))
+
+        st.info(t("💡 **Dr. Titan's Tip:** Frame +1 starts at position 0, +2 at position 1, +3 at position 2. Negative frames are on the reverse complement strand. Look for the longest ORF without stop codons (*)!"))
