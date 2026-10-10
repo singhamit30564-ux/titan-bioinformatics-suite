@@ -213,7 +213,7 @@ def mutation_snp(ref_sequence: str = "ATGGCACGTACGTAGCATTGA",
 # ─────────────────────────────────────────────────────────────────────────────
 # Tool 5 — ORF finder (6 frames, ATG→stop)
 # ─────────────────────────────────────────────────────────────────────────────
-def orf_find(sequence: str = "ATGAAAGGGCCCCTATAGGGTGAATGCGCCTAG",
+def orf_find(sequence: str = "ATGAAAGGGCCCTTTGGGCCCGGGAAATTTCCCGGGAAATTTAGGTGA",
              min_length_aa: int = 10) -> Dict[str, Any]:
     s = prepare_dna(sequence)
     guard_len(s, 200_000)

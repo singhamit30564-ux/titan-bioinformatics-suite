@@ -13,8 +13,12 @@ Renders any registered tool (1-260) with:
 """
 from __future__ import annotations
 
+import inspect
+import re
 from typing import Any, Dict
 import streamlit as st
+
+from titan_utils.compute import ComputeError
 
 from titan_utils.eln import get_session_log, sequence_digest
 from titan_utils.export import EXPORT_FORMATS, build_export, export_filename, export_mime
@@ -86,18 +90,31 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
     if run_btn or auto_run:
         handler = spec.get_handler()
         if handler is None:
-            # Fallback legacy adapter
-            from titan_tools.legacy_adapters import tool_legacy_generic
-            res = tool_legacy_generic(spec.id, spec.name)
+            st.error(
+                f"⚠️ No execution engine is wired to tool #{spec.id} ({spec.name}). "
+                "This is a registry wiring fault — regenerate the registry with "
+                "`python scripts/generate_registry.py`. No results are shown because none can be computed honestly."
+            )
+            return
+        # Bind only parameters the handler actually declares; never silently
+        # re-run with defaults (that used to print fabricated results for a
+        # failing input — the opposite of what a lab tool should do).
+        sig = inspect.signature(handler)
+        if any(par.kind == inspect.Parameter.VAR_KEYWORD for par in sig.parameters.values()):
+            bound = inputs_dict
         else:
-            try:
-                res = handler(**inputs_dict)
-            except TypeError:
-                # In case signature mismatch occurs, call with defaults
-                res = handler()
-            except Exception as ex:
-                st.warning(f"Note: Running with standard baseline parameters. Detail: {ex}")
-                res = handler()
+            bound = {k: v for k, v in inputs_dict.items() if k in sig.parameters}
+        try:
+            res = handler(**bound)
+        except ComputeError as ex:
+            st.error(f"🧪 Could not compute — check the input: {ex}")
+            return
+        except Exception as ex:  # noqa: BLE001
+            st.error(
+                f"⚠️ Tool #{spec.id} failed ({type(ex).__name__}): {ex}\n\n"
+                "No fallback result is generated — Titan never reruns with unrelated defaults."
+            )
+            return
 
         # Render Tool Results
         st.markdown("---")
@@ -109,8 +126,11 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
             metrics_dict = {}
             for m in res.metrics:
                 label, val = m[0], m[1]
-                delta = m[2] if len(m) > 2 else None
-                metrics_dict[label] = (val, delta)
+                third = m[2] if len(m) > 2 else None
+                if isinstance(third, str) and re.match(r"^[+-]\d", third.strip()):
+                    metrics_dict[label] = (val, third)          # looks like a delta
+                else:
+                    metrics_dict[label] = (val, None, third)    # explanatory note → tooltip
             sequence_metrics_row(metrics_dict)
 
         # Plotly Figure
@@ -150,6 +170,20 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
             with st.expander("🔬 Biological Context & Scientific References", expanded=False):
                 for note in res.notes:
                     st.markdown(f"- {note}")
+
+        # Textual / tree payloads (alignment blocks, Clustal output, Newick…)
+        extra = getattr(res, "extra_data", None) or {}
+        if extra.get("text"):
+            with st.expander("📜 Full text output", expanded=False):
+                st.code(extra["text"], language="text")
+        if extra.get("newick"):
+            st.download_button(
+                "🌳 Download Newick tree (.nwk)",
+                data=extra["newick"].encode("utf-8"),
+                file_name=f"titan_tool_{spec.id}_tree.nwk",
+                mime="text/plain",
+                key=f"{prefix}_download_newick",
+            )
 
         # ── Advanced Export Center · ZDR Provenance · ELN · PDF ────────────
         _render_export_center(spec, inputs_dict, res, prefix)

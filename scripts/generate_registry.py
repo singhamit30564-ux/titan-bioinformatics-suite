@@ -1,9 +1,67 @@
-"""Script to build titan_utils/registry.py for all 260 tools."""
+"""Script to build titan_utils/registry.py for all 260 tools.
+
+Legacy tools (ids 1-52) derive their handler + input widgets from the REAL
+adapter signatures exported by titan_tools.legacy_adapters (which mirror the
+validated computations in titan_utils.compute). Advanced domains (ids 53-260)
+come from the titan_tools domain modules. There are no generic/fake handlers.
+"""
 import inspect
-import json
 import re
 from pathlib import Path
+
 import titan_tools as tt
+
+TITLE_FIXUPS = [
+    ("Dna", "DNA"), ("Rna", "RNA"), ("Gc", "GC"), ("Tm", "Tm"), ("Crispr", "CRISPR"),
+    ("Pcr", "PCR"), ("Blast", "BLAST"), ("Fasta", "FASTA"), ("Fastq", "FASTQ"),
+    ("Qc", "QC"), ("Msa", "MSA"), ("Cpg", "CpG"), ("Vcf", "VCF"), ("Cgr", "CGR"), ("Orf", "ORF"),
+    ("Grna", "gRNA"), ("Cas9", "Cas9"), ("Snp", "SNP"), ("Indel", "InDel"),
+    ("Kegg", "KEGG"), ("Go", "GO"), ("Pi", "pI"), ("Mw", "MW"), ("Cds", "CDS"),
+    ("Rnai", "RNAi"), ("Rnase", "RNase"), ("Dnase", "DNase"), ("Codon", "Codon"),
+    ("Upgma", "UPGMA"), ("Nj", "NJ"), ("Dna", "DNA"), ("Rnasep", "RNase P"),
+]
+
+
+def _inputs_from_signature(func):
+    """Derive ToolInputSpec dicts from a handler signature."""
+    inputs = []
+    for p_name, param in inspect.signature(func).parameters.items():
+        p_def = param.default if param.default is not inspect.Parameter.empty else ""
+        options = []
+        if isinstance(p_def, str):
+            if p_def.count("|") >= 1 and len(p_def) <= 160 and "\n" not in p_def:
+                # convention: "opt a | opt b | opt c" → select widget
+                opts = [o.strip() for o in p_def.split("|") if o.strip()]
+                if len(opts) >= 2 and all(len(o) <= 45 for o in opts):
+                    itype = "select"
+                    options = opts
+                    p_def = opts[0]
+            elif len(p_def) > 40 or "\n" in p_def:
+                itype = "textarea"
+            else:
+                itype = "text"
+        elif isinstance(p_def, (int, float)):
+            itype = "number"
+        else:
+            itype = "text"
+        d = {"id": p_name, "label": p_name.replace("_", " ").title(),
+             "type": itype, "default": p_def,
+             "help": f"Input for {p_name.replace('_', ' ')}"}
+        if options:
+            d["options"] = options
+        inputs.append(d)
+    return inputs
+
+
+def _title_from_stem(stem: str) -> str:
+    if "_" in stem and stem[:2].isdigit():
+        stem = stem.split("_", 1)[1]
+    title = stem.replace("_", " ").replace(" and ", " & ").title()
+    for k, v in TITLE_FIXUPS:
+        if k != v:
+            title = re.sub(rf"\b{re.escape(k)}\b", v, title)
+    return title
+
 
 def main():
     content = Path("Home.py").read_text()
@@ -15,45 +73,42 @@ def main():
         ("cat5_lab", "Lab & Molecular Biology", "Lab & Molecular Biology"),
     ]
 
+    from titan_tools.legacy_adapters import ADAPTER_BY_ID
+    from titan_utils.compute import COMPUTE_BY_ID
+
     legacy_tools = []
     tool_id_counter = 1
-
     for cat_var, cat_name, domain_name in legacy_categories:
-        m = re.search(cat_var + r'\s*=\s*\[(.*?)\]', content, re.DOTALL)
-        if m:
-            files = re.findall(r'\"(\d+_[^\"]+\.py)\"', m.group(1))
-            for fname in files:
-                stem = fname.replace(".py", "")
-                if "_" in stem and stem[:2].isdigit():
-                    stem = stem.split("_", 1)[1]
-                title = stem.replace("_", " ").replace("and", "&").title()
-                for k, v in [
-                    ("Dna", "DNA"), ("Rna", "RNA"), ("Gc", "GC"), ("Tm", "Tm"), ("Crispr", "CRISPR"),
-                    ("Pcr", "PCR"), ("Blast", "BLAST"), ("Fasta", "FASTA"), ("Fastq", "FASTQ"),
-                    ("Qc", "QC"), ("Ms A", "MSA"), ("Vcf", "VCF"), ("Cgr", "CGR"), ("Orf", "ORF"),
-                    ("Grna", "gRNA"), ("Cas9", "Cas9"), ("Snp", "SNP"), ("Indel", "InDel"),
-                    ("Kegg", "KEGG"), ("Go", "GO"), ("Pi", "pI"), ("Mw", "MW")
-                ]:
-                    title = title.replace(k, v)
-                
-                hname = "tool_legacy_dna_rna_convert" if tool_id_counter == 1 else ("tool_legacy_revcomp" if tool_id_counter == 2 else "tool_legacy_generic")
-                legacy_tools.append({
-                    "id": tool_id_counter,
-                    "name": title,
-                    "domain": domain_name,
-                    "category_id": cat_var,
-                    "category_name": cat_name,
-                    "description": f"Foundational {domain_name} analysis module with validated Biopython algorithms.",
-                    "console_page": fname,
-                    "inputs": [
-                        {"id": "sequence", "label": "Input Sequence / Data", "type": "textarea", "default": "ATGCGATCGATCGATCGATCGATC", "help": "Enter biological sequence or data"}
-                    ],
-                    "handler_name": hname,
-                    "student_tip": f"{title} teaches core principles of molecular biology, sequence structure, and computational algorithms."
-                })
-                tool_id_counter += 1
-
-    print(f"Generated {len(legacy_tools)} legacy tools.")
+        m = re.search(cat_var + r"\s*=\s*\[(.*?)\]", content, re.DOTALL)
+        if not m:
+            raise SystemExit(f"category list {cat_var} not found in Home.py")
+        for fname in re.findall(r'"(\d+_[^"]+\.py)"', m.group(1)):
+            stem = fname.replace(".py", "")
+            title = _title_from_stem(stem)
+            handler = ADAPTER_BY_ID[tool_id_counter]
+            compute = COMPUTE_BY_ID[tool_id_counter]
+            doc = (compute.__doc__ or "").strip()
+            first = doc.split("\n")[0] if doc else ""
+            desc = re.sub(r"^Tool \d+:\s*", "", first).strip() or \
+                f"{title} — computed live by titan_utils.compute.{compute.__name__}."
+            if len(desc) < 25:
+                desc += " All numbers are computed from your input; nothing is simulated."
+            legacy_tools.append({
+                "id": tool_id_counter,
+                "name": title,
+                "domain": domain_name,
+                "category_id": cat_var,
+                "category_name": cat_name,
+                "description": desc,
+                "console_page": fname,
+                "inputs": _inputs_from_signature(handler),
+                "handler_name": handler.__name__,
+                "student_tip": (f"{title} runs on real algorithms (Biopython / validated Titan engines). "
+                                "Try an input twice with one changed base to see exactly which metrics move."),
+            })
+            tool_id_counter += 1
+    print(f"Generated {len(legacy_tools)} legacy tools (ids 1-{tool_id_counter - 1}).")
+    assert tool_id_counter == 53, f"legacy ids must be exactly 1..52, ended at {tool_id_counter - 1}"
 
     # New domains mapping
     import titan_tools.agriculture as m_agri
@@ -84,10 +139,7 @@ def main():
     current_id = 53
 
     for cat_id, d_name, c_page, mod, expected_count in domain_configs:
-        # Get all functions starting with tool_ in module in definition order
         func_names = [f for f in dir(mod) if f.startswith("tool_") and callable(getattr(mod, f))]
-        # Sort or maintain order
-        # Let's inspect line numbers to preserve source order
         func_names.sort(key=lambda fn: getattr(mod, fn).__code__.co_firstlineno)
         print(f"Module {cat_id}: found {len(func_names)} tools (expected {expected_count})")
         assert len(func_names) == expected_count, f"Mismatch in {cat_id}: {len(func_names)} != {expected_count}"
@@ -95,29 +147,10 @@ def main():
         for hname in func_names:
             func = getattr(mod, hname)
             doc = (func.__doc__ or "").strip()
-            # Clean title from doc or function name
             first_line = doc.split("\n")[0] if doc else hname
             if ":" in first_line:
                 first_line = first_line.split(":", 1)[1].strip()
             tool_title = first_line.rstrip(".") if first_line else hname.replace("tool_", "").replace("_", " ").title()
-
-            sig = inspect.signature(func)
-            inputs = []
-            for p_name, param in sig.parameters.items():
-                p_def = param.default if param.default != inspect.Parameter.empty else ""
-                if isinstance(p_def, (int, float)):
-                    itype = "number"
-                elif isinstance(p_def, str) and (len(p_def) > 40 or "\n" in p_def):
-                    itype = "textarea"
-                else:
-                    itype = "text"
-                inputs.append({
-                    "id": p_name,
-                    "label": p_name.replace("_", " ").title(),
-                    "type": itype,
-                    "default": p_def,
-                    "help": f"Input for {p_name.replace('_', ' ')}"
-                })
 
             all_tools.append({
                 "id": current_id,
@@ -127,9 +160,10 @@ def main():
                 "category_name": d_name,
                 "description": doc or f"Advanced {d_name} analytical tool.",
                 "console_page": c_page,
-                "inputs": inputs,
+                "inputs": _inputs_from_signature(func),
                 "handler_name": hname,
-                "student_tip": f"Tool #{current_id} ({tool_title}) demonstrates critical applied computational techniques in {d_name}."
+                "student_tip": (f"Tool #{current_id} ({tool_title}) demonstrates critical applied "
+                                f"computational techniques in {d_name}.")
             })
             current_id += 1
 
@@ -142,6 +176,7 @@ def main():
         '',
         'Provides structured metadata, category mappings, input specifications,',
         'and handler dispatch for both legacy tools (1-52) and advanced tools (53-260).',
+        'Generated by scripts/generate_registry.py — do not edit by hand.',
         '"""',
         'from __future__ import annotations',
         '',
@@ -202,10 +237,12 @@ def main():
         inputs_code = []
         for inp in t["inputs"]:
             inputs_code.append(
-                f"        ToolInputSpec(id={repr(inp['id'])}, label={repr(inp['label'])}, type={repr(inp['type'])}, default={repr(inp['default'])}, help={repr(inp.get('help', ''))})"
+                "        ToolInputSpec(id=%r, label=%r, type=%r, default=%r, options=%r, help=%r)"
+                % (inp["id"], inp["label"], inp["type"], inp["default"],
+                   inp.get("options", []), inp.get("help", ""))
             )
         inputs_block = "[\n" + ",\n".join(inputs_code) + "\n    ]" if inputs_code else "[]"
-        lines.append(f"    ToolSpec(")
+        lines.append("    ToolSpec(")
         lines.append(f"        id={t['id']},")
         lines.append(f"        name={repr(t['name'])},")
         lines.append(f"        domain={repr(t['domain'])},")
@@ -216,7 +253,7 @@ def main():
         lines.append(f"        inputs={inputs_block},")
         lines.append(f"        handler_name={repr(t['handler_name'])},")
         lines.append(f"        student_tip={repr(t['student_tip'])},")
-        lines.append(f"    ),")
+        lines.append("    ),")
 
     lines.extend([
         ']',
@@ -260,6 +297,7 @@ def main():
 
     Path("titan_utils/registry.py").write_text("\n".join(lines))
     print("Wrote titan_utils/registry.py successfully!")
+
 
 if __name__ == "__main__":
     main()
