@@ -1,8 +1,6 @@
 """Clinical Genomics & Precision Oncology tool algorithms (Tools 93-112)."""
 from __future__ import annotations
 
-import math
-import numpy as np
 import re
 import pandas as pd
 import plotly.graph_objects as go
@@ -214,7 +212,19 @@ def tool_gene_lof_intolerance(gene_symbol: str = "BRCA1") -> ToolResult:
         "CFTR": {"pLI": 0.00, "LOEUF": 0.85, "Status": "Tolerant (Recessive Carrier)", "Mechanism": "Biallelic cystic fibrosis"},
         "OR51E1": {"pLI": 0.00, "LOEUF": 1.45, "Status": "Highly Tolerant to LoF", "Mechanism": "Olfactory receptor redundancy"}
     }
-    match = db.get(gene, {"pLI": 0.95, "LOEUF": 0.25, "Status": "Intolerant to LoF", "Mechanism": "Essential cellular gene"})
+    match = db.get(gene)
+    if match is None:
+        return ToolResult(
+            title="gnomAD LoF Constraint — No Curated Record",
+            summary=(f"'{gene}' is not in the offline 5-gene constraint set. pLI/LOEUF are population "
+                     "statistics that cannot be guessed — refusing to fabricate one."),
+            metrics=[("Gene", gene, None), ("pLI", "unknown (offline set miss)", None),
+                     ("LOEUF", "unknown (offline set miss)", None)],
+            dataframe=pd.DataFrame([{"Gene": gene, "pLI_Score": None, "LOEUF_Decile": None,
+                                     "Constraint_Tier": "NOT IN CURATED SET",
+                                     "Disease_Mechanism": "look up real values at gnomad.broadinstitute.org"}]),
+            notes=["Curated offline entries: BRCA1, TP53, DMD, CFTR, OR51E1 only.",
+                   "A wrong intolerance claim could misprioritize a variant — silence beats invention."])
     df = pd.DataFrame([{"Gene": gene, "pLI_Score": match["pLI"], "LOEUF_Decile": match["LOEUF"], "Constraint_Tier": match["Status"], "Disease_Mechanism": match["Mechanism"]}])
 
     fig = go.Figure(go.Indicator(
@@ -312,7 +322,18 @@ def tool_clinvar_cross_referencer(rsid_or_variant: str = "rs28934578") -> ToolRe
         "rs80357906": {"Gene": "BRCA1", "HGVS": "NM_007294.4:c.5266dupC (p.Gln1756Profs)", "Significance": "Pathogenic", "Review": "3 stars (Expert panel ENIGMA)", "Condition": "Hereditary breast and ovarian cancer"},
         "rs121913529": {"Gene": "BRAF", "HGVS": "NM_004333.6:c.1799T>A (p.Val600Glu)", "Significance": "Pathogenic", "Review": "3 stars (Expert panel)", "Condition": "Cardiofaciocutaneous syndrome / Melanoma"}
     }
-    hit = clinvar_db.get(var, {"Gene": "BRCA2", "HGVS": "c.5946delT", "Significance": "Pathogenic", "Review": "2 stars (Multiple submitters, no conflicts)", "Condition": "Familial cancer susceptibility"})
+    hit = clinvar_db.get(var)
+    if hit is None:
+        return ToolResult(
+            title="ClinVar Cross-Referencer — No Offline Record",
+            summary=(f"'{var}' is not in the 3-record offline mirror. ClinVar data changes with every submitter "
+                     "review, so guessing a significance here would be clinically dangerous."),
+            metrics=[("Query", var, None), ("ClinVar", "not found offline — query https://ncbi.nlm.nih.gov/clinvar", None)],
+            dataframe=pd.DataFrame([{"Identifier": var, "Gene": None, "HGVS_Nomenclature": None,
+                                     "Clinical_Significance": "UNKNOWN (offline miss)",
+                                     "Gold_Star_Review_Status": None, "Associated_Disease": None}]),
+            notes=["Curated offline rsIDs: rs28934578 (TP53 R175H), rs80357906 (BRCA1 5382insC), rs121913529 (BRAF V600E).",
+                   "Never report 'Pathogenic' for an unlooked-up variant — that is why the old fallback was removed."])
     df = pd.DataFrame([{"Identifier": var, "Gene": hit["Gene"], "HGVS_Nomenclature": hit["HGVS"], "Clinical_Significance": hit["Significance"], "Gold_Star_Review_Status": hit["Review"], "Associated_Disease": hit["Condition"]}])
 
     fig = go.Figure(go.Indicator(

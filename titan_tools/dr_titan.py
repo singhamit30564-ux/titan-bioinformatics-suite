@@ -247,7 +247,17 @@ def tool_dr_titan_gene_nomenclature(gene_alias: str = "HER2") -> ToolResult:
         "PD-1": {"Official": "PDCD1", "Name": "programmed cell death 1", "Aliases": "CD279, PD1, SLEB2", "Chromosome": "2q37.3"},
         "ACE2": {"Official": "ACE2", "Name": "angiotensin converting enzyme 2", "Aliases": "ACEH", "Chromosome": "Xp22.2"}
     }
-    match = db.get(alias, {"Official": alias, "Name": f"{alias} Locus", "Aliases": "None", "Chromosome": "Autosomal"})
+    match = db.get(alias)
+    if match is None:
+        return ToolResult(
+            title="HGNC Nomenclature Resolver — Alias Not In Offline Set",
+            summary=(f"'{alias}' is not one of the curated aliases (HER2, P53, PD-1, ACE2). Inventing an "
+                     "'X Locus / Autosomal' row would be fake nomenclature, so the resolver stops here."),
+            metrics=[("Query alias", alias, None), ("HGNC", "not resolved offline — see www.genenames.org", None)],
+            dataframe=pd.DataFrame([{"Query_Alias": alias, "Approved_HGNC_Symbol": None,
+                                     "Full_Approved_Name": "NOT IN CURATED SET", "Previous_Symbols": None,
+                                     "Chromosomal_Band": None}]),
+            notes=["Offline mirror holds 4 common aliases only; it never guesses new ones."])
     df = pd.DataFrame([{"Query_Alias": alias, "Approved_HGNC_Symbol": match["Official"], "Full_Approved_Name": match["Name"], "Previous_Symbols": match["Aliases"], "Chromosomal_Band": match["Chromosome"]}])
 
     fig = px.bar(df, x="Approved_HGNC_Symbol", y=[1], color_discrete_sequence=[TITAN_TEAL])

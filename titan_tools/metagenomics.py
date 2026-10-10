@@ -1,7 +1,6 @@
 """Metagenomics & Microbiome Analytics tool algorithms (Tools 113-132)."""
 from __future__ import annotations
 
-import math
 import numpy as np
 import re
 import pandas as pd

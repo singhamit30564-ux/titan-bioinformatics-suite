@@ -213,7 +213,7 @@ def oligo_tms(oligos: str = "ATGGCTAAAGGGCCC\nTTTGGGCCCATAGCTATG\nCCTTAGGGAAACCC
 # ─────────────────────────────────────────────────────────────────────────────
 def melting_curve(sequence: str = "ATGGCTAAAGGGCCCTTTGGGCCCATAG",
                   na_mm: float = 50.0, dnac_nm: float = 25.0) -> Dict[str, Any]:
-    from ..thermo import (ThermoError, fraction_bound, melting_curve as mc,
+    from ..thermo import (ThermoError, melting_curve as mc,
                           nn_dH_dS, nn_tm, self_complementary)
     s = prepare_dna(sequence)
     if len(s) > 120:
@@ -483,7 +483,6 @@ def codon_optimize(protein_sequence: str = "MKVLWAALLVTFLAGCQAKVEQAVETEPEPELRQQ"
             continue
         if weights and aa in weights and sum(weights[aa].values()) > 0:
             w = weights[aa]
-            total = sum(w.values())
             # deterministic argmax on usage with GC tie-break
             best = max(sorted(w.keys(), key=lambda c: c), key=lambda c: (w.get(c, 0), -(abs(_cgc(c) - 0.5))))
             out_codons.append(best)

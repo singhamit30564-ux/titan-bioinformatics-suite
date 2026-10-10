@@ -9,7 +9,6 @@ import inspect
 import re
 from pathlib import Path
 
-import titan_tools as tt
 
 TITLE_FIXUPS = [
     ("Dna", "DNA"), ("Rna", "RNA"), ("Gc", "GC"), ("Tm", "Tm"), ("Crispr", "CRISPR"),

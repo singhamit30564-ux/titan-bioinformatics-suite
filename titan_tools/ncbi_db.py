@@ -1,14 +1,13 @@
 """NCBI & External Biological Database Connectors (Tools 213-232)."""
 from __future__ import annotations
 
-import json
 import urllib.request
 import urllib.parse
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
-from titan_tools.common import ToolResult, titan_plot_layout, TITAN_GOLD, TITAN_TEAL, TITAN_CORAL, TITAN_BLUE, TITAN_PURPLE, TITAN_GREEN
+from titan_tools.common import ToolResult, titan_plot_layout, TITAN_GOLD, TITAN_TEAL, TITAN_CORAL, TITAN_PURPLE
 
 
 import os
@@ -124,7 +123,13 @@ def tool_ncbi_protein_fetch(accession_id: str = "NP_000537") -> ToolResult:
         "NP_004324": {"Protein": "serine/threonine-protein kinase B-raf", "Organism": "Homo sapiens", "Length_aa": 766, "MW_kDa": 84.4, "Function": "MAPK/ERK signaling pathway transducer"},
         "YP_009724390": {"Protein": "surface glycoprotein (Spike)", "Organism": "SARS-CoV-2", "Length_aa": 1273, "MW_kDa": 141.2, "Function": "Receptor binding domain (ACE2 engagement)"}
     }
-    match = db.get(acc, {"Protein": f"{acc} Protein", "Organism": "Homo sapiens", "Length_aa": 420, "MW_kDa": 46.2, "Function": f"RefSeq curated protein for {acc}"})
+    match = db.get(acc)
+    if match is None:
+        _res = _not_found("NCBI Protein (RefSeq) Fetch", acc)
+        if st_note:
+            import dataclasses
+            _res = dataclasses.replace(_res, notes=list(_res.notes) + [st_note])
+        return _res
     df = pd.DataFrame([{"Protein_Accession": acc, "Protein_Name": match["Protein"], "Organism": match["Organism"], "Length_Residues": match["Length_aa"], "Molecular_Weight_kDa": match["MW_kDa"], "Biological_Role": match["Function"]}])
 
     fig = px.bar(df, x="Protein_Name", y="Length_Residues", color_discrete_sequence=[TITAN_TEAL])
@@ -445,7 +450,9 @@ def tool_omim_phenotype_linker(mim_number: str = "191170") -> ToolResult:
         "604370": {"Phenotype": "Breast-ovarian cancer, familial, 1", "Gene": "BRCA1", "Inheritance": "Autosomal dominant", "Clinical_Synopsis": "High lifetime risk of breast, ovarian, and fallopian tube carcinomas"},
         "219700": {"Phenotype": "Cystic fibrosis (CF)", "Gene": "CFTR", "Inheritance": "Autosomal recessive", "Clinical_Synopsis": "Chronic pulmonary infections, pancreatic insufficiency, elevated sweat chloride"}
     }
-    match = db.get(mim, {"Phenotype": f"MIM #{mim} Phenotype", "Gene": "Unknown", "Inheritance": "Autosomal dominant", "Clinical_Synopsis": f"Online Mendelian Inheritance in Man record #{mim}"})
+    match = db.get(mim)
+    if match is None:
+        return _not_found("OMIM Phenotype Record (offline)", mim)
     df = pd.DataFrame([{"MIM_Number": mim, "Clinical_Phenotype": match["Phenotype"], "Causal_Gene": match["Gene"], "Mode_of_Inheritance": match["Inheritance"], "Clinical_Manifestations": match["Clinical_Synopsis"]}])
 
     fig = px.bar(df, x="Clinical_Phenotype", y=[1], color_discrete_sequence=[TITAN_CORAL])
@@ -496,7 +503,9 @@ def tool_ensembl_id_resolver(gene_symbol: str = "EGFR") -> ToolResult:
         "TP53": {"ENSG": "ENSG00000141510", "ENST": "ENST00000269305.9", "ENSP": "ENSP00000269305", "Chr": "17:7,668,421-7,687,490"},
         "KRAS": {"ENSG": "ENSG00000133703", "ENST": "ENST00000256078.10", "ENSP": "ENSP00000256078", "Chr": "12:25,205,246-25,250,929"}
     }
-    match = db.get(sym, {"ENSG": f"ENSG0000_{sym}", "ENST": "ENST0000_CANONICAL", "ENSP": "ENSP0000_PROTEIN", "Chr": "Chr 1:1,000,000-1,050,000"})
+    match = db.get(sym)
+    if match is None:
+        return _not_found("Ensembl Gene Identifiers (offline)", sym)
     df = pd.DataFrame([{"Gene_Symbol": sym, "Ensembl_Gene_ID": match["ENSG"], "Canonical_Transcript": match["ENST"], "Ensembl_Protein": match["ENSP"], "Genomic_Span": match["Chr"]}])
 
     fig = px.bar(df, x="Ensembl_Gene_ID", y=[1], color_discrete_sequence=[TITAN_TEAL])
@@ -578,7 +587,9 @@ def tool_kegg_rest_pathway_fetch(pathway_id: str = "hsa00010") -> ToolResult:
         "hsa04110": {"Name": "Cell cycle - Homo sapiens", "Class": "Cellular Processes; Cell growth and death", "Genes": 124, "Compounds": 8},
         "hsa05200": {"Name": "Pathways in cancer - Homo sapiens", "Class": "Human Diseases; Cancers: Overview", "Genes": 395, "Compounds": 22}
     }
-    match = db.get(pid, {"Name": f"KEGG Pathway {pid}", "Class": "Biological Pathways", "Genes": 45, "Compounds": 18})
+    match = db.get(pid)
+    if match is None:
+        return _not_found("KEGG Pathway Entry (offline)", pid)
     df = pd.DataFrame([{"KEGG_Pathway_ID": pid, "Pathway_Title": match["Name"], "Functional_Category": match["Class"], "Annotated_Gene_Count": match["Genes"], "Substrate_Compounds": match["Compounds"]}])
 
     fig = go.Figure(go.Bar(x=["Genes", "Metabolite Compounds"], y=[match["Genes"], match["Compounds"]], marker_color=[TITAN_TEAL, TITAN_GOLD]))
