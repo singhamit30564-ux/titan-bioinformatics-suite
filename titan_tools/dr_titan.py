@@ -1,6 +1,7 @@
 """Dr. Titan AI & Bio-Automation tool engines (Tools 233-260)."""
 from __future__ import annotations
 
+import re
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -43,30 +44,84 @@ def tool_dr_titan_sequence_explainer(sequence: str = "ATGCGTAGTCTAGCTAGCTAG", la
 
 
 def tool_dr_titan_variant_pathogenicity(variant: str = "BRAF:c.1799T>A:p.V600E") -> ToolResult:
-    """Tool 234: Dr. Titan Variant Pathogenicity Advisor."""
-    v = variant.strip()
-    df = pd.DataFrame([
-        {"Analysis_Level": "DNA Mutation", "Detail": "T to A transversion at nucleotide 1799"},
-        {"Analysis_Level": "Protein Recoding", "Detail": "Valine (hydrophobic) to Glutamic Acid (negatively charged) at codon 600"},
-        {"Analysis_Level": "Oncogenic Mechanism", "Detail": "Negative charge mimics activating phosphorylation loop, locking kinase ON"},
-        {"Analysis_Level": "Clinical Recommendation", "Detail": "FDA-approved dual BRAF/MEK inhibition (Dabrafenib + Trametinib)"}
-    ])
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=99.0,
-        gauge=dict(axis=dict(range=[0, 100]), bar=dict(color=TITAN_CORAL))
-    ))
-    fig.update_layout(**titan_plot_layout("Pathogenicity Confidence %", height=260))
-
+    """Tool 234: Dr. Titan Variant Pathogenicity Advisor (offline, curated)."""
+    v = (variant or "").strip().upper()
+    rows = [{"Analysis_Level": "Input", "Detail": v or "(empty)"}]
+    score = 0
+    gene = v.split(":")[0].strip() if ":" in v else ""
+    pm = re.search(r"P[:.]([A-Z])([0-9]+)([A-Z*])", v)
+    ref = alt = None
+    codon = None
+    if pm:
+        ref, codon, alt = pm.group(1), int(pm.group(2)), pm.group(3)
+        rows.append({"Analysis_Level": "Protein change parsed",
+                     "Detail": f"{gene or 'gene?'} {ref}{codon}{alt}"})
+        if alt == "*":
+            score += 45
+            rows.append({"Analysis_Level": "Consequence", "Detail": "Stop-gained (nonsense) → truncation likely"})
+        elif alt == ref:
+            rows.append({"Analysis_Level": "Consequence", "Detail": "Synonymous (no amino-acid change)"})
+        else:
+            try:
+                from Bio.Align import substitution_matrices
+                b = float(substitution_matrices.load("BLOSUM62")[ref, alt])
+            except Exception:  # unknown letters
+                b = 0.0
+            rows.append({"Analysis_Level": "BLOSUM62 substitution score",
+                         "Detail": f"{ref}→{alt}: {b:+.0f} ({'conservative' if b > 0 else 'non-conservative'})"})
+            score += 25 if b <= -2 else (10 if b < 0 else 0)
+            acidic, basic = set("DE"), set("KRH")
+            if (ref in acidic and alt in basic) or (ref in basic and alt in acidic):
+                score += 20
+                rows.append({"Analysis_Level": "Charge reversal",
+                             "Detail": f"{ref}→{alt} flips side-chain charge — often destabilizing or regulatory"})
+            hydro = set("AVILMFWCY")
+            if (ref in hydro) != (alt in hydro):
+                score += 10
+                rows.append({"Analysis_Level": "Hydrophobicity class change",
+                             "Detail": "buried/exposed character changes at this position"})
+    else:
+        rows.append({"Analysis_Level": "Parsing", "Detail":
+                     "No 'p.XnnnY' field found — biochemical inference skipped; supply e.g. 'TP53:c.524G>A:p.R175H'"})
+    if ("FRAMESHIFT" in v) or ("DEL" in v) or ("INS" in v) and "P:" not in v:
+        score += 30
+        rows.append({"Analysis_Level": "Frameshift/indel suspected",
+                     "Detail": "c.-level deletion/insertion notation without protein field — assume truncating"})
+    HOTSPOTS = {("BRAF", 600), ("KRAS", 12), ("KRAS", 13), ("KRAS", 61), ("NRAS", 61),
+                ("EGFR", 858), ("TP53", 175), ("TP53", 248), ("TP53", 273), ("PIK3CA", 545),
+                ("PIK3CA", 1047), ("IDH1", 132)}  # curated recurrent-driver positions (teaching set)
+    if gene and codon and (gene, codon) in HOTSPOTS:
+        score += 40
+        rows.append({"Analysis_Level": "Curated hotspot match",
+                     "Detail": f"{gene} codon {codon} is a recurrent driver hotspot in cancer genomics"})
+    score = min(score, 98)
+    tier = ("PATHOGENIC (likely)" if score >= 70 else
+            "LIKELY PATHOGENIC SIGNAL" if score >= 45 else
+            "UNCERTAIN SIGNIFICANCE (VUS-like)" if score >= 20 else
+            "BENIGN-LEADING BIOCHEMISTRY")
+    rows.append({"Analysis_Level": "Clinical note", "Detail":
+                 "Curated offline heuristics only — the authoritative calls live in ClinVar/COSMIC and formal ACMG review."})
+    df = pd.DataFrame(rows)
+    fig = go.Figure(go.Indicator(mode="gauge+number", value=score,
+                                 domain=dict(x=[0, 1], y=[0, 1]),
+                                 gauge=dict(axis=dict(range=[0, 100]), bar=dict(color=TITAN_CORAL),
+                                            steps=[dict(range=[0, 19], color="#1c2a25"),
+                                                   dict(range=[20, 44], color="#3a3a1c"),
+                                                   dict(range=[45, 69], color="#3a241c"),
+                                                   dict(range=[70, 100], color="#4a1c25")],
+                                            threshold=dict(line=dict(color="white", width=2), thickness=0.75, value=70))))
+    fig.update_layout(**titan_plot_layout("Heuristic pathogenicity signal (0-100, this rubric only)", height=280))
     return ToolResult(
-        title="Dr. Titan Variant Clinical Impact Advisor",
-        summary=f"Analyzed {v}. Diagnosis: TIER 1A PATHOGENIC CANCER DRIVER.",
-        metrics=[("Pathogenicity Call", "Pathogenic (Tier 1A)", None), ("Mechanism", "Constitutive MAPK Activation", None), ("Therapeutic", "Targeted TKI Approved", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["Dr. Titan explains: Substituting neutral Valine with acidic Glutamate creates electrostatic repulsion that keeps BRAF permanently active.",
-               "Clinical oncologists prescribe targeted kinase inhibitors rather than conventional chemotherapy for this mutation."]
-    )
+        title="Dr. Titan Variant Clinical Impact Advisor (offline heuristics)",
+        summary=f"{v or '(no variant)'} — heuristic tier: {tier} (score {score}/100 from BLOSUM/charge/hotspot signals).",
+        metrics=[("Signal score", f"{score}/100", "sum of rubric components (see table)"),
+                 ("Tier (heuristic)", tier, None),
+                 ("Database check", "NOT queried (offline) — consult ClinVar/COSMIC", None)],
+        dataframe=df, figure=fig,
+        notes=["Every signal above is computed from your string (BLOSUM62 via Biopython, charge/hydrophobicity "
+               "classes, curated hotspot-position list). No ClinVar lookup or PM2/PP3 population evidence is "
+               "available offline, so this is educational triage, not classification.",
+               "For real submissions: use VEP + ClinVar + ACMG criteria via the clinical-domain tools."])
 
 
 def tool_dr_titan_primer_troubleshooter(tm_forward: float = 60.5, tm_reverse: float = 52.0) -> ToolResult:
@@ -524,29 +579,44 @@ def tool_dr_titan_epigenetics_tutor(modification: str = "H3K27me3 (Histone H3 Ly
 
 
 def tool_dr_titan_forensic_dna_explainer(str_loci: str = "D3S1358:15/16, vWA:17/18, FGA:21/22, D8S1179:13/14") -> ToolResult:
-    """Tool 253: Dr. Titan Forensic DNA Fingerprinting Explainer."""
+    """Tool 253: Dr. Titan Forensic DNA Fingerprinting Explainer (teaching model)."""
     items = [x.strip() for x in str_loci.split(",") if ":" in x]
-    records = []
-    prob_match = 1.0
+    if not items:
+        raise ValueError("Enter loci as 'D3S1358:15/16, vWA:17/18' (name:alleleA/alleleB).")
+    # uniform teaching assumption; NOT population allele frequencies (no frequency DB offline)
+    P_HET, P_HOM = 0.05, 0.05 * 0.05
+    records, prob_match, n_hom = [], 1.0, 0
     for it in items:
-        locus, alleles = it.split(":")
-        p_locus = 0.05  # Average random match probability per locus
+        locus, alleles = it.split(":", 1)
+        al = [a.strip() for a in alleles.replace("/", ",").split(",") if a.strip()]
+        homozygous = len(al) >= 2 and al[0] == al[1]
+        p_locus = P_HOM if homozygous else P_HET
+        if homozygous:
+            n_hom += 1
         prob_match *= p_locus
-        records.append({"CODIS_Locus": locus.strip(), "Genotype_Alleles": alleles.strip(), "Heterozygosity": "Heterozygous", "Random_Match_Probability": p_locus})
+        records.append({"CODIS_Locus": locus.strip(), "Genotype_Alleles": "/".join(al[:2]) or "?",
+                        "Zygosity": "homozygous" if homozygous else ("heterozygous" if len(al) >= 2 else "unknown (single allele)"),
+                        "Random_Match_Probability": p_locus})
     df = pd.DataFrame(records)
-
-    fig = px.bar(df, x="CODIS_Locus", y="Random_Match_Probability", color_discrete_sequence=[TITAN_TEAL])
-    fig.update_layout(**titan_plot_layout("Forensic STR Locus Allele Frequencies", height=280))
-
+    fig = px.bar(df, x="CODIS_Locus", y="Random_Match_Probability", color="Zygosity",
+                 color_discrete_map={"homozygous": TITAN_GOLD, "heterozygous": TITAN_TEAL})
+    fig.update_layout(**titan_plot_layout("Per-locus RMP under the 5% teaching assumption (log scale)", height=300))
+    fig.update_yaxes(type="log")
+    one_in = 1.0 / prob_match if prob_match > 0 else float("inf")
+    unique = one_in >= 1e12
     return ToolResult(
-        title="Dr. Titan Forensic DNA Fingerprinting Explainer",
-        summary=f"Analyzed {len(df)} FBI CODIS core Short Tandem Repeat (STR) loci. Combined random match probability: 1 in {1.0/prob_match:,.0f}.",
-        metrics=[("Random Match Probability", f"1 in {1.0/prob_match:,.0f}", None), ("CODIS Standards", "Passed FBI Standard", None), ("Individualization", "Statistically Unique Profile", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["Forensic DNA profiling utilizes 20 core Short Tandem Repeat (STR) tetranucleotide repeat loci in non-coding regions.",
-               "The product rule multiplies independent allele frequencies, yielding random match probabilities exceeding 1 in 1 trillion."]
-    )
+        title="Forensic DNA Profile — Product-Rule Demonstration",
+        summary=(f"{len(df)} STR loci; each heterozygous locus contributes 0.05 and each homozygous locus 0.05² "
+                 f"({n_hom} homozygous). Combined random-match probability ≈ 1 in {one_in:,.0f}."),
+        metrics=[("Combined RMP", f"1 in {one_in:,.0f}", "product rule, assumed independence"),
+                 ("Uniqueness convention", "meets 1-in-a-trillion demo threshold" if unique else "below 1-in-trillion demo threshold", None),
+                 ("Population model", "flat 5% per-locus — educational, NOT allele-frequency DB", None)],
+        dataframe=df, figure=fig,
+        notes=["Real CODIS matching multiplies published allele frequencies per population (e.g. 20-loci core STR kit). "
+               "The flat 0.05/0.0025 model here only demonstrates why the combined probability collapses exponentially with loci.",
+               "Theta-correction for related individuals and population substructure are not applied.",
+               "The 'FBI standard' badge was removed deliberately: passing it requires the actual SWGDAM frequency tables."])
+
 
 
 def tool_dr_titan_gut_dysbiosis_advisor(fb_ratio: float = 3.8) -> ToolResult:

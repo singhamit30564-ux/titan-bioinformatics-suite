@@ -11,15 +11,69 @@ import plotly.express as px
 from titan_tools.common import ToolResult, titan_plot_layout, TITAN_GOLD, TITAN_TEAL, TITAN_CORAL, TITAN_BLUE, TITAN_PURPLE, TITAN_GREEN
 
 
+import os
+
+def _live_enabled() -> bool:
+    """Opt-in live NCBI access: export TITAN_NCBI_LIVE=1 to query eutils."""
+    return os.environ.get("TITAN_NCBI_LIVE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _eutils_efetch(db: str, uid: str, rettype: str = "fasta") -> str:
+    url = ("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+           f"?db={db}&id={urllib.parse.quote(str(uid))}&rettype={rettype}&retmode=text")
+    with urllib.request.urlopen(url, timeout=20) as resp:
+        return resp.read().decode("utf-8", "replace")
+
+
+def _not_found(what: str, key: str) -> ToolResult:
+    return ToolResult(
+        title=f"{what} — Not In Offline Dataset",
+        summary=(f"No curated offline record exists for '{key}' and no live fetch was performed. "
+                 "Titan returns nothing here rather than inventing annotations."),
+        metrics=[("Query", str(key), None), ("Mode", "offline-curated", None),
+                 ("Live fetch", "disabled — set TITAN_NCBI_LIVE=1 (needs internet)", None)],
+        notes=["The offline set holds a handful of textbook accessions only.",
+               "Unknown IDs never receive fabricated lengths, organisms or statistics."])
+
+
+def _titan_preset(fn):
+    """Marks a tool as returning curated preset data (surfaced in the registry)."""
+    fn._titan_preset = True
+    return fn
+
+
+@_titan_preset
 def tool_ncbi_nucleotide_fetch(accession_id: str = "NC_005816") -> ToolResult:
     """Tool 213: NCBI Nucleotide (GenBank) Fetch & Accession Parser."""
     acc = accession_id.strip()
+    st_note = ""
+    if _live_enabled():
+        try:
+            text = _eutils_efetch("nuccore", acc)
+            lines = text.strip().splitlines()
+            header = lines[0] if lines and lines[0].startswith(">") else ""
+            seq = "".join(l.strip() for l in lines[1:]).upper()
+            if seq:
+                gc = 100.0 * (seq.count("G") + seq.count("C")) / len(seq)
+                df = pd.DataFrame([{"NCBI_Accession": acc, "Organism": "via efetch", "Molecule_Type": "fetched",
+                                    "Sequence_Length_bp": len(seq), "Annotated_Genes": "-", "Definition": header}])
+                return ToolResult(title=f"NCBI Nucleotide Fetch (LIVE efetch) — {acc}",
+                                  summary=f"Retrieved {len(seq):,} bases from NCBI efetch for {acc}. GC {gc:.1f}%.",
+                                  metrics=[("Accession", acc, None), ("Length", f"{len(seq):,} bp", None),
+                                           ("GC %", f"{gc:.1f}%", None)],
+                                  dataframe=df,
+                                  notes=["Live efetch (nuccore, FASTA). Length and GC are computed from the real fetched sequence; the header is NCBI's definition line."],
+                                  fasta=text if text.startswith(">") else None)
+        except (urllib.error.URLError, OSError, ValueError) as ex:
+            st_note = f"Live fetch failed ({type(ex).__name__}); fell back to the offline curated set."
     db = {
         "NC_005816": {"Organism": "Yersinia pestis KIM10+ plasmid pPCP1", "Length_bp": 9609, "Molecule": "Circular DNA", "Genes": 12, "Description": "Pesticin, coagulase, and plasminogen activator plasmid"},
         "NM_000546": {"Organism": "Homo sapiens", "Length_bp": 2586, "Molecule": "mRNA", "Genes": 1, "Description": "TP53 tumor protein p53 transcript variant 1"},
         "NC_045512": {"Organism": "Severe acute respiratory syndrome coronavirus 2", "Length_bp": 29903, "Molecule": "ssRNA", "Genes": 11, "Description": "SARS-CoV-2 isolate Wuhan-Hu-1 complete genome"}
     }
-    match = db.get(acc, {"Organism": f"{acc} Specimen", "Length_bp": 12500, "Molecule": "Genomic DNA", "Genes": 8, "Description": f"NCBI Nucleotide record for accession {acc}"})
+    match = db.get(acc)
+    if match is None:
+        return _not_found("NCBI Nucleotide record", acc)
     df = pd.DataFrame([{"NCBI_Accession": acc, "Organism": match["Organism"], "Molecule_Type": match["Molecule"], "Sequence_Length_bp": match["Length_bp"], "Annotated_Genes": match["Genes"], "Definition": match["Description"]}])
 
     fig = go.Figure(go.Indicator(
@@ -35,14 +89,36 @@ def tool_ncbi_nucleotide_fetch(accession_id: str = "NC_005816") -> ToolResult:
         metrics=[("Accession ID", acc, None), ("Genome Length", f"{match['Length_bp']:,} bp", None), ("Coding Genes", str(match["Genes"]), None)],
         dataframe=df,
         figure=fig,
-        notes=["NCBI Entrez eFetch connects to GenBank/RefSeq to retrieve canonical FASTA sequences and GenBank flatfile annotations.",
+        notes=([f"⚠️ {st_note}"] if st_note else []) +
+              ["Offline mode serves a small curated set; export TITAN_NCBI_LIVE=1 (with internet) to efetch real records.",
                "Plasmid pPCP1 of Yersinia pestis encodes the pla protease responsible for bacterial invasiveness in bubonic plague."]
     )
 
 
+@_titan_preset
 def tool_ncbi_protein_fetch(accession_id: str = "NP_000537") -> ToolResult:
     """Tool 214: NCBI Protein (RefSeq) Fast Fetch & Sequence Inspector."""
     acc = accession_id.strip()
+    st_note = ""
+    if _live_enabled():
+        try:
+            text = _eutils_efetch("protein", acc)
+            seq = "".join(l.strip() for l in text.splitlines() if l.strip() and not l.startswith(">")).upper()
+            if seq:
+                from Bio.SeqUtils.ProtParam import ProteinAnalysis
+                mw = ProteinAnalysis(seq).molecular_weight()
+                df = pd.DataFrame([{"Protein_Accession": acc, "Protein_Name": text.splitlines()[0][:80],
+                                    "Organism": "via efetch", "Length_Residues": len(seq),
+                                    "Molecular_Weight_kDa": round(mw / 1000.0, 2), "Biological_Role": "-"}])
+                return ToolResult(title=f"NCBI Protein Fetch (LIVE efetch) — {acc}",
+                                  summary=f"Retrieved {len(seq)} aa from NCBI; computed MW {mw/1000:.2f} kDa.",
+                                  metrics=[("Accession", acc, None), ("Length", f"{len(seq)} aa", None),
+                                           ("MW (computed)", f"{mw/1000:.2f} kDa", "Bio.SeqUtils on the fetched sequence")],
+                                  dataframe=df,
+                                  notes=["Live efetch (protein, FASTA); molecular weight computed from the real sequence."],
+                                  fasta=text if text.startswith(">") else None)
+        except (urllib.error.URLError, OSError, ValueError) as ex:
+            st_note = f"Live fetch failed ({type(ex).__name__}); fell back to the offline curated set."
     db = {
         "NP_000537": {"Protein": "cellular tumor antigen p53", "Organism": "Homo sapiens", "Length_aa": 393, "MW_kDa": 43.6, "Function": "DNA-binding transcription factor tumor suppressor"},
         "NP_004324": {"Protein": "serine/threonine-protein kinase B-raf", "Organism": "Homo sapiens", "Length_aa": 766, "MW_kDa": 84.4, "Function": "MAPK/ERK signaling pathway transducer"},
@@ -65,6 +141,7 @@ def tool_ncbi_protein_fetch(accession_id: str = "NP_000537") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_ncbi_gene_id_mapper(gene_id: str = "7157") -> ToolResult:
     """Tool 215: NCBI Gene ID to Genomic Locus & Exon Coordinate Mapper."""
     gid = gene_id.strip()
@@ -73,7 +150,9 @@ def tool_ncbi_gene_id_mapper(gene_id: str = "7157") -> ToolResult:
         "672": {"Symbol": "BRCA1", "Name": "BRCA1 DNA repair associated", "Location": "Chr 17:43,044,295-43,170,245 (17q21.31)", "Exons": 24, "Aliases": "RNF53, FANCS, BRCC1"},
         "675": {"Symbol": "BRCA2", "Name": "BRCA2 DNA repair associated", "Location": "Chr 13:32,315,474-32,400,266 (13q13.1)", "Exons": 27, "Aliases": "FACD, FANCD1"}
     }
-    match = db.get(gid, {"Symbol": f"GENE_{gid}", "Name": "Candidate Locus", "Location": "Chr 1:1,000,000-1,050,000", "Exons": 8, "Aliases": "None"})
+    match = db.get(gid)
+    if match is None:
+        return _not_found("NCBI Gene mapping", gid)
     df = pd.DataFrame([{"NCBI_Gene_ID": gid, "Official_Symbol": match["Symbol"], "Full_Name": match["Name"], "Cytogenetic_Band": match["Location"], "Total_Exons": match["Exons"], "Approved_Aliases": match["Aliases"]}])
 
     fig = go.Figure(go.Bar(x=[match["Symbol"]], y=[match["Exons"]], marker_color=TITAN_GOLD))
@@ -90,6 +169,7 @@ def tool_ncbi_gene_id_mapper(gene_id: str = "7157") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_ncbi_taxonomy_browser(species_name: str = "Homo sapiens") -> ToolResult:
     """Tool 216: NCBI Taxonomy Scientific Lineage & Cladistic Browser."""
     sp = species_name.strip()
@@ -119,6 +199,7 @@ def tool_ncbi_taxonomy_browser(species_name: str = "Homo sapiens") -> ToolResult
     )
 
 
+@_titan_preset
 def tool_ncbi_dbsnp_lookup(rsid: str = "rs80357906") -> ToolResult:
     """Tool 217: NCBI dbSNP Clinical & Minor Allele Frequency Query."""
     var = rsid.strip()
@@ -127,7 +208,9 @@ def tool_ncbi_dbsnp_lookup(rsid: str = "rs80357906") -> ToolResult:
         "rs10455872": {"Gene": "LPA", "Alleles": "A>G", "Global_MAF": 0.082, "Clinical_Significance": "Risk Factor (Coronary artery disease)", "Validation": "1000 Genomes, TopMed"},
         "rs6025": {"Gene": "F5", "Alleles": "C>T (Factor V Leiden)", "Global_MAF": 0.024, "Clinical_Significance": "Pathogenic / Thrombophilia", "Validation": "HapMap, ClinVar"}
     }
-    match = db.get(var, {"Gene": "Candidate Gene", "Alleles": "A>G", "Global_MAF": 0.015, "Clinical_Significance": "Investigational Variant", "Validation": "dbSNP Build 156"})
+    match = db.get(var)
+    if match is None:
+        return _not_found("Ncbi Dbsnp Lookup", var)
     df = pd.DataFrame([{"dbSNP_rsID": var, "Host_Gene": match["Gene"], "Variant_Allele": match["Alleles"], "Global_Minor_Allele_Freq": match["Global_MAF"], "ClinVar_Significance": match["Clinical_Significance"], "dbSNP_Build": match["Validation"]}])
 
     fig = go.Figure(go.Indicator(
@@ -148,6 +231,7 @@ def tool_ncbi_dbsnp_lookup(rsid: str = "rs80357906") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_ncbi_pubmed_search(query_keyword: str = "CRISPR Cas9 cancer immunotherapy") -> ToolResult:
     """Tool 218: NCBI PubMed Literature Search & Abstract Retriever."""
     q = query_keyword.strip()
@@ -171,6 +255,7 @@ def tool_ncbi_pubmed_search(query_keyword: str = "CRISPR Cas9 cancer immunothera
     )
 
 
+@_titan_preset
 def tool_ncbi_clinvar_lookup(variant_id: str = "VCV000012345") -> ToolResult:
     """Tool 219: NCBI ClinVar Variant Assertion & Review Status."""
     v = variant_id.strip()
@@ -195,52 +280,92 @@ def tool_ncbi_clinvar_lookup(variant_id: str = "VCV000012345") -> ToolResult:
     )
 
 
-def tool_remote_blastn_search(query_seq: str = "TGCACGTGCCCTGCTTCTCCA") -> ToolResult:
-    """Tool 220: Remote NCBI BLASTn Nucleotide Similarity Search."""
-    q = query_seq.upper().strip()
-    hits = [
-        {"Accession": "NC_000017.11", "Organism": "Homo sapiens Chr 17", "E_value": 4e-9, "Identity_%": 100.0, "Bit_Score": 42.1},
-        {"Accession": "NC_005116.4", "Organism": "Pan troglodytes (Chimpanzee)", "E_value": 8e-8, "Identity_%": 95.2, "Bit_Score": 38.2},
-        {"Accession": "NC_000083.7", "Organism": "Mus musculus (House mouse)", "E_value": 2e-4, "Identity_%": 85.7, "Bit_Score": 28.5}
-    ]
+@_titan_preset
+def tool_remote_blastn_search(query_seq: str = "TGCACGTGCCCTGCTTCTCCA",
+                              subject_fasta: str = "") -> ToolResult:
+    """Tool 220: Offline Seed&Extend Similarity Search (BLASTn-style, local)."""
+    q = (query_seq or "").upper().strip()
+    if not subject_fasta.strip():
+        return ToolResult(
+            title="BLASTn-Style Local Search — no subject database supplied",
+            summary=("This page does NOT query NCBI's remote BLAST service and will not fabricate hits. "
+                     "Paste a subject FASTA (genes, contigs, a small genome set) to run a real "
+                     "seed-and-extend search against it."),
+            metrics=[("Query length", f"{len(q)} nt", None), ("Subject DB", "empty", None)],
+            notes=["With a subject set provided, this computes ungapped HSPs from exact k-mer seeds (same engine as tool #50)."])
+    from titan_tools.legacy_adapters import _to_result
+    from titan_utils.compute.lab import blast_local
+    res = _to_result(blast_local(query=q, subject=subject_fasta))
+    res.title = "BLASTn-Style Local Search (offline)"
+    res.notes = res.notes + ["Not NCBI BLAST: no E-values, no nr database, no gapped extension. "
+                             "For real remote BLAST run `blastn -remote -db nt` on a networked machine.",
+                             "Multiple subjects are pooled into one search space (FASTA headers stripped); "
+                             "coordinates refer to the concatenated target."]
+    return res
+
+
+@_titan_preset
+def tool_remote_blastp_search(protein_seq: str = "MEEPQSDPSVEPPLSQETFSDLWKLLPEN",
+                              subject_fasta: str = "") -> ToolResult:
+    """Tool 221: Offline Protein Similarity Search (BLASTp-style, local)."""
+    q = (protein_seq or "").upper().strip()
+    if not subject_fasta.strip():
+        return ToolResult(
+            title="BLASTp-Style Local Search — no subject database supplied",
+            summary=("No remote nr search happens here and no hits are invented. Paste ortholog FASTA "
+                     "sequences (e.g. p53 from a few species) to run a real BLOSUM62 alignment search."),
+            metrics=[("Query length", f"{len(q)} aa", None), ("Subject DB", "empty", None)],
+            notes=["With subjects provided: Biopython PairwiseAligner (BLOSUM62, affine gaps) per record — global alignments, real scores."])
+    from Bio import Align
+    al = Align.PairwiseAligner()
+    al.substitution_matrix = Align.substitution_matrices.load("BLOSUM62")
+    al.open_gap_score, al.extend_gap_score = -11.0, -1.0
+    recs, name, buf = [], None, []
+    for line in subject_fasta.splitlines():
+        if line.startswith(">"):
+            if name is not None:
+                recs.append((name, "".join(buf)))
+            parts = line[1:].split()
+            name, buf = (parts[0] if parts else f"s{len(recs) + 1}"), []
+        elif name is not None:
+            buf.append(line.strip())
+    if name is not None:
+        recs.append((name, "".join(buf)))
+    if not recs:
+        raise ValueError("subject_fasta could not be parsed as FASTA.")
+    hits = []
+    for n, s_ in recs:
+        try:
+            a = al.align(q, s_)[0]
+        except Exception:  # noqa: BLE001 - odd alphabets
+            continue
+        ra, rb = str(a[0]), str(a[1])
+        nmatch = sum(1 for x, y in zip(ra, rb) if x == y and x != "-")
+        ident = nmatch / len(ra) if ra else 0.0
+        hits.append({"Subject": n, "Score": round(float(a.score), 1), "Identity_%": round(100 * ident, 1),
+                     "Subject_len_aa": len(s_), "Aligned_len": len(ra)})
+    hits.sort(key=lambda h: -h["Score"])
     df = pd.DataFrame(hits)
-    fig = px.bar(df, x="Organism", y="Identity_%", color="Bit_Score", color_continuous_scale="Viridis")
-    fig.update_layout(**titan_plot_layout("BLASTn Top Database Alignments", height=300))
-
+    fig = None
+    if len(df):
+        fig = px.bar(df, x="Subject", y="Identity_%", color_discrete_sequence=[TITAN_TEAL])
+        fig.update_layout(**titan_plot_layout("BLOSUM62 alignment identity vs your subjects", height=300))
+    top = df.iloc[0] if len(df) else None
     return ToolResult(
-        title="Remote NCBI BLASTn Similarity Search",
-        summary=f"Searched GenBank nt database with {len(q)} nt query. Top match: Homo sapiens (E = 4e-9, 100% identity).",
-        metrics=[("Top Hit", "Homo sapiens (100%)", None), ("E-Value", "4e-9", None), ("Bit Score", "42.1", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["BLASTn searches nucleotide databases using exact short seeds (word size 11 or 28) followed by gap-extended local alignments.",
-               "Expect values (E-value) < 1e-5 confirm statistically significant homology beyond random chance."]
-    )
+        title="BLASTp-Style Local Search (offline, BLOSUM62 alignments)",
+        summary=(f"Aligned the {len(q)} aa query against {len(recs)} subjects; top: "
+                 f"{top['Subject']} ({top['Identity_%']}% identity, score {top['Score']})." if top is not None
+                 else "No alignable subjects found."),
+        metrics=[("Subjects", str(len(recs)), None),
+                 ("Top identity", f"{top['Identity_%']}%" if top is not None else "-", None)],
+        dataframe=df if len(df) else None, figure=fig,
+        notes=["Identity counts matches over ALL aligned columns, including columns where the query is gapped "
+               "against a longer subject — so 16/16 exact prefix matches read as 69.6% against a 23-column alignment.",
+               "Global pairwise alignments (BLOSUM62, affine gaps) — NOT a BLAST heuristic; no E-values. "
+               "For real remote BLASTp run `blastp -remote -db nr` with network access."])
 
 
-def tool_remote_blastp_search(protein_seq: str = "MEEPQSDPSVEPPLSQETFSDLWKLLPEN") -> ToolResult:
-    """Tool 221: Remote NCBI BLASTp Protein Homology Search."""
-    seq = protein_seq.upper().strip()
-    hits = [
-        {"Accession": "P04637.4", "Protein": "Cellular tumor antigen p53", "Organism": "Homo sapiens", "E_value": 2e-14, "Identity_%": 100.0},
-        {"Accession": "P02340.2", "Protein": "Cellular tumor antigen p53", "Organism": "Mus musculus", "E_value": 4e-11, "Identity_%": 82.8},
-        {"Accession": "P10360.1", "Protein": "Cellular tumor antigen p53", "Organism": "Xenopus laevis", "E_value": 1e-7, "Identity_%": 65.5}
-    ]
-    df = pd.DataFrame(hits)
-    fig = px.bar(df, x="Organism", y="Identity_%", color_discrete_sequence=[TITAN_TEAL])
-    fig.update_layout(**titan_plot_layout("BLASTp Orthologous Protein Alignment", height=300))
-
-    return ToolResult(
-        title="Remote NCBI BLASTp Protein Homology Search",
-        summary=f"Queried non-redundant protein database (nr). Confirmed p53 transactivation domain orthologs.",
-        metrics=[("Top Hit", "Human p53 (100%)", None), ("E-Value", "2e-14", None), ("Scoring Matrix", "BLOSUM62", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["BLASTp utilizes the BLOSUM62 log-odds matrix to detect distant evolutionary homologies between divergent protein sequences.",
-               "The N-terminal transactivation domain (aa 1-42) interacts directly with MDM2 negative regulator."]
-    )
-
-
+@_titan_preset
 def tool_ncbi_geo_dataset_fetch(gse_accession: str = "GSE12345") -> ToolResult:
     """Tool 222: NCBI Gene Expression Omnibus (GEO) Meta-Profiler."""
     gse = gse_accession.strip()
@@ -265,6 +390,7 @@ def tool_ncbi_geo_dataset_fetch(gse_accession: str = "GSE12345") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_ncbi_sra_run_inspector(srr_accession: str = "SRR11412227") -> ToolResult:
     """Tool 223: NCBI Sequence Read Archive (SRA) Run Inspector."""
     srr = srr_accession.strip()
@@ -285,6 +411,7 @@ def tool_ncbi_sra_run_inspector(srr_accession: str = "SRR11412227") -> ToolResul
     )
 
 
+@_titan_preset
 def tool_ncbi_mmdb_structure_fetch(pdb_id: str = "1TUP") -> ToolResult:
     """Tool 224: NCBI MMDB Macromolecular 3D Structure Record Summarizer."""
     pid = pdb_id.strip().upper()
@@ -309,6 +436,7 @@ def tool_ncbi_mmdb_structure_fetch(pdb_id: str = "1TUP") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_omim_phenotype_linker(mim_number: str = "191170") -> ToolResult:
     """Tool 225: OMIM Morbid Map & Hereditary Disease Phenotype Linker."""
     mim = mim_number.strip()
@@ -334,6 +462,7 @@ def tool_omim_phenotype_linker(mim_number: str = "191170") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_uniprot_functional_annotator(uniprot_id: str = "P04637") -> ToolResult:
     """Tool 226: UniProtKB Protein Knowledgebase Functional Annotator."""
     uid = uniprot_id.strip().upper()
@@ -358,6 +487,7 @@ def tool_uniprot_functional_annotator(uniprot_id: str = "P04637") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_ensembl_id_resolver(gene_symbol: str = "EGFR") -> ToolResult:
     """Tool 227: Ensembl Gene Symbol to Canonical ID Resolver."""
     sym = gene_symbol.strip().upper()
@@ -383,6 +513,7 @@ def tool_ensembl_id_resolver(gene_symbol: str = "EGFR") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_pubchem_compound_fetch(compound_query: str = "Aspirin") -> ToolResult:
     """Tool 228: PubChem Chemical Compound CID Properties & SMILES Fetcher."""
     comp = compound_query.strip()
@@ -391,7 +522,9 @@ def tool_pubchem_compound_fetch(compound_query: str = "Aspirin") -> ToolResult:
         "Caffeine": {"CID": 2519, "Formula": "C8H10N4O2", "MW": 194.19, "SMILES": "CN1C=NC2=C1C(=O)N(C(=O)N2C)C", "IUPAC": "1,3,7-trimethylpurine-2,6-dione"},
         "Gleevec": {"CID": 5291, "Formula": "C29H31N7O", "MW": 493.6, "SMILES": "CC1=C(C=C(C=C1)NC(=O)C2=CC=C(C=C2)CN3CCN(CC3)C)NC4=NC=CC(=N4)C5=CN=CC=C5", "IUPAC": "Imatinib"}
     }
-    match = db.get(comp, db["Aspirin"])
+    match = db.get(comp)
+    if match is None:
+        return _not_found("PubChem compound", comp)
     df = pd.DataFrame([{"Compound_Name": comp, "PubChem_CID": match["CID"], "Molecular_Formula": match["Formula"], "Molecular_Weight_g_mol": match["MW"], "Canonical_SMILES": match["SMILES"], "IUPAC_Name": match["IUPAC"]}])
 
     fig = go.Figure(go.Indicator(
@@ -412,6 +545,7 @@ def tool_pubchem_compound_fetch(compound_query: str = "Aspirin") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_wwpdb_validation_report(pdb_id: str = "4HHB") -> ToolResult:
     """Tool 229: Worldwide PDB (wwPDB) Quality Validation Metric Fetcher."""
     pid = pdb_id.strip().upper()
@@ -435,6 +569,7 @@ def tool_wwpdb_validation_report(pdb_id: str = "4HHB") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_kegg_rest_pathway_fetch(pathway_id: str = "hsa00010") -> ToolResult:
     """Tool 230: KEGG Pathway REST API Entry Extractor."""
     pid = pathway_id.strip()
@@ -460,6 +595,7 @@ def tool_kegg_rest_pathway_fetch(pathway_id: str = "hsa00010") -> ToolResult:
     )
 
 
+@_titan_preset
 def tool_reactome_pathway_hierarchy(pathway_id: str = "R-HSA-69278") -> ToolResult:
     """Tool 231: Reactome Biological Pathway Hierarchy Event Inspector."""
     rid = pathway_id.strip()
@@ -483,6 +619,7 @@ def tool_reactome_pathway_hierarchy(pathway_id: str = "R-HSA-69278") -> ToolResu
     )
 
 
+@_titan_preset
 def tool_string_ppi_network_fetch(protein_name: str = "TP53") -> ToolResult:
     """Tool 232: STRING Protein-Protein Interaction Network Interactor Matcher."""
     p_name = protein_name.strip().upper()

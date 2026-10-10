@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 import numpy as np
+import re
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -13,7 +14,16 @@ from titan_tools.common import ToolResult, titan_plot_layout, TITAN_GOLD, TITAN_
 def tool_acmg_pathogenicity_classifier(criteria: str = "PVS1, PM2, PP3") -> ToolResult:
     """Tool 93: ACMG / AMP Clinical Variant Pathogenicity Tier Classifier."""
     codes = [c.strip().upper() for c in criteria.split(",") if c.strip()]
-    
+    _VALID = re.compile(r"^(PVS[1-4]|PS[1-9](\.[1-3])?|PM[1-6](a|b)?|PP[1-5]|BA1|BS[1-4]|BP[1-7])$")
+    invalid = [c for c in codes if not _VALID.match(c)]
+    if invalid:
+        raise ValueError(
+            f"Unrecognised ACMG/AMP criterion code(s): {', '.join(invalid)}. Valid families: "
+            "PVS1-4, PS1-9(.1-.3), PM1-6(a-b), PP1-5, BA1, BS1-4, BP1-7. "
+            "Example: 'PVS1, PM2, PP3'.")
+    if not codes:
+        raise ValueError("Provide at least one ACMG/AMP criterion, e.g. 'PVS1, PM2, PP3'.")
+
     # ACMG scoring logic
     pvs = sum(1 for c in codes if c.startswith("PVS"))
     ps = sum(1 for c in codes if c.startswith("PS"))
@@ -60,7 +70,9 @@ def tool_acmg_pathogenicity_classifier(criteria: str = "PVS1, PM2, PP3") -> Tool
         metrics=[("ACMG Tier", tier.split()[0], None), ("Pathogenic Criteria", str(pvs+ps+pm+pp), None), ("Benign Criteria", str(ba+bs+bp), None)],
         dataframe=df,
         figure=fig,
-        notes=["PVS1 (null variant in gene where LoF is disease mechanism) carries decisive pathogenic weight.",
+        notes=["Simplified deterministic combination rules (Rich 2015 / ACMG-AMP 2015 tables) — a teaching aid, "
+               "not a clinical classification; require evidence-level strength (e.g. PP3_Strong) is not modelled.",
+               "PVS1 (null variant in gene where LoF is disease mechanism) carries decisive pathogenic weight.",
                "Clinical reporting follows Richards et al. 2015 ACMG/AMP standards and guidelines."]
     )
 

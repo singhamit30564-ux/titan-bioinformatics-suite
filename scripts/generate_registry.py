@@ -152,13 +152,17 @@ def main():
                 first_line = first_line.split(":", 1)[1].strip()
             tool_title = first_line.rstrip(".") if first_line else hname.replace("tool_", "").replace("_", " ").title()
 
+            desc = doc or f"Advanced {d_name} analytical tool."
+            if getattr(func, "_titan_preset", False):
+                desc = ("⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest "
+                        "'not found' instead of invented data). " + desc)
             all_tools.append({
                 "id": current_id,
                 "name": tool_title,
                 "domain": d_name,
                 "category_id": cat_id,
                 "category_name": d_name,
-                "description": doc or f"Advanced {d_name} analytical tool.",
+                "description": desc,
                 "console_page": c_page,
                 "inputs": _inputs_from_signature(func),
                 "handler_name": hname,

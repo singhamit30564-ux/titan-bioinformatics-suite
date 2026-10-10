@@ -554,28 +554,52 @@ def tool_chloroplast_ir_junction_mapper(sequence: str = "ATGC" * 100) -> ToolRes
     )
 
 
-def tool_plant_secondary_metabolite_cluster(sequence: str = "MDDFFDDXXDMKLSNFLLGXXXCXGATCTCGATC") -> ToolResult:
+def tool_plant_secondary_metabolite_cluster(sequence: str = "MDDFFDDXXDMKLSNFLLGXXXCXGATCTCGATC",
+                                           extra_motifs: str = "") -> ToolResult:
     """Tool 69: Plant Secondary Metabolite Terpenoid / Flavonoid Cluster Finder."""
-    seq = sequence.upper().strip()
-    clusters = [
-        {"Enzyme_Core": "Terpene Synthase (TPS)", "Signature_Motif": "DDxxD / NSE/DTE motif", "Status": "Detected" if "DD" in seq else "Absent", "Product": "Sesquiterpenoid phytoalexin"},
-        {"Enzyme_Core": "Cytochrome P450 (CYP71)", "Signature_Motif": "FxxGxxxCxG heme domain", "Status": "Detected" if "G" in seq else "Absent", "Product": "Hydroxylated secondary scaffold"},
-        {"Enzyme_Core": "Chalcone Synthase (CHS)", "Signature_Motif": "Cys164 catalytic triad", "Status": "Detected", "Product": "Flavonoid / anthocyanin pigment"},
-        {"Enzyme_Core": "BAHD Acyltransferase", "Signature_Motif": "HxxxD motif", "Status": "Putative", "Product": "Volatile ester scent"}
+    seq = re.sub(r"[^A-Z]", "X", sequence.upper())
+    motifs = [
+        ("Terpene Synthase (TPS)", r"DD[A-Z]{2}D", "diterpene/sesquiterpene cyclase aspartate loop"),
+        ("Cytochrome P450 (CYP71-family)", r"F[A-Z]{2}G[A-Z]{2}C[A-Z]G", "heme-binding FGxGxxxC signature"),
+        ("Chalcone synthase / type III PKS", r"C[A-Z]SHHH", "active-site Cys-His-His proxy (also hits NRPS KS)"),
+        ("BAHD acyltransferase", r"H[A-Z]{3}[DNE]G", "His-Asp catalytic dyad proxy (low specificity)"),
     ]
-    df = pd.DataFrame(clusters)
-    fig = px.pie(df, names="Enzyme_Core", values=[1, 1, 1, 1], color_discrete_sequence=[TITAN_GOLD, TITAN_PURPLE, TITAN_TEAL, TITAN_GREEN])
-    fig.update_layout(**titan_plot_layout("Biosynthetic Gene Cluster (BGC) Synteny", height=300))
-
+    if extra_motifs.strip():
+        for i, pat in enumerate([x.strip() for x in extra_motifs.split(";") if x.strip()]):
+            try:
+                re.compile(pat)
+            except re.error as e:
+                raise ValueError(f"Custom motif {i + 1} is not a valid regex: {e}")
+            motifs.append((f"Custom motif {i + 1}", pat, "user-supplied pattern"))
+    rows, hits = [], 0
+    for name, pat, func in motifs:
+        found = [m.start() + 1 for m in re.finditer(pat, seq)]
+        if found:
+            hits += 1
+        rows.append({"Enzyme_Core": name, "Regex": pat,
+                     "Status": f"Motif match at {', '.join(map(str, found[:8]))}" if found else "No match",
+                     "Matches": len(found), "Product_Class": func})
+    df = pd.DataFrame(rows)
+    fig = px.bar(df, x="Matches", y="Enzyme_Core", orientation="h", color_discrete_sequence=[TITAN_TEAL])
+    fig.update_layout(**titan_plot_layout("Exact motif matches in the submitted sequence", height=300))
+    if hits:
+        summary = (f"{hits}/{len(motifs)} biosynthetic enzyme motifs matched in {len(seq)} residues. "
+                   "Motif presence suggests — but does not prove — a pathway gene; cluster colocalization "
+                   "cannot be assessed from a single sequence.")
+    else:
+        summary = (f"No TPS/P450/PKS/BAHD motif matched in {len(seq)} residues. "
+                   "Note: X-substituted positions (non-letter input characters) break motifs by construction.")
     return ToolResult(
         title="Plant Secondary Metabolite Terpenoid / Flavonoid Cluster Finder",
-        summary=f"Surveyed genomic sequence ({len(seq)} residues) for co-localized plant biosynthetic gene clusters.",
-        metrics=[("Cluster Status", "Active BGC", None), ("Core Synthase", "Terpene Synthase", None), ("Pathways Matched", "Terpenoid + Flavonoid", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["Plant specialized metabolic pathways frequently organize into non-homologous biosynthetic gene clusters (BGCs).",
-               "Co-regulated expression protects plants from insect herbivory and fungal necrotrophs."]
-    )
+        summary=summary,
+        metrics=[("Sequence length", f"{len(seq)} aa", None), ("Motifs matched", f"{hits} / {len(motifs)}", None),
+                 ("Evidence level", "exact motif screen", "not antiSMASH/CyanoBacillin-grade")],
+        dataframe=df, figure=fig,
+        notes=["Non-alpha input characters are replaced by X so offsets stay aligned with your sequence.",
+               "Real BGC discovery (e.g. antiSMASH, CyanoBac) requires genome context: gene neighbourhood, "
+               "synteny and HMM domain assignment — this page screens only the four exact signatures listed.",
+               "Plant specialized metabolism does form non-homologous biosynthetic gene clusters (e.g. dhurrin, "
+               "cyanogenic glycosides) — the motif proxies above mark candidate enzymes within them."])
 
 
 def tool_cold_shock_cbf_dreb(sequence: str = "MGEVRGPRRGYRGVRQRPWGKWAAEIRDPRKGVTWLGTFETAEEAA") -> ToolResult:

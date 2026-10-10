@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 import numpy as np
+import re
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -279,26 +280,44 @@ def tool_pangenome_partitioner(strain_count: int = 25, core_genes: int = 2850, s
 
 def tool_bgc_domain_scanner(sequence: str = "MAKTVVVGAGGAGLRAALGLARRGFAVTVLEKDSFAGGTWR") -> ToolResult:
     """Tool 122: Biosynthetic Gene Cluster (BGC) Domain Architecture Scanner."""
-    seq = sequence.upper().strip()
-    domains = [
-        {"Domain": "Adenylation (A) Domain", "Signature": "A3/A6 Core P-loop", "Function": "Amino acid substrate recognition and ATP activation", "Status": "Detected"},
-        {"Domain": "Peptidyl Carrier Protein (PCP)", "Signature": "4'-Phosphopantetheine Ser", "Function": "Covalently carries thioester intermediate", "Status": "Detected"},
-        {"Domain": "Condensation (C) Domain", "Signature": "HHxxxDG catalytic motif", "Function": "Forms peptide bond between donor & acceptor", "Status": "Detected"},
-        {"Domain": "Thioesterase (TE) Domain", "Signature": "G-x-S-x-G catalytic triad", "Function": "Macrocyclization and product release", "Status": "Detected"}
+    seq = re.sub(r"[^A-Z]", "", sequence.upper().replace("U", "C"))
+    motifs = [
+        ("Condensation (C) — HHxxxDG", r"HH[A-Z]{3}DG", "peptide-bond formation between donor and acceptor thioesters"),
+        ("Adenylation A1 P-loop (Walker A)", r"G[A-Z]G[A-Z][KT][ST]", "ATP binding for amino-acid activation"),
+        ("Thioesterase (TE) — GxSxG", r"G[A-Z]{2}S[A-Z]{2}G", "hydrolysis / cyclization and product release"),
+        ("ACP/PCP pantetheinylation (GxSxGG)", r"G[A-Z]{2}S[A-Z]{2}GG", "4'-phosphopantetheine attachment site"),
+        ("KS/GAT active site (CxSHHH)", r"C[A-Z]SHHH", "β-ketoacyl condensation (PKS starter unit)"),
     ]
-    df = pd.DataFrame(domains)
-    fig = px.bar(df, x="Domain", y=[95, 92, 90, 88], color_discrete_sequence=[TITAN_GOLD])
-    fig.update_layout(**titan_plot_layout("NRPS / PKS Modular Assembly Line Domain Scores", height=300))
-
+    rows, hits = [], 0
+    for name, pat, func in motifs:
+        found = [m.start() + 1 for m in re.finditer(pat, seq)]
+        if found:
+            hits += 1
+        rows.append({"Domain_Motif": name, "Regex": pat,
+                     "Status": f"Detected at pos {', '.join(map(str, found[:6]))}" if found else "Not found",
+                     "Matches": len(found), "Function": func})
+    df = pd.DataFrame(rows)
+    fig = px.bar(df, x="Matches", y="Domain_Motif", orientation="h", color_discrete_sequence=[TITAN_GOLD])
+    fig.update_layout(**titan_plot_layout("Canonical NRPS/PKS fingerprint matches", height=300))
+    if hits:
+        summary = (f"{hits}/5 canonical NRPS/PKS fingerprints matched in {len(seq)} aa — partial assembly-line "
+                   "signature present. Verify with antiSMASH HMM profiles before drawing conclusions.")
+    else:
+        summary = (f"No canonical NRPS/PKS fingerprints matched in {len(seq)} aa. "
+                   "This sequence does not resemble a multidomain synthetase — do not interpret absence as "
+                   "proof of absence (short or divergent clusters evade exact motifs).")
     return ToolResult(
         title="Biosynthetic Gene Cluster (BGC) Domain Architecture Scanner",
-        summary="Scanned non-ribosomal peptide synthetase (NRPS) modular assembly line. Complete A-PCP-C-TE module detected.",
-        metrics=[("BGC Type", "NRPS Module", None), ("Predicted Product", "Cyclic Non-Ribosomal Lipopeptide", None), ("Chemical Class", "Secondary Metabolite", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["NRPS and PKS multienzymes assemble natural products like daptomycin, vancomycin, and erythromycin in an assembly-line fashion.",
-               "Substrate specificity of Adenylation domains can be decoded from the 10-residue Stachelhaus code."]
-    )
+        summary=summary,
+        metrics=[("Input length", f"{len(seq)} aa", None), ("Motifs matched", f"{hits} / 5", None),
+                 ("BGC type call", "partial" if 0 < hits < 5 else ("likely NRPS/PKS fragment" if hits else "not detected")),],
+        dataframe=df, figure=fig,
+        notes=["Exact-regex proxies for the best-documented NRPS/PKS fingerprints (C-domain HHxxxDG, TE GxSxG, "
+               "KS CxSHHH, Walker-A P-loop, PCP pantetheinylation site). antiSMASH uses profile HMMs and gene-cluster "
+               "context, so this page is a first-pass screen only.",
+               "The substrate specificity of Adenylation domains can additionally be decoded from the 10-residue "
+               "Stachelhaus code — not attempted here.",
+               "Input was uppercased and stripped of non-letter characters; RNA codons U are read as T→C complement rule is NOT applied — paste protein sequence."])
 
 
 def tool_rarefaction_curve_simulator(read_depth: int = 50000, max_otus: int = 450) -> ToolResult:

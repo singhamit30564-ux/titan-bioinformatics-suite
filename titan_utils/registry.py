@@ -125,7 +125,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         description='ORF Finder — computed live by titan_utils.compute.orf_find.',
         console_page='05_ORF_Finder.py',
         inputs=[
-        ToolInputSpec(id='sequence', label='Sequence', type='text', default='ATGAAAGGGCCCCTATAGGGTGAATGCGCCTAG', options=[], help='Input for sequence'),
+        ToolInputSpec(id='sequence', label='Sequence', type='textarea', default='ATGAAAGGGCCCTTTGGGCCCGGGAAATTTCCCGGGAAATTTAGGTGA', options=[], help='Input for sequence'),
         ToolInputSpec(id='min_length_aa', label='Min Length Aa', type='number', default=10, options=[], help='Input for min length aa')
     ],
         handler_name='tool_legacy_05_orf_find',
@@ -1093,7 +1093,8 @@ MASTER_REGISTRY: List[ToolSpec] = [
         description='Tool 69: Plant Secondary Metabolite Terpenoid / Flavonoid Cluster Finder.',
         console_page='65_Agriculture_and_Plant_Genomics.py',
         inputs=[
-        ToolInputSpec(id='sequence', label='Sequence', type='text', default='MDDFFDDXXDMKLSNFLLGXXXCXGATCTCGATC', options=[], help='Input for sequence')
+        ToolInputSpec(id='sequence', label='Sequence', type='text', default='MDDFFDDXXDMKLSNFLLGXXXCXGATCTCGATC', options=[], help='Input for sequence'),
+        ToolInputSpec(id='extra_motifs', label='Extra Motifs', type='text', default='', options=[], help='Input for extra motifs')
     ],
         handler_name='tool_plant_secondary_metabolite_cluster',
         student_tip='Tool #69 (Plant Secondary Metabolite Terpenoid / Flavonoid Cluster Finder) demonstrates critical applied computational techniques in Agriculture & Plant Genomics.',
@@ -2061,7 +2062,8 @@ MASTER_REGISTRY: List[ToolSpec] = [
         description='Tool 137: Protein Salt Bridge & Ionic Charge Network Identifier.',
         console_page='69_Structural_Biology_and_Biophysics.py',
         inputs=[
-        ToolInputSpec(id='pairs', label='Pairs', type='textarea', default='Asp12-Arg85:2.8, Glu45-Lys102:3.2, Asp90-His112:3.8, Glu15-Lys19:5.5', options=[], help='Input for pairs')
+        ToolInputSpec(id='pairs', label='Pairs', type='textarea', default='Asp12-Arg85:2.8, Glu45-Lys102:3.2, Asp90-His112:3.8, Glu15-Lys19:5.5', options=[], help='Input for pairs'),
+        ToolInputSpec(id='dielectric', label='Dielectric', type='number', default=4.0, options=[], help='Input for dielectric')
     ],
         handler_name='tool_salt_bridge_finder',
         student_tip='Tool #137 (Protein Salt Bridge & Ionic Charge Network Identifier) demonstrates critical applied computational techniques in Structural Biology & Biophysics.',
@@ -3164,7 +3166,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 213: NCBI Nucleotide (GenBank) Fetch & Accession Parser.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 213: NCBI Nucleotide (GenBank) Fetch & Accession Parser.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='accession_id', label='Accession Id', type='text', default='NC_005816', options=[], help='Input for accession id')
@@ -3178,7 +3180,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 214: NCBI Protein (RefSeq) Fast Fetch & Sequence Inspector.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 214: NCBI Protein (RefSeq) Fast Fetch & Sequence Inspector.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='accession_id', label='Accession Id', type='text', default='NP_000537', options=[], help='Input for accession id')
@@ -3192,7 +3194,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 215: NCBI Gene ID to Genomic Locus & Exon Coordinate Mapper.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 215: NCBI Gene ID to Genomic Locus & Exon Coordinate Mapper.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='gene_id', label='Gene Id', type='text', default='7157', options=[], help='Input for gene id')
@@ -3206,7 +3208,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 216: NCBI Taxonomy Scientific Lineage & Cladistic Browser.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 216: NCBI Taxonomy Scientific Lineage & Cladistic Browser.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='species_name', label='Species Name', type='text', default='Homo sapiens', options=[], help='Input for species name')
@@ -3220,7 +3222,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 217: NCBI dbSNP Clinical & Minor Allele Frequency Query.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 217: NCBI dbSNP Clinical & Minor Allele Frequency Query.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='rsid', label='Rsid', type='text', default='rs80357906', options=[], help='Input for rsid')
@@ -3234,7 +3236,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 218: NCBI PubMed Literature Search & Abstract Retriever.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 218: NCBI PubMed Literature Search & Abstract Retriever.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='query_keyword', label='Query Keyword', type='text', default='CRISPR Cas9 cancer immunotherapy', options=[], help='Input for query keyword')
@@ -3248,7 +3250,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 219: NCBI ClinVar Variant Assertion & Review Status.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 219: NCBI ClinVar Variant Assertion & Review Status.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='variant_id', label='Variant Id', type='text', default='VCV000012345', options=[], help='Input for variant id')
@@ -3258,31 +3260,33 @@ MASTER_REGISTRY: List[ToolSpec] = [
     ),
     ToolSpec(
         id=220,
-        name='Remote NCBI BLASTn Nucleotide Similarity Search',
+        name='Offline Seed&Extend Similarity Search (BLASTn-style, local)',
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 220: Remote NCBI BLASTn Nucleotide Similarity Search.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 220: Offline Seed&Extend Similarity Search (BLASTn-style, local).",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
-        ToolInputSpec(id='query_seq', label='Query Seq', type='text', default='TGCACGTGCCCTGCTTCTCCA', options=[], help='Input for query seq')
+        ToolInputSpec(id='query_seq', label='Query Seq', type='text', default='TGCACGTGCCCTGCTTCTCCA', options=[], help='Input for query seq'),
+        ToolInputSpec(id='subject_fasta', label='Subject Fasta', type='text', default='', options=[], help='Input for subject fasta')
     ],
         handler_name='tool_remote_blastn_search',
-        student_tip='Tool #220 (Remote NCBI BLASTn Nucleotide Similarity Search) demonstrates critical applied computational techniques in NCBI & Global Bioinformatics APIs.',
+        student_tip='Tool #220 (Offline Seed&Extend Similarity Search (BLASTn-style, local)) demonstrates critical applied computational techniques in NCBI & Global Bioinformatics APIs.',
     ),
     ToolSpec(
         id=221,
-        name='Remote NCBI BLASTp Protein Homology Search',
+        name='Offline Protein Similarity Search (BLASTp-style, local)',
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 221: Remote NCBI BLASTp Protein Homology Search.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 221: Offline Protein Similarity Search (BLASTp-style, local).",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
-        ToolInputSpec(id='protein_seq', label='Protein Seq', type='text', default='MEEPQSDPSVEPPLSQETFSDLWKLLPEN', options=[], help='Input for protein seq')
+        ToolInputSpec(id='protein_seq', label='Protein Seq', type='text', default='MEEPQSDPSVEPPLSQETFSDLWKLLPEN', options=[], help='Input for protein seq'),
+        ToolInputSpec(id='subject_fasta', label='Subject Fasta', type='text', default='', options=[], help='Input for subject fasta')
     ],
         handler_name='tool_remote_blastp_search',
-        student_tip='Tool #221 (Remote NCBI BLASTp Protein Homology Search) demonstrates critical applied computational techniques in NCBI & Global Bioinformatics APIs.',
+        student_tip='Tool #221 (Offline Protein Similarity Search (BLASTp-style, local)) demonstrates critical applied computational techniques in NCBI & Global Bioinformatics APIs.',
     ),
     ToolSpec(
         id=222,
@@ -3290,7 +3294,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 222: NCBI Gene Expression Omnibus (GEO) Meta-Profiler.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 222: NCBI Gene Expression Omnibus (GEO) Meta-Profiler.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='gse_accession', label='Gse Accession', type='text', default='GSE12345', options=[], help='Input for gse accession')
@@ -3304,7 +3308,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 223: NCBI Sequence Read Archive (SRA) Run Inspector.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 223: NCBI Sequence Read Archive (SRA) Run Inspector.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='srr_accession', label='Srr Accession', type='text', default='SRR11412227', options=[], help='Input for srr accession')
@@ -3318,7 +3322,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 224: NCBI MMDB Macromolecular 3D Structure Record Summarizer.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 224: NCBI MMDB Macromolecular 3D Structure Record Summarizer.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='pdb_id', label='Pdb Id', type='text', default='1TUP', options=[], help='Input for pdb id')
@@ -3332,7 +3336,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 225: OMIM Morbid Map & Hereditary Disease Phenotype Linker.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 225: OMIM Morbid Map & Hereditary Disease Phenotype Linker.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='mim_number', label='Mim Number', type='text', default='191170', options=[], help='Input for mim number')
@@ -3346,7 +3350,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 226: UniProtKB Protein Knowledgebase Functional Annotator.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 226: UniProtKB Protein Knowledgebase Functional Annotator.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='uniprot_id', label='Uniprot Id', type='text', default='P04637', options=[], help='Input for uniprot id')
@@ -3360,7 +3364,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 227: Ensembl Gene Symbol to Canonical ID Resolver.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 227: Ensembl Gene Symbol to Canonical ID Resolver.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='gene_symbol', label='Gene Symbol', type='text', default='EGFR', options=[], help='Input for gene symbol')
@@ -3374,7 +3378,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 228: PubChem Chemical Compound CID Properties & SMILES Fetcher.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 228: PubChem Chemical Compound CID Properties & SMILES Fetcher.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='compound_query', label='Compound Query', type='text', default='Aspirin', options=[], help='Input for compound query')
@@ -3388,7 +3392,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 229: Worldwide PDB (wwPDB) Quality Validation Metric Fetcher.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 229: Worldwide PDB (wwPDB) Quality Validation Metric Fetcher.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='pdb_id', label='Pdb Id', type='text', default='4HHB', options=[], help='Input for pdb id')
@@ -3402,7 +3406,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 230: KEGG Pathway REST API Entry Extractor.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 230: KEGG Pathway REST API Entry Extractor.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='pathway_id', label='Pathway Id', type='text', default='hsa00010', options=[], help='Input for pathway id')
@@ -3416,7 +3420,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 231: Reactome Biological Pathway Hierarchy Event Inspector.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 231: Reactome Biological Pathway Hierarchy Event Inspector.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='pathway_id', label='Pathway Id', type='text', default='R-HSA-69278', options=[], help='Input for pathway id')
@@ -3430,7 +3434,7 @@ MASTER_REGISTRY: List[ToolSpec] = [
         domain='NCBI & Global Bioinformatics APIs',
         category_id='ncbi',
         category_name='NCBI & Global Bioinformatics APIs',
-        description='Tool 232: STRING Protein-Protein Interaction Network Interactor Matcher.',
+        description="⚠️ Offline preset dataset (curated textbook records; unknown IDs get an honest 'not found' instead of invented data). Tool 232: STRING Protein-Protein Interaction Network Interactor Matcher.",
         console_page='73_NCBI_and_Global_Bioinformatics_APIs.py',
         inputs=[
         ToolInputSpec(id='protein_name', label='Protein Name', type='text', default='TP53', options=[], help='Input for protein name')
@@ -3455,17 +3459,17 @@ MASTER_REGISTRY: List[ToolSpec] = [
     ),
     ToolSpec(
         id=234,
-        name='Dr. Titan Variant Pathogenicity Advisor',
+        name='Dr. Titan Variant Pathogenicity Advisor (offline, curated)',
         domain='Dr. Titan AI & Bio-Copilot',
         category_id='dr_titan',
         category_name='Dr. Titan AI & Bio-Copilot',
-        description='Tool 234: Dr. Titan Variant Pathogenicity Advisor.',
+        description='Tool 234: Dr. Titan Variant Pathogenicity Advisor (offline, curated).',
         console_page='74_Dr_Titan_AI_Bio_Copilot.py',
         inputs=[
         ToolInputSpec(id='variant', label='Variant', type='text', default='BRAF:c.1799T>A:p.V600E', options=[], help='Input for variant')
     ],
         handler_name='tool_dr_titan_variant_pathogenicity',
-        student_tip='Tool #234 (Dr. Titan Variant Pathogenicity Advisor) demonstrates critical applied computational techniques in Dr. Titan AI & Bio-Copilot.',
+        student_tip='Tool #234 (Dr. Titan Variant Pathogenicity Advisor (offline, curated)) demonstrates critical applied computational techniques in Dr. Titan AI & Bio-Copilot.',
     ),
     ToolSpec(
         id=235,
@@ -3723,17 +3727,17 @@ MASTER_REGISTRY: List[ToolSpec] = [
     ),
     ToolSpec(
         id=253,
-        name='Dr. Titan Forensic DNA Fingerprinting Explainer',
+        name='Dr. Titan Forensic DNA Fingerprinting Explainer (teaching model)',
         domain='Dr. Titan AI & Bio-Copilot',
         category_id='dr_titan',
         category_name='Dr. Titan AI & Bio-Copilot',
-        description='Tool 253: Dr. Titan Forensic DNA Fingerprinting Explainer.',
+        description='Tool 253: Dr. Titan Forensic DNA Fingerprinting Explainer (teaching model).',
         console_page='74_Dr_Titan_AI_Bio_Copilot.py',
         inputs=[
         ToolInputSpec(id='str_loci', label='Str Loci', type='textarea', default='D3S1358:15/16, vWA:17/18, FGA:21/22, D8S1179:13/14', options=[], help='Input for str loci')
     ],
         handler_name='tool_dr_titan_forensic_dna_explainer',
-        student_tip='Tool #253 (Dr. Titan Forensic DNA Fingerprinting Explainer) demonstrates critical applied computational techniques in Dr. Titan AI & Bio-Copilot.',
+        student_tip='Tool #253 (Dr. Titan Forensic DNA Fingerprinting Explainer (teaching model)) demonstrates critical applied computational techniques in Dr. Titan AI & Bio-Copilot.',
     ),
     ToolSpec(
         id=254,

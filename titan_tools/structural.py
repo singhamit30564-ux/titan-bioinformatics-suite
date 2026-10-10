@@ -155,34 +155,54 @@ def tool_bfactor_flexibility(bfactor_string: str = "18.2, 19.5, 21.0, 35.4, 48.2
     )
 
 
-def tool_salt_bridge_finder(pairs: str = "Asp12-Arg85:2.8, Glu45-Lys102:3.2, Asp90-His112:3.8, Glu15-Lys19:5.5") -> ToolResult:
+def tool_salt_bridge_finder(pairs: str = "Asp12-Arg85:2.8, Glu45-Lys102:3.2, Asp90-His112:3.8, Glu15-Lys19:5.5",
+                            dielectric: float = 4.0) -> ToolResult:
     """Tool 137: Protein Salt Bridge & Ionic Charge Network Identifier."""
-    items = [x.strip() for x in pairs.split(",") if ":" in x]
-    records = []
-    active_count = 0
-    for it in items:
-        p, d = it.split(":")
-        dist = float(d.strip())
-        is_bridge = dist <= 4.0
+    # formal side-chain charges at pH 7 (His treated as +0.5, partial protonation)
+    charge = {"ASP": -1.0, "GLU": -1.0, "LYS": +1.0, "ARG": +1.0, "HIS": +0.5}
+    records, active, eps = [], 0, float(dielectric or 4.0)
+    for it in [x.strip() for x in pairs.split(",") if ":" in x]:
+        try:
+            side, d = it.split(":")
+            dist = float(d.strip())
+            r1, r2 = side.split("-")
+            n1, n2 = r1.strip()[:3].upper(), r2.strip()[:3].upper()
+            q1, q2 = charge.get(n1, 0.0), charge.get(n2, 0.0)
+        except (ValueError, KeyError):
+            continue
+        # Coulomb in kcal/mol: 332·q1·q2/(ε·r[Å]) — opposite charges give attraction (<0)
+        energy = 332.0 * q1 * q2 / (eps * max(1.0, dist))
+        is_bridge = dist <= 4.0 and q1 * q2 < 0
         if is_bridge:
-            active_count += 1
-        energy = round(-332.0 * (1.0 * -1.0) / (4.0 * max(1.0, dist)), 2)  # Coulombic approx in protein interior (dielectric=4)
-        records.append({"Ionic_Pair": p.strip(), "Distance_Å": dist, "Salt_Bridge_Formed": "YES (Distance <= 4.0 Å)" if is_bridge else "NO (Out of Range)", "Approx_Gibbs_Energy_kcal_mol": -3.5 if is_bridge else 0.0})
+            active += 1
+        records.append({"Ionic_Pair": side.strip(), "Distance_Å": round(dist, 2),
+                        "Charges": f"{q1:+g}/{q2:+g}",
+                        "Salt_Bridge_Formed": "YES (≤4.0 Å, opposite charge)" if is_bridge else "no",
+                        "Coulomb_Energy_kcal_mol": round(energy, 2),
+                        "Coulomb_Water_kcal_mol": round(energy * eps / 78.0, 2)})
+    if not records:
+        raise ValueError("No parsable pairs. Use format 'Asp12-Arg85:2.8, Glu45-Lys102:3.2' (distance in Å).")
     df = pd.DataFrame(records)
-
-    fig = px.bar(df, x="Ionic_Pair", y="Distance_Å", color="Salt_Bridge_Formed", color_discrete_map={"YES (Distance <= 4.0 Å)": TITAN_TEAL, "NO (Out of Range)": TITAN_CORAL})
-    fig.add_hline(y=4.0, line_dash="dash", line_color=TITAN_GOLD, annotation_text="Salt Bridge Cutoff (4.0 Å)")
-    fig.update_layout(**titan_plot_layout("Ionic Side-Chain Inter-Atomic Distances", height=300))
-
+    fig = px.bar(df, x="Ionic_Pair", y="Coulomb_Energy_kcal_mol", color="Salt_Bridge_Formed",
+                 color_discrete_map={"YES (≤4.0 Å, opposite charge)": TITAN_TEAL, "no": TITAN_CORAL})
+    fig.update_layout(**titan_plot_layout("Pair Coulomb Energy (buried ε=%g)" % eps, height=300))
+    total = round(float(df[df["Salt_Bridge_Formed"] != "no"]["Coulomb_Energy_kcal_mol"].sum()), 1)
+    # triad = a charged residue bridging two partners (name appearing twice)
+    from collections import Counter as _C
+    parts = _C(tok.split("-")[0][:3].strip().upper() for tok in (x.split(":")[0] for x in pairs.split(",") if ":" in x))
+    triads = sum(1 for _, c in parts.items() if c >= 2)
     return ToolResult(
         title="Protein Salt Bridge & Ionic Network Identifier",
-        summary=f"Screened {len(df)} charged residue pairings. Confirmed {active_count} active salt bridges (<= 4.0 Å).",
-        metrics=[("Salt Bridges", str(active_count), None), ("Thermal Stabilization", f"-{active_count * 3.5:.1f} kcal/mol", None), ("Network Type", "Triad Network", None)],
-        dataframe=df,
-        figure=fig,
-        notes=["Salt bridges combine hydrogen bonding and long-range electrostatic Coulombic attraction between Asp/Glu and Arg/Lys/His.",
-               "Buried salt bridges contribute up to 3-5 kcal/mol of conformational stability in thermophilic enzymes."]
-    )
+        summary=f"Screened {len(records)} charged pairs: {active} salt bridges (≤4.0 Å), summed Coulomb energy {total} kcal/mol (ε={eps:g}).",
+        metrics=[("Salt Bridges", str(active), None),
+                 ("Σ Bridge Energy", f"{total} kcal/mol", "332·q₁q₂/(εr), buried dielectric"),
+                 ("Putative Triad Residues", str(triads), "side chain bridging ≥2 partners")],
+        dataframe=df, figure=fig,
+        notes=["Pair energies are continuum Coulomb estimates 332·q₁q₂/(ε·r) kcal/mol with formal charges "
+               "(Asp/Glu −1, Lys/Arg +1, His +0.5); ε=4 approximates a buried interface — water-screened values use ε=78.",
+               "Salt bridges combine hydrogen bonding and electrostatics; buried pairs in thermophilic enzymes are reported "
+               "to contribute 3-5 kcal/mol, consistent with the distances above.",
+               "This is a pairwise electrostatic screen from distances you measured — it does not replace PB/PB-SA or MD free energies."])
 
 
 def tool_pocket_volume_estimator(length_x: float = 12.0, width_y: float = 10.5, depth_z: float = 8.0) -> ToolResult:
