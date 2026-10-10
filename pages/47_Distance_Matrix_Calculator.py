@@ -72,8 +72,15 @@ if st.button("🧮 Calculate Distance Matrix", type="primary", use_container_wid
                             
                             for i in range(n):
                                 for j in range(i + 1, n):
-                                    diffs = sum(1 for a, b in zip(seqs[i], seqs[j]) if a != b and a != '-' and b != '-')
-                                    dist = diffs / L
+                                    compared = 0
+                                    diffs = 0
+                                    for a, b in zip(seqs[i], seqs[j]):
+                                        if a == '-' or b == '-':
+                                            continue  # gap columns carry no information
+                                        compared += 1
+                                        if a != b:
+                                            diffs += 1
+                                    dist = diffs / compared if compared else 0.0
                                     dist_matrix[i, j] = dist
                                     dist_matrix[j, i] = dist
                             

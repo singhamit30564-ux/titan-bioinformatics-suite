@@ -206,7 +206,11 @@ def run_batch(
     """Run the selected analyses across every record in ``payload``."""
     from datetime import datetime, timezone
 
+    if len(payload or "") > 4_000_000:
+        raise ValueError("Batch payload exceeds the 4 MB in-RAM limit — split the file.")
     records = parse_multi_fasta(payload)
+    if len(records) > 3000:
+        raise ValueError(f"Batch supports up to 3,000 records per run (got {len(records)}).")
     chosen = [a for a in (analyses or DEFAULT_ANALYSES) if a in BATCH_ANALYSES]
     rec = provenance_record(payload, kind="fastq/fasta batch", label="batch_input")
     result = BatchResult(

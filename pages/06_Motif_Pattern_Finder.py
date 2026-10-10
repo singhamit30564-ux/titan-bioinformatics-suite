@@ -50,6 +50,12 @@ if calculate_btn:
         st.error("❌ Please enter a search pattern.")
     elif any(char not in "ATCG" for char in clean_dna.replace("N", "")):
         st.error("❌ Invalid DNA! Only A, T, C, G (and N for unknown) are allowed.")
+    elif len(clean_dna) > 100_000:
+        st.error("❌ Sequence longer than 100 kb — trim it or use the batch tools.")
+    elif re.search(r"\)\s*[+*]|\][+*]\s*[+*]|[+*]{2}", pattern):
+        st.error("❌ That pattern has nested quantifiers (e.g. '(a+)+') — Python's regex engine can "
+                 "hang exponentially on it (catastrophic backtracking). Rewrite the motif without nesting, "
+                 "or use an explicit IUPAC/string pattern.")
     else:
         try:
             # Find all matches with positions

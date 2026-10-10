@@ -1,145 +1,109 @@
-import streamlit as st
-from Bio import AlignIO
-from Bio.Align import MultipleSeqAlignment
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
+"""Consensus Sequence Generator — column-wise majority over a real alignment.
+
+Sequences of unequal length are aligned with the validated Titan progressive
+engine first (previously they were right-padded, which fabricates consensus
+positions). Columns whose top letter is under the threshold become 'N'.
+"""
 from collections import Counter
+
+import pandas as pd
 import plotly.graph_objects as go
-from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+import streamlit as st
+
+from titan_utils.msa import MSAError, progressive_msa
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-titan_title("🧬", "Module 4.12: Consensus Sequence Generator", "Refactored with Titan validation & export.")
-st.markdown("Generate consensus sequence from multiple aligned sequences using majority rule.")
+titan_title("🧬", "Consensus Sequence Generator", "Majority-rule consensus over a true alignment.")
+st.markdown("Derive the majority base at every alignment column, with per-position confidence.")
 st.markdown("---")
 
-fasta_input = st.text_area("Enter Aligned Sequences in FASTA format", 
+fasta_input = st.text_area(
+    "Enter Sequences (FASTA — aligned or unaligned)",
     """>Seq1
-ATGCGTACGTAGCTAG
+ATGCGTACGAAGCTAGCC
 >Seq2
 ATGCGTACGAAGCTAG
 >Seq3
 ATGCGTGCCTAGCTAG
 >Seq4
-ATGCA_TACGTAGCTAG
->Seq5
-ATGCGTACGTAGCTAG""", height=250)
-
-threshold = st.slider("Consensus Threshold (%)", 50, 100, 50, 
-    help="Minimum percentage for a base to be included in consensus")
+ATGCAACGTAGCTAG
+""",
+    height=220,
+)
+threshold = st.slider("Consensus Threshold (%)", 50, 100, 50,
+                      help="Minimum frequency of the top letter for it to be called.")
 
 if st.button("🔬 Generate Consensus", type="primary", use_container_width=True):
-    try:
-        # Parse sequences
-        records = []
-        current_id = ""
-        current_seq = ""
-        
-        for line in fasta_input.strip().split('\n'):
-            if line.startswith('>'):
-                if current_id:
-                    records.append(SeqRecord(Seq(current_seq), id=current_id))
-                current_id = line[1:].strip()
-                current_seq = ""
-            else:
-                current_seq += line.strip()
-        if current_id:
-            records.append(SeqRecord(Seq(current_seq), id=current_id))
-        
-        if len(records) < 2:
-            st.error("❌ Need at least 2 sequences!")
-        else:
-            # Align to max length
-            max_len = max(len(rec.seq) for rec in records)
-            aligned_seqs = [str(rec.seq).ljust(max_len, '-') for rec in records]
-            
-            # Generate consensus
-            consensus_seq = []
-            consensus_confidence = []
-            position_data = []
-            
-            for pos in range(max_len):
-                bases = [seq[pos] for seq in aligned_seqs if pos < len(seq)]
-                counts = Counter(bases)
-                total = len(bases)
-                
-                # Find most common base
-                most_common_base, most_common_count = counts.most_common(1)[0]
-                percentage = (most_common_count / total) * 100
-                
-                if percentage >= threshold and most_common_base != '-':
-                    consensus_seq.append(most_common_base)
-                    consensus_confidence.append(percentage)
-                else:
-                    consensus_seq.append('N')  # Ambiguous
-                    consensus_confidence.append(0)
-                
-                position_data.append({
-                    'Position': pos + 1,
-                    'Base': most_common_base,
-                    'Count': most_common_count,
-                    'Percentage': f"{percentage:.1f}%"
-                })
-            
-            final_consensus = ''.join(consensus_seq)
-            
-            st.markdown("### 🧬 Consensus Sequence")
-            st.success(f"**Length:** {len(final_consensus)} bp")
-            st.code(final_consensus, language="text")
-            
-            # Download button
-            st.download_button(
-                label="⬇️ Download Consensus (FASTA)",
-                data=f">Consensus_Sequence\n{final_consensus}",
-                file_name="consensus_sequence.fasta",
-                mime="text/plain"
-            )
-            
-            # Confidence visualization
-            st.markdown("### 📊 Position-wise Confidence")
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=list(range(1, len(consensus_confidence) + 1)),
-                y=consensus_confidence,
-                mode='lines+markers',
-                line=dict(color='#d4af37', width=2),
-                marker=dict(size=4, color='#66fcf1'),
-                name='Confidence %'
-            ))
-            
-            fig.add_hline(y=threshold, line_dash="dash", line_color="#ff0055", 
-                         annotation_text=f"Threshold ({threshold}%)")
-            
-            fig.update_layout(
-                title="Consensus Sequence Confidence by Position",
-                xaxis_title="Position",
-                yaxis_title="Confidence (%)",
-                template="plotly_dark",
-                paper_bgcolor='#0a0e17',
-                plot_bgcolor='#1a1f2e',
-                yaxis=dict(range=[0, 100])
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Position table
-            st.markdown("### 📋 Detailed Position Analysis")
-            import pandas as pd
-            df = pd.DataFrame(position_data)
-            st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            # Statistics
-            valid_bases = sum(1 for base in consensus_seq if base != 'N')
-            st.markdown("### 📈 Summary Statistics")
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Total Length", f"{len(final_consensus)} bp")
-            c2.metric("Valid Bases", f"{valid_bases} ({(valid_bases/len(final_consensus))*100:.1f}%)")
-            c3.metric("Ambiguous (N)", f"{len(final_consensus) - valid_bases}")
-            
-            st.info("💡 **Dr. Titan's Tip:** Consensus sequences are used to represent a group of related sequences (like viral strains or gene families). 'N' indicates positions where no base meets the threshold, showing high variability!")
-            
-    except Exception as e:
-        st.error(f"❌ Error: {e}")
-        import traceback
-        st.code(traceback.format_exc())
+    records, name, buf = [], None, []
+    for line in (fasta_input or "").strip().splitlines():
+        if line.startswith(">"):
+            if name is not None:
+                records.append((name, "".join(buf)))
+            name, buf = line[1:].strip() or f"seq{len(records) + 1}", []
+        elif name is not None:
+            buf.append(line.strip())
+    if name is not None:
+        records.append((name, "".join(buf)))
+    raw = [(n, "".join(ch for ch in s.upper() if ch.isalpha() or ch == "-")) for n, s in records]
+    raw = [(n, s) for n, s in raw if s]
+    if len(raw) < 2:
+        st.error("❌ Need at least 2 sequences in FASTA format.")
+        st.stop()
+
+    # keep gapped rows only when ALL rows are gapped and equal length → pre-aligned input
+    gapped = all(("-" in s) for _, s in raw)
+    equal = len({len(s) for _, s in raw}) == 1
+    if gapped and equal:
+        rows = [s for _, s in raw]
+        pre = True
+    else:
+        try:
+            stripped = [(n, "".join(ch for ch in s if ch != "-")) for n, s in raw]
+            if len({s for _, s in stripped}) == 1:
+                raise MSAError("All sequences are identical — nothing to align.")
+            res = progressive_msa([n for n, _ in stripped], [s for _, s in stripped])
+            rows = [s for _, s in res["aligned"]]
+            pre = False
+        except MSAError as ex:
+            st.error(f"❌ {ex}")
+            st.stop()
+
+    width = len(rows[0])
+    consensus, confidence, table = [], [], []
+    for pos in range(width):
+        letters = [r[pos] for r in rows]
+        cnt = Counter(letters)
+        top, tn = cnt.most_common(1)[0]
+        pct = 100.0 * tn / len(rows)
+        keep = top != "-" and pct >= threshold
+        consensus.append(top if keep else "N")
+        confidence.append(pct if keep else 0.0)
+        table.append({"Position": pos + 1, "Consensus": top if keep else "N",
+                      "Frequency_%": round(pct, 1), "Counts": dict(sorted(cnt.items()))})
+
+    cons_str = "".join(consensus)
+    st.markdown("### 🧬 Consensus Sequence")
+    st.code(f">consensus\n{cons_str}", language="text")
+    st.download_button("⬇️ Download consensus FASTA", data=f">consensus\n{cons_str}\n".encode(),
+                       file_name="titan_consensus.fasta", mime="text/plain", key="cons_dl")
+
+    fig = go.Figure(go.Bar(x=[t["Position"] for t in table], y=[t["Frequency_%"] for t in table],
+                           marker_color="#00d4aa", name="Top-letter frequency %"))
+    fig.add_hline(y=threshold, line_dash="dot", line_color="#d4af37",
+                  annotation_text=f"threshold {threshold}%")
+    fig.update_layout(title="Per-position top-letter frequency", xaxis_title="Alignment position",
+                      yaxis_title="%", yaxis=dict(range=[0, 105]), template="plotly_dark",
+                      paper_bgcolor="#0a0e17", plot_bgcolor="#1a1f2e", height=320)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.dataframe(pd.DataFrame(table), use_container_width=True, hide_index=True)
+    st.download_button("⬇️ Download position table CSV", data=df_to_csv_bytes(pd.DataFrame(
+        [{k: v for k, v in r.items() if k != "Counts"} for r in table])),
+        file_name="titan_consensus_positions.csv", mime="text/csv", key="cons_csv")
+    n_amb = cons_str.count("N")
+    st.caption(f"{'Pre-aligned input read column-wise.' if pre else 'Aligned with the Titan progressive engine first.'} "
+               f"Length {width}; ambiguous (N) columns: {n_amb}.")
+    dr_titan_tip("Consensus with N-masking is how degenerate primer pools and motif PWMs are built — "
+                 "columns under the threshold carry no reliable signal.")
+    smart_lock()

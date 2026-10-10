@@ -1,95 +1,108 @@
+"""Multiple Sequence Alignment — Titan progressive profile aligner.
+
+This page previously "aligned" sequences by right-padding them with gaps,
+which is not an alignment. It now delegates to :func:`titan_utils.msa.progressive_msa`
+(affine-gap profile alignment, BLOSUM62 for proteins, UPGMA guide tree) — the
+same validated engine behind Hub tool 38. It is a teaching-grade aligner, not
+Clustal Omega, and says so.
+"""
 import streamlit as st
-from Bio import AlignIO
-from Bio.Align import MultipleSeqAlignment
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-import plotly.graph_objects as go
 import pandas as pd
-from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
-from titan_utils.io import df_to_csv_bytes
+import plotly.graph_objects as go
+
+from titan_utils.msa import MSAError, progressive_msa
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-titan_title("🧬", "Module 4.05: Multiple Sequence Alignment (MSA)", "Refactored with Titan validation & export.")
-st.markdown("Align 3 or more sequences and visualize conservation.")
+titan_title("🧬", "Multiple Sequence Alignment", "Progressive profile alignment (Titan engine).")
+st.markdown(
+    "Align several DNA/RNA or protein sequences and inspect per-column conservation. "
+    "Powered by the in-house progressive aligner (guide tree: UPGMA; affine gap costs)."
+)
 st.markdown("---")
 
-fasta_input = st.text_area("Enter Sequences in FASTA format", 
+fasta_input = st.text_area(
+    "Enter Sequences (FASTA)",
     """>Seq1
-ATGCGTACGTAGCTAG
+ATGCGTACGAAGCTAGCC
 >Seq2
 ATGCGTACGAAGCTAG
 >Seq3
 ATGCGTGCCTAGCTAG
 >Seq4
-ATGCA_TACGTAGCTAG""", height=250)
+ATGCAACGTAGCTAG
+""",
+    height=250,
+)
+cA, cB = st.columns([3, 1])
+with cB:
+    gap_open = st.slider("Gap open cost", 4.0, 20.0, 10.0, 0.5)
+with cA:
+    st.caption("Gap extension is fixed at 0.5 and profile gap at 1.5 (standard defaults).")
 
 if st.button("🔬 Perform MSA", type="primary", use_container_width=True):
-    try:
-        # Parse sequences
-        records = []
-        current_id = ""
-        current_seq = ""
-        
-        for line in fasta_input.strip().split('\n'):
-            if line.startswith('>'):
-                if current_id:
-                    records.append(SeqRecord(Seq(current_seq), id=current_id))
-                current_id = line[1:].strip()
-                current_seq = ""
-            else:
-                current_seq += line.strip()
-        if current_id:
-            records.append(SeqRecord(Seq(current_seq), id=current_id))
-        
-        if len(records) < 3:
-            st.error("❌ Need at least 3 sequences for MSA!")
-        else:
-            # Simple MSA (in real app, use ClustalW or MUSCLE)
-            # For demo, we'll pad sequences to same length
-            max_len = max(len(rec.seq) for rec in records)
-            aligned_seqs = [str(rec.seq).ljust(max_len, '-') for rec in records]
-            
-            st.markdown("### 📋 Aligned Sequences")
-            for i, (rec, aligned) in enumerate(zip(records, aligned_seqs), 1):
-                st.code(f">{rec.id}\n{aligned}", language="text")
-            
-            # Conservation analysis
-            st.markdown("### 📈 Conservation Analysis")
-            
-            conservation_scores = []
-            positions = list(range(max_len))
-            
-            for pos in range(max_len):
-                bases = [seq[pos] for seq in aligned_seqs if pos < len(seq)]
-                if bases:
-                    most_common = max(set(bases), key=bases.count)
-                    conservation = (bases.count(most_common) / len(bases)) * 100
-                    conservation_scores.append(conservation)
-                else:
-                    conservation_scores.append(0)
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=positions,
-                y=conservation_scores,
-                mode='lines+markers',
-                line=dict(color='#d4af37', width=3),
-                name='Conservation %'
-            ))
-            
-            fig.update_layout(
-                title="Sequence Conservation Across Positions",
-                xaxis_title="Position",
-                yaxis_title="Conservation (%)",
-                template="plotly_dark",
-                paper_bgcolor='#0a0e17',
-                plot_bgcolor='#1a1f2e',
-                yaxis=dict(range=[0, 100])
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.info("💡 **Dr. Titan's Tip:** High conservation (close to 100%) indicates functionally important regions. Low conservation suggests evolutionary variation or non-critical regions!")
-            
-    except Exception as e:
-        st.error(f"❌ MSA Error: {e}")
+    records = []
+    name, buf = None, []
+    for line in (fasta_input or "").strip().splitlines():
+        if line.startswith(">"):
+            if name is not None:
+                records.append((name, "".join(buf)))
+            name, buf = line[1:].strip() or f"seq{len(records) + 1}", []
+        elif name is not None:
+            buf.append(line.strip())
+    if name is not None:
+        records.append((name, "".join(buf)))
+    # strip any gap-like placeholders from raw input; the aligner inserts its own
+    records = [(n, "".join(ch for ch in s.upper() if ch.isalpha())) for n, s in records]
+    records = [(n, s) for n, s in records if s]
+
+    if len(records) < 2:
+        st.error("❌ Need at least 2 non-empty sequences in FASTA format.")
+    elif len({s for _, s in records}) == 1:
+        st.error("❌ All input sequences are identical — nothing to align.")
+    else:
+        try:
+            res = progressive_msa([n for n, _ in records], [s for _, s in records],
+                                  gap_open=gap_open)
+        except MSAError as ex:
+            st.error(f"❌ {ex}")
+            st.stop()
+
+        aligned = res["aligned"]
+        width = res["width"]
+        rows_s = [s for _, s in aligned]
+
+        st.markdown("### 📋 Aligned Sequences")
+        for name_a, seq_a in aligned:
+            st.code(f">{name_a}\n{seq_a}", language="text")
+
+        st.markdown("### 📈 Conservation Analysis")
+        conservation = []
+        for i in range(width):
+            letters = [s[i] for s in rows_s]
+            top = max(set(letters), key=letters.count)
+            conservation.append(100.0 * letters.count(top) / len(letters))
+        fig = go.Figure(go.Scatter(x=list(range(1, width + 1)), y=conservation, mode="lines+markers",
+                                   line=dict(color="#d4af37", width=3), name="Conservation %"))
+        fig.update_layout(title="Column Conservation (top-letter frequency)",
+                          xaxis_title="Alignment position", yaxis_title="Conservation (%)",
+                          yaxis=dict(range=[0, 105]), template="plotly_dark",
+                          paper_bgcolor="#0a0e17", plot_bgcolor="#1a1f2e", height=340)
+        st.plotly_chart(fig, use_container_width=True)
+
+        df = pd.DataFrame([{"Sequence": n, "Aligned": s, "Gaps": s.count("-")} for n, s in aligned])
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        fasta_bytes = ("\n".join(f">{n}\n{s}" for n, s in aligned) + "\n").encode()
+        st.download_button("⬇️ Download aligned FASTA", data=fasta_bytes,
+                           file_name="titan_msa.fasta", mime="text/plain", key="msa_fasta")
+
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Sequences", str(len(aligned)))
+        m2.metric("Alignment width", f"{width} cols")
+        m3.metric("Mean pairwise identity", f"{100.0 * res['identity']:.1f}%")
+        if res.get("newick"):
+            st.caption(f"Guide tree (Newick): `{res['newick']}`")
+        st.info("⚠️ Titan's progressive aligner — a correct, reproducible teaching implementation. "
+                "For publication-grade MSA use Clustal Omega / MUSCLE / MAFFT externally.")
+        dr_titan_tip("Highly conserved columns (near 100%) mark functionally or structurally important sites; "
+                     "insertions cluster in loop/hypervariable regions.")
+        smart_lock()

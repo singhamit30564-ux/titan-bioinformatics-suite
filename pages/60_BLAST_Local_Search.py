@@ -4,8 +4,12 @@ from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
-titan_title("🔍", "🔍 Module 5.08: BLAST Local Search (Seed & Extend)", "Refactored with Titan validation & export.")
-st.markdown("Simulate the Basic Local Alignment Search Tool (BLAST) algorithm to find High Scoring Segment Pairs (HSPs).")
+titan_title("🔍", "Module 5.08: Local Similarity Search (BLAST-style Seed & Extend)", "Honest in-RAM search — scores are real, statistics are not.")
+st.markdown(
+    "Finds High-Scoring Segment Pairs (HSPs) by exact k-mer seeding and ungapped extension. "
+    "**This is not NCBI BLAST**: there is no gapped extension, no Karlin-Altschul E-value or bit score — "
+    "reported scores are plain match/mismatch sums over the extended segment."
+)
 st.markdown("---")
 
 # --- INPUTS ---

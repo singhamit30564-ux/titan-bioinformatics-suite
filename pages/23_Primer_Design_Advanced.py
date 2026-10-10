@@ -5,6 +5,7 @@ from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_
 from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
+from titan_utils import thermo
 
 titan_title("🧪", "Advanced Primer Design Engine", "Refactored with Titan validation & export.")
 st.markdown(t("Scan your entire sequence for optimal primer candidates with Tm, GC%, and self-complementarity checks."))
@@ -28,13 +29,11 @@ max_candidates = st.slider(t("Top Candidates to Show"), 5, 20, 10)
 
 # --- HELPER FUNCTIONS ---
 def calculate_tm(seq):
-    """Basic Tm calculation using modified Wallace rule"""
-    gc = seq.count('G') + seq.count('C')
-    at = seq.count('A') + seq.count('T')
-    length = len(seq)
-    # SantaLucia 1998 nearest-neighbor approximation (simplified)
-    tm = 64.9 + 41 * (gc - 16.4) / length
-    return tm
+    """Tm via SantaLucia nearest-neighbor (validated Biopython path);
+    Wallace rule for very short oligos (<14 nt), matching standard practice."""
+    if len(seq) < 14:
+        return thermo.wallace_tm(seq)[0]
+    return thermo.nn_tm(seq)
 
 def check_self_complementarity(seq):
     """Basic check for hairpin potential"""

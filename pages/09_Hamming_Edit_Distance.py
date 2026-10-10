@@ -47,6 +47,9 @@ if calculate_btn:
     
     if not s1 or not s2:
         st.error("❌ Please enter both sequences.")
+    elif max(len(s1), len(s2)) > 5000:
+        st.error("❌ Sequences over 5,000 bp each are refused: the exact Levenshtein DP is O(n·m) "
+                 "and would hang the browser session. Compare windows, or use the alignment tools instead.")
     elif any(char not in "ATCG" for char in s1+s2):
         st.error("❌ Invalid DNA! Only A, T, C, G are allowed.")
     else:
@@ -72,13 +75,23 @@ if calculate_btn:
         else:
             st.warning("⚠️ **Hamming Distance:** `N/A` *(Sequences must be of equal length to calculate Hamming distance. Use Edit Distance instead.)*")
             
-        # --- THE "SMART LOCK" ---
+        # --- EXPORT (real downloads, no fake gates) ---
         st.markdown("---")
         st.markdown("### 📥 Export Data")
+        df_out = pd.DataFrame([{
+            "Sequence_1_Length": len(s1), "Sequence_2_Length": len(s2),
+            "Hamming_Distance": hamming_dist if hamming_dist is not None else "N/A (unequal lengths)",
+            "Edit_Distance_Levenshtein": lev_dist,
+            "Identity_%": round(100.0 * (1 - (hamming_dist / len(s1))), 2) if hamming_dist is not None else "",
+        }])
+        st.dataframe(df_out, use_container_width=True, hide_index=True)
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("📄 Download PDF (Free)", use_container_width=True):
-                st.info("📄 Generating PDF... (Coming in v1.1)")
+            st.download_button("📄 Download CSV", data=df_to_csv_bytes(df_out),
+                               file_name="titan_distance_metrics.csv", mime="text/csv", key="dist_csv")
         with c2:
-            if st.button("📊 Download CSV (🔒 Explorer)", use_container_width=True):
-                st.info("✅ CSV export unlocked — smart_lock enabled.")
+            mism = "".join("|" if a != b else "." for a, b in zip(s1, s2)) if len(s1) == len(s2) else ""
+            st.download_button("🧬 Download comparison (FASTA)",
+                               data=(f">seq1\n{s1}\n>seq2\n{s2}\n>mismatches\n{mism}\n").encode(),
+                               file_name="titan_distance_comparison.fasta", mime="text/plain", key="dist_fasta")
+        smart_lock()

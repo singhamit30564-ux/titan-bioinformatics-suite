@@ -36,6 +36,10 @@ if st.button("🔬 Parse VCF Data", type="primary", use_container_width=True):
             try:
                 # Parse VCF
                 lines = data_to_parse.strip().split('\n')
+                if len(lines) > 25_000:
+                    lines = lines[:25_000]
+                    st.warning("⚠️ Input truncated to 25,000 lines for in-browser parsing "
+                               "— for whole-chromosome VCFs use the `bcftools`/`cyvcf2` route on a server.")
                 header_line = ""
                 data_lines = []
                 

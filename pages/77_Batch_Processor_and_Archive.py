@@ -65,7 +65,11 @@ chosen = [analysis_labels[l] for l in chosen_labels]
 run_clicked = st.button("🚀 Run Batch Processing", type="primary", use_container_width=True, key="batch_run_btn")
 
 # Run in RAM on every render so tables/exports stay in sync.
-result = run_batch(payload, chosen)
+try:
+    result = run_batch(payload, chosen)
+except ValueError as batch_err:
+    st.error(f"⚠️ {batch_err}")
+    st.stop()
 prov = provenance_record(payload, kind="multi-FASTA batch", label="batch_input")
 
 if run_clicked:
