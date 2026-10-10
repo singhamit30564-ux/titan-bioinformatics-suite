@@ -66,6 +66,9 @@ def _page(filename: str, language: str) -> st.Page:
 cat0_hub = [
     "00_Tool_Palette_and_Hub.py",
 ]
+cat0_playground = [
+    "18_Sequence_Playground.py",
+]
 cat1_dna = [
     "01_DNA_RNA_Conversion.py",
     "02_Reverse_Complement_Stats.py",
@@ -265,6 +268,7 @@ try:
         {
             t("🏠 Home", selected_language): [home],
             t("🎛️ Master Suite Hub", selected_language): [_page(f, selected_language) for f in cat0_hub],
+            t("🎮 Sequence Playground", selected_language): [_page(f, selected_language) for f in cat0_playground],
             t("🧬 1 · DNA / RNA Basics", selected_language): [_page(f, selected_language) for f in cat1_dna],
             t("🥩 2 · Protein Analysis", selected_language): [_page(f, selected_language) for f in cat2_prot],
             t("🧪 3 · Genomics & QC", selected_language): [_page(f, selected_language) for f in cat3_genome],
@@ -298,7 +302,7 @@ except Exception:  # pragma: no cover — older Streamlit
     _render_home()
     st.markdown(t("### Quick Links"))
     for group in (
-        cat0_hub, cat1_dna, cat2_prot, cat3_genome, cat4_align, cat5_lab,
+        cat0_hub, cat0_playground, cat1_dna, cat2_prot, cat3_genome, cat4_align, cat5_lab,
         cat6_agri, cat7_marine, cat8_clinical, cat9_metagenomics,
         cat10_structural, cat11_epigenetics, cat12_synthetic,
         cat13_population, cat14_ncbi, cat15_dr_titan, cat16_studio,
