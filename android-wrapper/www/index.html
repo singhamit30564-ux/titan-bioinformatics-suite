@@ -1,0 +1,34 @@
+<!doctype html>
+<!--
+  Fallback/offline placeholder page only.
+
+  This file is NOT the app's real UI — Capacitor's `server.url` in
+  capacitor.config.json points the WebView straight at your deployed Titan
+  Bioinformatics Suite (a live Streamlit server), so this static page is only
+  ever seen for a split second during first launch, or if the device has no
+  network connection at all.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Titan Bio</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0a0e17; }
+    .wrap {
+      height: 100%; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; font-family: -apple-system, Roboto, Arial, sans-serif;
+      color: #e0e0e0; text-align: center; padding: 24px; box-sizing: border-box;
+    }
+    .logo { font-size: 28px; font-weight: 800; color: #d4af37; letter-spacing: 1px; }
+    .sub { font-size: 13px; color: #8b9bb4; margin-top: 10px; max-width: 320px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">🧬 TITAN BIO</div>
+    <div class="sub">Loading the Titan Bioinformatics Suite… if this stays on screen, check your internet
+      connection — Titan Bio is a live app and needs network access to load.</div>
+  </div>
+</body>
+</html>

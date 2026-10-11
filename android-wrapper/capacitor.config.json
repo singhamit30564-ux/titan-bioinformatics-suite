@@ -1,0 +1,25 @@
+{
+  "appId": "com.titan.bio",
+  "appName": "Titan Bio",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://REPLACE-WITH-YOUR-DEPLOYED-TITAN-BIO-URL",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0a0e17",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": true,
+      "spinnerColor": "#d4af37",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
+  }
+}

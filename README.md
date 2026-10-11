@@ -231,3 +231,22 @@ pytest tests/ -q   # 208 passed, 1 skipped (page without buttons)
 ```
 
 New test coverage in `tests/test_feature_expansion.py` (48 tests) spans the ZDR guarantees, viewer presets, flow packaging, grader correctness (incl. canonical Rosalind answers), batch archives, GLP exports, publication palettes, and navigation wiring.
+
+## 🧪 Feature Pack v6 — Photo Explainer, PWA, Flashcards, Course Mode, APK Wrapper (2026-10)
+
+Five bounded, **additive-only** features — no existing tool page or algorithm was modified:
+
+1. **📸 Photo Se Samjhao (Vision AI)** — `pages/80_Photo_Explainer.py` + `titan_utils/vision.py`: camera/upload a textbook page, Dr. Titan explains it in simple Hinglish (under 200 words) via Groq Vision (`llama-3.2-11b-vision-preview`). **Opt-in**: with no `GROQ_API_KEY` configured (via `st.secrets` or an env var) the page still loads and shows a setup-instructions card instead of failing. Images are base64-encoded and sent straight from RAM — never written to disk — with a documented 20-request/session soft cap and optional read-aloud via the existing Voice of Dr. Titan narrator.
+2. **📵 PWA / Offline Mode (beta)** — `static/manifest.json`, `static/sw.js`, `static/icons/` (served via `server.enableStaticServing` at `/app/static/...`) plus `titan_utils/pwa.py`, which injects the manifest link and registers the service worker via `st.components.html` with full graceful degradation (a blocked/unsupported browser cannot affect any of the 260 tools — this only runs on Home). Home gains an honest "Offline Scope" card (what truly works offline vs. what always needs the network) and an "Install App" (Add to Home Screen) card.
+3. **🎴 Flashcards + Spaced Repetition** — `pages/81_Flashcards.py` + `titan_utils/flashcards.py`: 50 original Class-10/12 biology flashcards (`data/flashcards.json`), a documented **SM-2-lite** scheduler (interval/ease/due-date, resets on a failed recall), a pure-CSS 3D flip-card animation (no JavaScript), a daily due-cards queue, add/edit/delete for custom cards, and a Plotly progress chart. Review state persists to the browser's `localStorage` through a small reusable Streamlit component bridge (`titan_utils/local_storage.py`) — the same local-browser-storage pattern the Classroom Quiz already uses — rather than `st.query_params` (which would leak review history into a shareable URL).
+4. **🎓 Course Mode** — `pages/82_Course.py` + `titan_utils/course.py`: a free, original 8-chapter bioinformatics primer (`data/course.json` — DNA/RNA, protein structure, Central Dogma, bioinformatics tools, sequence analysis, databases, phylogenetics, and AI in biology/AlphaFold/Evo 2), each with a 5-question graded quiz. Passing a chapter (≥60%) awards XP into the suite's **existing** Arena XP counter (shared with the Bio Olympiad & Practice Arena) instead of a new system, and a completion certificate renders as a PDF in-RAM via the existing ReportLab `pdf_generator`.
+5. **📱 Android Wrapper (APK-ready)** — `android-wrapper/`: a minimal, honestly-documented Capacitor WebView shell (`capacitor.config.json`, `package.json`, dark/gold splash config) that points at your deployed Titan Bio URL. The README spells out, up front, that this is a thin WebView shell (not an offline native rewrite) and walks through the 5-step local build (`npm install` → `npx cap add android` → `npx cap sync` → open in Android Studio → build the APK).
+
+**Validation:**
+
+```bash
+python -m py_compile pages/*.py Home.py titan_utils/*.py
+pytest tests/ -q   # 245 passed, 1 skipped (pre-existing: a page with no buttons)
+```
+
+New coverage lives in `tests/test_feature_pack_v6.py` (20 tests, ≥3 per feature plus explicit `AppTest` smoke checks for all 3 new pages); the existing generic page-interaction suite (`tests/test_page_interactions.py`) automatically picked up the 3 new pages too (every button click on fresh state, zero uncaught exceptions/error banners).

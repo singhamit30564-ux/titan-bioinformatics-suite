@@ -1,0 +1,767 @@
+"""One-off generator for data/course.json — the free Titan Bioinformatics course.
+
+All copy below is written from scratch for this project (original wording,
+no copied textbook text). Re-run by hand after editing the content:
+
+    python scripts/build_course_content.py
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+OUT_PATH = Path(__file__).resolve().parent.parent / "data" / "course.json"
+
+CHAPTERS = [
+    {
+        "id": "ch1",
+        "title": "DNA & RNA Fundamentals",
+        "sections": [
+            {
+                "heading": "Building Blocks of Life",
+                "body": (
+                    "Every instruction your body ever follows is written in a tiny molecular alphabet. "
+                    "DNA and RNA are both built from repeating units called nucleotides. Each nucleotide "
+                    "has three parts: a five-carbon sugar, a phosphate group, and a nitrogenous base. "
+                    "In DNA the sugar is deoxyribose; in RNA it is ribose, which has one extra oxygen atom. "
+                    "The bases are the 'letters' of the genetic code: Adenine (A), Thymine (T), Guanine (G), "
+                    "and Cytosine (C) in DNA, with Uracil (U) replacing Thymine in RNA. Nucleotides link "
+                    "together through their sugar and phosphate groups to form a long backbone, with the "
+                    "bases sticking out to the side like rungs waiting to be matched. Understanding this "
+                    "simple four-letter alphabet is the first step to understanding every gene, mutation, "
+                    "and protein described later in this course."
+                ),
+            },
+            {
+                "heading": "DNA: The Double Helix",
+                "body": (
+                    "DNA does not float around as a single strand — it pairs with a second, complementary "
+                    "strand to form the famous double helix, described by James Watson and Francis Crick in "
+                    "1953 using X-ray diffraction images captured by Rosalind Franklin and Maurice Wilkins. "
+                    "The two strands run in opposite directions (antiparallel) and are held together by "
+                    "hydrogen bonds between bases: A always pairs with T (two hydrogen bonds), and G always "
+                    "pairs with C (three hydrogen bonds). This strict pairing rule means that if you know one "
+                    "strand's sequence, you automatically know the other — which is exactly how DNA "
+                    "replication copies genetic information accurately before a cell divides. The twisting "
+                    "ladder shape also protects the bases on the inside, like the protected spine of a "
+                    "zipped-up book, while still allowing enzymes to unzip it when needed."
+                ),
+            },
+            {
+                "heading": "RNA: DNA's Working Copy",
+                "body": (
+                    "If DNA is the permanent master blueprint locked safely in the nucleus, RNA is the "
+                    "disposable working copy sent out to get a job done. RNA is usually single-stranded, "
+                    "which lets it fold into varied 3D shapes to perform different jobs. Messenger RNA (mRNA) "
+                    "carries a gene's instructions from the DNA to the ribosome. Transfer RNA (tRNA) ferries "
+                    "the correct amino acid to match each instruction. Ribosomal RNA (rRNA) forms the core "
+                    "machinery of the ribosome itself. Because RNA is temporary and easily broken down, cells "
+                    "can quickly turn genes on or off by controlling how much RNA copy exists at a given "
+                    "moment, without ever touching the original DNA blueprint."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "What are the three components of a single nucleotide?",
+                "options": [
+                    "A sugar, a phosphate group, and a nitrogenous base",
+                    "A protein, a lipid, and a sugar",
+                    "Two bases and one phosphate group",
+                    "A ribosome, an enzyme, and a base",
+                ],
+                "correct_index": 0,
+                "explanation": "Nucleotides are built from one sugar, one phosphate group, and one base — these link into long chains to form DNA/RNA.",
+            },
+            {
+                "question": "Which base replaces Thymine in RNA?",
+                "options": ["Guanine", "Cytosine", "Uracil", "Adenine"],
+                "correct_index": 2,
+                "explanation": "RNA uses Uracil (U) wherever DNA would use Thymine (T).",
+            },
+            {
+                "question": "In DNA base pairing, Guanine always pairs with:",
+                "options": ["Adenine", "Cytosine", "Thymine", "Uracil"],
+                "correct_index": 1,
+                "explanation": "G-C pairs form three hydrogen bonds, while A-T pairs form two.",
+            },
+            {
+                "question": "Who captured the X-ray diffraction data crucial to discovering DNA's double-helix structure?",
+                "options": ["Charles Darwin", "Rosalind Franklin", "Gregor Mendel", "Louis Pasteur"],
+                "correct_index": 1,
+                "explanation": "Rosalind Franklin's X-ray images (notably 'Photo 51') were key evidence for Watson and Crick's 1953 model.",
+            },
+            {
+                "question": "Why can RNA fold into many different 3D shapes more easily than double-stranded DNA?",
+                "options": [
+                    "Because RNA is usually single-stranded",
+                    "Because RNA has no bases",
+                    "Because RNA is found only outside cells",
+                    "Because RNA never contains Adenine",
+                ],
+                "correct_index": 0,
+                "explanation": "Being single-stranded, RNA is free to fold back on itself in many ways, enabling varied structures and functions.",
+            },
+        ],
+    },
+    {
+        "id": "ch2",
+        "title": "Protein Structure",
+        "sections": [
+            {
+                "heading": "Amino Acids & Peptide Bonds",
+                "body": (
+                    "Proteins are built from a toolkit of 20 standard amino acids, each with the same basic "
+                    "backbone (an amino group, a carboxyl group, and a central carbon) but a different "
+                    "'side chain' that gives it unique chemical properties — some are water-loving "
+                    "(hydrophilic), some are water-fearing (hydrophobic), some carry a charge. When the "
+                    "carboxyl group of one amino acid reacts with the amino group of the next, they form a "
+                    "strong covalent link called a peptide bond, releasing a water molecule in the process. "
+                    "A chain of amino acids joined this way is called a polypeptide. The specific order of "
+                    "amino acids — dictated directly by the gene's codon sequence — determines everything "
+                    "about how that polypeptide will eventually fold and function."
+                ),
+            },
+            {
+                "heading": "Levels of Protein Structure",
+                "body": (
+                    "Biologists describe protein shape in four levels. Primary structure is simply the linear "
+                    "sequence of amino acids, read like a sentence. Secondary structure describes local, "
+                    "repeating folding patterns stabilized by hydrogen bonds — mainly the corkscrew-shaped "
+                    "alpha helix and the pleated, ribbon-like beta sheet. Tertiary structure is the overall "
+                    "3D shape a single polypeptide chain folds into, driven largely by how hydrophobic side "
+                    "chains tuck inward away from water. Quaternary structure applies only to proteins made "
+                    "of multiple polypeptide chains (subunits) that must assemble together, like hemoglobin's "
+                    "four subunits working as one unit to carry oxygen in blood."
+                ),
+            },
+            {
+                "heading": "Why Structure Determines Function",
+                "body": (
+                    "A protein's final 3D shape is not decoration — it is the entire reason the protein works. "
+                    "An enzyme's active site must be shaped precisely to grip its target molecule, the way a "
+                    "key must match a lock. Antibodies must fold so their binding region matches a specific "
+                    "pathogen marker. Even a single amino-acid change can distort the fold enough to break "
+                    "function entirely — this is exactly what happens in diseases like sickle-cell anemia, "
+                    "caused by one altered amino acid in hemoglobin. This tight link between sequence, shape, "
+                    "and function is also why predicting 3D structure from sequence (the subject of Chapter 8) "
+                    "is one of biology's most valuable computational problems."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "What chemical bond links amino acids together in a protein chain?",
+                "options": ["Hydrogen bond", "Peptide bond", "Ionic bond", "Glycosidic bond"],
+                "correct_index": 1,
+                "explanation": "A peptide bond forms between the carboxyl group of one amino acid and the amino group of the next.",
+            },
+            {
+                "question": "Which structural level refers to the plain linear sequence of amino acids?",
+                "options": ["Primary structure", "Secondary structure", "Tertiary structure", "Quaternary structure"],
+                "correct_index": 0,
+                "explanation": "Primary structure is just the order of amino acids, read like a sentence.",
+            },
+            {
+                "question": "Alpha helices and beta sheets are examples of which structural level?",
+                "options": ["Primary", "Secondary", "Tertiary", "Quaternary"],
+                "correct_index": 1,
+                "explanation": "These are local, repeating folding patterns stabilized by hydrogen bonds — the hallmark of secondary structure.",
+            },
+            {
+                "question": "Quaternary structure specifically describes:",
+                "options": [
+                    "The linear amino acid sequence",
+                    "A single chain's overall 3D fold",
+                    "Multiple polypeptide chains assembling into one functional protein",
+                    "The sugar backbone of DNA",
+                ],
+                "correct_index": 2,
+                "explanation": "Quaternary structure only applies when two or more polypeptide subunits combine, like hemoglobin's four chains.",
+            },
+            {
+                "question": "Sickle-cell anemia is a classic example of how:",
+                "options": [
+                    "RNA replaces DNA in the nucleus",
+                    "A single amino-acid change can disrupt a protein's shape and function",
+                    "Proteins never fold incorrectly",
+                    "Ribosomes stop making mRNA",
+                ],
+                "correct_index": 1,
+                "explanation": "One altered amino acid in hemoglobin distorts its shape enough to change red blood cell function and shape.",
+            },
+        ],
+    },
+    {
+        "id": "ch3",
+        "title": "Central Dogma",
+        "sections": [
+            {
+                "heading": "Transcription: DNA to mRNA",
+                "body": (
+                    "Transcription is the first step of gene expression: copying a gene's DNA sequence into a "
+                    "messenger RNA (mRNA) molecule. The enzyme RNA polymerase binds near the start of a gene "
+                    "at a region called a promoter, unwinds the DNA double helix locally, and reads one DNA "
+                    "strand (the template strand) to build a complementary RNA strand, base by base, using "
+                    "Uracil wherever the template has Adenine. Transcription happens inside the nucleus in "
+                    "eukaryotic cells. Before the mRNA leaves the nucleus, non-coding sections called introns "
+                    "are often cut out and the remaining coding sections, exons, are joined together — a "
+                    "process called splicing — producing the final, mature mRNA ready for translation."
+                ),
+            },
+            {
+                "heading": "Translation: mRNA to Protein",
+                "body": (
+                    "Translation turns the mRNA's nucleotide message into an actual protein. The mRNA travels "
+                    "to a ribosome, which reads it three bases (one codon) at a time. Each codon specifies "
+                    "one amino acid, according to the nearly universal genetic code — for example, the codon "
+                    "AUG codes for methionine and also marks the start of translation. Transfer RNA (tRNA) "
+                    "molecules, each carrying a specific amino acid and a matching three-base anticodon, pair "
+                    "up with each codon in turn. The ribosome links the delivered amino acids into a growing "
+                    "polypeptide chain until it reaches a 'stop' codon, which signals the ribosome to release "
+                    "the finished protein."
+                ),
+            },
+            {
+                "heading": "Regulation & Exceptions to the Rule",
+                "body": (
+                    "The Central Dogma — DNA makes RNA makes protein — describes the usual direction of "
+                    "information flow, but cells also control *how much* of each step happens, turning genes "
+                    "up or down depending on their needs; this is called gene regulation. There are also "
+                    "important exceptions worth knowing honestly: retroviruses like HIV use an enzyme called "
+                    "reverse transcriptase to copy RNA back into DNA, running the dogma in reverse. Some RNAs "
+                    "are never translated into protein at all — they work directly as functional molecules, "
+                    "such as the rRNA and tRNA you met earlier, or regulatory microRNAs that fine-tune gene "
+                    "expression."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "Which enzyme carries out transcription?",
+                "options": ["DNA polymerase", "RNA polymerase", "Ligase", "Helicase only"],
+                "correct_index": 1,
+                "explanation": "RNA polymerase reads the DNA template strand and builds a complementary mRNA strand.",
+            },
+            {
+                "question": "What is removed from pre-mRNA during splicing?",
+                "options": ["Exons", "Introns", "Codons", "Ribosomes"],
+                "correct_index": 1,
+                "explanation": "Introns (non-coding sections) are cut out, and the remaining exons are joined to form mature mRNA.",
+            },
+            {
+                "question": "A codon is made up of how many mRNA bases?",
+                "options": ["1", "2", "3", "4"],
+                "correct_index": 2,
+                "explanation": "Each codon is a triplet of three mRNA bases that specifies one amino acid or a start/stop signal.",
+            },
+            {
+                "question": "What do retroviruses like HIV do that runs the Central Dogma 'in reverse'?",
+                "options": [
+                    "Convert protein back into mRNA",
+                    "Use reverse transcriptase to copy RNA into DNA",
+                    "Translate DNA directly without RNA",
+                    "Destroy ribosomes permanently",
+                ],
+                "correct_index": 1,
+                "explanation": "Reverse transcriptase converts the viral RNA genome into DNA, which then integrates into the host genome.",
+            },
+            {
+                "question": "Which of these RNA types is NOT translated into protein, working instead as a functional molecule itself?",
+                "options": ["mRNA", "tRNA", "A newly transcribed pre-mRNA", "A codon"],
+                "correct_index": 1,
+                "explanation": "tRNA folds into a functional shape that delivers amino acids during translation — it is never itself translated.",
+            },
+        ],
+    },
+    {
+        "id": "ch4",
+        "title": "Bioinformatics Tools Overview",
+        "sections": [
+            {
+                "heading": "What Is Bioinformatics?",
+                "body": (
+                    "Bioinformatics is the field that applies computer science, statistics, and software "
+                    "engineering to biological data — DNA sequences, protein structures, gene expression "
+                    "levels, and more. Modern sequencing machines can generate billions of DNA letters in a "
+                    "single run, far more than any person could analyze by hand, so computational tools are "
+                    "essential for turning raw data into biological insight. A bioinformatician might search "
+                    "for a gene's relatives across species, compare a patient's DNA to a reference genome to "
+                    "find a disease-causing mutation, or predict how a new protein will fold. This course (and "
+                    "the 260+ tools in the rest of this suite) focuses on exactly these kinds of practical, "
+                    "hands-on computational biology tasks."
+                ),
+            },
+            {
+                "heading": "Sequence Analysis Tools",
+                "body": (
+                    "Two of the most widely used bioinformatics tool categories are search and alignment. "
+                    "BLAST (Basic Local Alignment Search Tool) lets you take a DNA or protein sequence and "
+                    "quickly search enormous public databases for similar sequences — useful for identifying "
+                    "an unknown gene or finding related sequences in other species. Alignment tools, such as "
+                    "pairwise alignment (Needleman-Wunsch for global alignment, Smith-Waterman for local "
+                    "alignment) and multiple sequence alignment (MSA), line up two or more sequences to reveal "
+                    "shared regions, mutations, insertions, and deletions. These comparisons are the "
+                    "foundation for studying evolution, diagnosing genetic disease, and designing primers for "
+                    "lab experiments."
+                ),
+            },
+            {
+                "heading": "Structure & Visualization Tools",
+                "body": (
+                    "Beyond raw sequence text, bioinformatics tools also help scientists see and predict 3D "
+                    "shape. Molecular viewers (like the 3D viewer in this suite) render a protein or DNA "
+                    "structure in an interactive, rotatable 3D model built from atomic coordinate data. "
+                    "Structure-prediction tools go a step further, predicting an unknown 3D shape directly "
+                    "from a sequence — AlphaFold (covered in depth in Chapter 8) is the most famous recent "
+                    "example. Together, sequence tools and structure tools let researchers move from a simple "
+                    "string of letters to a working, visual, testable hypothesis about how a biological "
+                    "molecule actually behaves."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "What does BLAST primarily help you do?",
+                "options": [
+                    "Predict 3D protein structure from scratch",
+                    "Search databases for sequences similar to your query",
+                    "Translate DNA into amino acids",
+                    "Edit genes using CRISPR",
+                ],
+                "correct_index": 1,
+                "explanation": "BLAST compares your sequence against huge public databases to find similar, likely related, sequences.",
+            },
+            {
+                "question": "Which alignment algorithm is designed for *local* alignment (finding the best matching region, not the whole sequence)?",
+                "options": ["Needleman-Wunsch", "Smith-Waterman", "SM-2", "AlphaFold"],
+                "correct_index": 1,
+                "explanation": "Smith-Waterman finds the best-matching local region, while Needleman-Wunsch aligns sequences end-to-end (global).",
+            },
+            {
+                "question": "What is a Multiple Sequence Alignment (MSA) used for?",
+                "options": [
+                    "Aligning three or more sequences together to reveal shared/conserved regions",
+                    "Only aligning exactly two sequences",
+                    "Measuring protein molecular weight",
+                    "Replacing the need for a reference genome",
+                ],
+                "correct_index": 0,
+                "explanation": "MSA lines up multiple sequences at once, revealing conserved motifs and evolutionary relationships.",
+            },
+            {
+                "question": "Why is bioinformatics necessary in modern biology?",
+                "options": [
+                    "Because sequencing produces more data than can be analyzed by hand",
+                    "Because DNA no longer needs a computer to be studied",
+                    "Because all biological questions are now solved",
+                    "Because proteins do not have 3D structure",
+                ],
+                "correct_index": 0,
+                "explanation": "Modern sequencing generates billions of DNA letters per run — computational tools are essential to make sense of it.",
+            },
+            {
+                "question": "A molecular 3D viewer is most useful for:",
+                "options": [
+                    "Reading raw FASTQ quality scores",
+                    "Visualizing and rotating a protein or DNA structure interactively",
+                    "Running PCR in a wet lab",
+                    "Counting GC content only",
+                ],
+                "correct_index": 1,
+                "explanation": "3D viewers render atomic coordinate data as an interactive model you can rotate and inspect.",
+            },
+        ],
+    },
+    {
+        "id": "ch5",
+        "title": "Sequence Analysis Basics",
+        "sections": [
+            {
+                "heading": "FASTA & FASTQ Formats",
+                "body": (
+                    "Almost every bioinformatics tool expects sequence data in one of two simple text formats. "
+                    "FASTA format stores a sequence with a one-line header starting with '>' (containing an ID "
+                    "and description) followed by the sequence itself, wrapped across lines. It is used for "
+                    "reference genomes, genes, and proteins. FASTQ format extends this idea for raw sequencing "
+                    "reads: each record has four lines — a header, the sequence, a separator ('+'), and a "
+                    "line of quality scores (one symbol per base) showing how confident the sequencer was "
+                    "about each letter it called. Learning to read these two formats is a foundational skill, "
+                    "since nearly every tool in this course's suite accepts one or both of them."
+                ),
+            },
+            {
+                "heading": "Pairwise Alignment & Scoring",
+                "body": (
+                    "To compare two sequences meaningfully, alignment algorithms assign a numeric score: a "
+                    "reward for matching bases/amino acids, a penalty for mismatches, and a penalty for gaps "
+                    "(insertions or deletions) needed to line sequences up. Dynamic programming algorithms "
+                    "like Needleman-Wunsch (global alignment) and Smith-Waterman (local alignment) efficiently "
+                    "find the mathematically best-scoring alignment rather than checking every possibility by "
+                    "brute force. A higher alignment score generally suggests the sequences are more similar "
+                    "— and, often, more likely to share an evolutionary origin or biological function. "
+                    "Scoring matrices (like BLOSUM for proteins) fine-tune which substitutions are penalized "
+                    "more or less, based on real biochemical similarity."
+                ),
+            },
+            {
+                "heading": "k-mers & Motifs",
+                "body": (
+                    "Instead of comparing whole sequences at once, many fast modern tools break a sequence "
+                    "into overlapping fixed-length chunks called k-mers (a k-mer of length 3 from 'ATCGA' "
+                    "would be 'ATC', 'TCG', 'CGA'). Counting and comparing k-mer frequencies is much faster "
+                    "than full alignment and underlies many genome-assembly and species-identification tools. "
+                    "A motif, on the other hand, is a short, often biologically meaningful pattern that "
+                    "recurs across sequences — such as a transcription factor binding site or a restriction "
+                    "enzyme cut site. Finding motifs helps researchers spot functional regulatory elements "
+                    "hidden within long stretches of otherwise unremarkable DNA."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "How many lines does one FASTQ record contain?",
+                "options": ["1", "2", "3", "4"],
+                "correct_index": 3,
+                "explanation": "A FASTQ record has a header, the sequence, a '+' separator, and a quality-score line — four lines total.",
+            },
+            {
+                "question": "What symbol starts a FASTA header line?",
+                "options": ["#", ">", "@", "%"],
+                "correct_index": 1,
+                "explanation": "FASTA headers begin with '>' followed by an ID/description, then the sequence on following lines.",
+            },
+            {
+                "question": "In sequence alignment, what does a 'gap penalty' represent?",
+                "options": [
+                    "A bonus for perfect matches",
+                    "A cost charged for inserting/deleting bases to align sequences",
+                    "The length of the shorter sequence",
+                    "The number of codons in a gene",
+                ],
+                "correct_index": 1,
+                "explanation": "Gap penalties discourage unnecessary insertions/deletions so the algorithm favors genuinely similar alignments.",
+            },
+            {
+                "question": "What is a k-mer?",
+                "options": [
+                    "A protein secondary structure",
+                    "An overlapping fixed-length substring of a sequence",
+                    "A type of ribosome",
+                    "A codon that only appears in RNA",
+                ],
+                "correct_index": 1,
+                "explanation": "K-mers are short overlapping fragments (length k) used for fast sequence comparison and assembly.",
+            },
+            {
+                "question": "A sequence motif is best described as:",
+                "options": [
+                    "A random, meaningless stretch of DNA",
+                    "A short, recurring, often functionally important pattern",
+                    "Another name for a full chromosome",
+                    "A quality score threshold",
+                ],
+                "correct_index": 1,
+                "explanation": "Motifs are short recurring patterns, such as binding sites, that often carry biological meaning.",
+            },
+        ],
+    },
+    {
+        "id": "ch6",
+        "title": "Databases (NCBI, EMBL)",
+        "sections": [
+            {
+                "heading": "Why Biological Databases Matter",
+                "body": (
+                    "No single lab sequences every organism on Earth, so biology depends on shared, public "
+                    "databases where researchers deposit and retrieve sequence, structure, and literature "
+                    "data. Without these databases, you could not run BLAST (there would be nothing to search "
+                    "against), confirm whether a mutation has been reported before, or look up a gene's known "
+                    "function. Most major databases are free, openly accessible, and cross-link to each other "
+                    "— a single accession number can connect a DNA sequence, its translated protein, related "
+                    "research papers, and known variants. Learning the major database families is just as "
+                    "important as learning any specific analysis algorithm."
+                ),
+            },
+            {
+                "heading": "The NCBI Family",
+                "body": (
+                    "The (US) National Center for Biotechnology Information hosts a cluster of interlinked "
+                    "resources. GenBank is its primary nucleotide sequence database, containing DNA/RNA "
+                    "sequences submitted from around the world. RefSeq provides a curated, non-redundant set "
+                    "of reference sequences for genomes, genes, and proteins. PubMed indexes millions of "
+                    "biomedical research article abstracts. dbSNP catalogs known single nucleotide "
+                    "polymorphisms (common genetic variants), and ClinVar specifically tracks variants with "
+                    "known or suspected clinical significance. Entrez is the unified search system that ties "
+                    "all of these NCBI databases together under one search box."
+                ),
+            },
+            {
+                "heading": "EMBL-EBI & Global Collaboration",
+                "body": (
+                    "Europe's equivalent hub is EMBL-EBI (European Bioinformatics Institute), which hosts the "
+                    "European Nucleotide Archive (ENA, GenBank's European counterpart), UniProt (the leading "
+                    "curated protein sequence and function database), and Ensembl (a genome browser and "
+                    "annotation resource for many species). NCBI, EMBL-EBI, and Japan's DDBJ synchronize their "
+                    "core nucleotide records daily through the International Nucleotide Sequence Database "
+                    "Collaboration (INSDC), so a sequence submitted to any one of them becomes visible in all "
+                    "three — a quietly remarkable example of global scientific cooperation that this entire "
+                    "course, and the broader field of bioinformatics, depends on."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "Which NCBI database is the primary home for submitted DNA/RNA nucleotide sequences?",
+                "options": ["PubMed", "GenBank", "ClinVar", "UniProt"],
+                "correct_index": 1,
+                "explanation": "GenBank is NCBI's primary nucleotide sequence database.",
+            },
+            {
+                "question": "Which database specifically tracks genetic variants with known or suspected clinical significance?",
+                "options": ["ClinVar", "Ensembl", "ENA", "dbSNP only"],
+                "correct_index": 0,
+                "explanation": "ClinVar focuses on the clinical relevance of specific variants, beyond just cataloging that they exist.",
+            },
+            {
+                "question": "UniProt and Ensembl are hosted by which organization?",
+                "options": ["NCBI", "EMBL-EBI", "DDBJ", "WHO"],
+                "correct_index": 1,
+                "explanation": "EMBL-EBI, Europe's bioinformatics hub, hosts UniProt (proteins) and Ensembl (genome annotation).",
+            },
+            {
+                "question": "What does the INSDC collaboration ensure?",
+                "options": [
+                    "That only one country can submit sequences",
+                    "That NCBI, EMBL-EBI, and DDBJ synchronize core nucleotide records daily",
+                    "That all databases require a paid subscription",
+                    "That protein structures are deleted after review",
+                ],
+                "correct_index": 1,
+                "explanation": "INSDC keeps GenBank, ENA, and DDBJ synchronized, so one submission becomes globally visible.",
+            },
+            {
+                "question": "Entrez is best described as:",
+                "options": [
+                    "A single sequence alignment algorithm",
+                    "NCBI's unified search system across its linked databases",
+                    "A protein structure file format",
+                    "A gene-editing enzyme",
+                ],
+                "correct_index": 1,
+                "explanation": "Entrez is the cross-database search portal tying together GenBank, PubMed, dbSNP, and more.",
+            },
+        ],
+    },
+    {
+        "id": "ch7",
+        "title": "Phylogenetics Introduction",
+        "sections": [
+            {
+                "heading": "What Is a Phylogenetic Tree?",
+                "body": (
+                    "A phylogenetic tree is a branching diagram that represents estimated evolutionary "
+                    "relationships among genes, organisms, or species. Each branch tip (leaf) represents a "
+                    "sequence or species being studied today, while internal branch points (nodes) represent "
+                    "inferred common ancestors. Branch lengths often represent the amount of evolutionary "
+                    "change (such as the number of DNA substitutions) that occurred along that path. Trees are "
+                    "never a certain, photographed history — they are the best statistical estimate given the "
+                    "sequence data available, and that honesty about uncertainty is an important part of "
+                    "reading them correctly."
+                ),
+            },
+            {
+                "heading": "Building Trees from Sequences",
+                "body": (
+                    "Two broad families of methods build trees from sequence data. Distance-based methods "
+                    "(like UPGMA and Neighbor-Joining) first calculate an overall similarity/difference score "
+                    "between every pair of sequences, then cluster the most similar pairs together step by "
+                    "step. Character-based methods (like Maximum Parsimony and Maximum Likelihood) instead "
+                    "examine each individual position across a multiple sequence alignment and search for the "
+                    "tree shape that best explains the observed pattern of changes, using an explicit "
+                    "evolutionary model. Character-based methods are generally more statistically rigorous but "
+                    "more computationally expensive than distance-based methods."
+                ),
+            },
+            {
+                "heading": "Reading & Interpreting Trees",
+                "body": (
+                    "To read a tree correctly, trace from any two leaves back to their shared internal node — "
+                    "that node is their most recent common ancestor, and a shorter path to that node generally "
+                    "suggests a closer relationship. The order branches are drawn left-to-right on the page "
+                    "does *not* imply anything about relationship; what matters is the branching pattern "
+                    "itself. Trees are used throughout biology: tracking how a virus is mutating and spreading "
+                    "during an outbreak, classifying newly discovered species, and tracing the evolutionary "
+                    "origin of a gene family across many organisms."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "What does an internal node in a phylogenetic tree represent?",
+                "options": [
+                    "A present-day species being studied",
+                    "An inferred common ancestor",
+                    "A sequencing error",
+                    "A protein's active site",
+                ],
+                "correct_index": 1,
+                "explanation": "Internal nodes represent the estimated most recent common ancestor of the branches that stem from them.",
+            },
+            {
+                "question": "Which pair of methods are distance-based tree-building approaches?",
+                "options": [
+                    "Maximum Parsimony and Maximum Likelihood",
+                    "UPGMA and Neighbor-Joining",
+                    "BLAST and FASTA",
+                    "AlphaFold and Evo 2",
+                ],
+                "correct_index": 1,
+                "explanation": "UPGMA and Neighbor-Joining cluster sequences based on overall pairwise distance scores.",
+            },
+            {
+                "question": "Character-based tree methods like Maximum Likelihood are generally:",
+                "options": [
+                    "Less rigorous but free",
+                    "More statistically rigorous but more computationally expensive",
+                    "Only usable on protein structures, never DNA",
+                    "Identical in every way to distance-based methods",
+                ],
+                "correct_index": 1,
+                "explanation": "Character-based methods model evolution explicitly per-site, at a higher computational cost.",
+            },
+            {
+                "question": "Does the left-to-right order of branches on a printed tree indicate how closely related they are?",
+                "options": [
+                    "Yes, always",
+                    "No — only the branching pattern and shared nodes matter",
+                    "Only for bacteria",
+                    "Only in distance-based trees",
+                ],
+                "correct_index": 1,
+                "explanation": "Left-to-right ordering is just a drawing choice; relationships are defined by the branching topology, not page order.",
+            },
+            {
+                "question": "Which of these is a real-world public-health use of phylogenetic trees?",
+                "options": [
+                    "Predicting tomorrow's weather",
+                    "Tracking how a virus is mutating and spreading during an outbreak",
+                    "Measuring a protein's molecular weight",
+                    "Formatting a FASTQ file",
+                ],
+                "correct_index": 1,
+                "explanation": "Outbreak investigators build phylogenetic trees from viral sequences to trace transmission chains and mutations.",
+            },
+        ],
+    },
+    {
+        "id": "ch8",
+        "title": "AI in Biology (Evo 2, AlphaFold Intro)",
+        "sections": [
+            {
+                "heading": "Why AI Fits Biology So Well",
+                "body": (
+                    "Modern biology produces exactly the kind of data machine learning thrives on: enormous, "
+                    "patterned, and far too large for manual analysis — millions of sequenced genomes, "
+                    "catalogued protein structures, and biomedical images. Deep learning models can learn "
+                    "subtle statistical patterns in this data that are not obvious to a human eye, then use "
+                    "those patterns to make predictions about biology we have not directly observed yet. This "
+                    "chapter is intentionally labeled with an honest caveat: AI models are powerful prediction "
+                    "tools trained on existing data, not infallible oracles — their predictions are hypotheses "
+                    "that still deserve experimental confirmation in a real lab."
+                ),
+            },
+            {
+                "heading": "AlphaFold & Protein Structure Prediction",
+                "body": (
+                    "For decades, determining a protein's 3D structure experimentally (via X-ray "
+                    "crystallography or cryo-EM) could take months or years per protein. In 2020-2021, "
+                    "DeepMind's AlphaFold achieved a breakthrough by predicting protein structures from amino "
+                    "acid sequence alone with accuracy rivaling experimental methods for many proteins, by "
+                    "learning from the patterns in tens of thousands of previously solved structures combined "
+                    "with evolutionary information from related sequences. This dramatically accelerated "
+                    "structural biology research worldwide, with predicted structures for nearly every "
+                    "known protein now freely available in public databases — though predictions still carry "
+                    "a confidence score, and lower-confidence regions should be treated cautiously."
+                ),
+            },
+            {
+                "heading": "Evo 2 & Genomic Foundation Models",
+                "body": (
+                    "A newer frontier is applying large 'foundation model' AI architectures — similar in "
+                    "spirit to the models behind modern chatbots — directly to raw DNA sequence, rather than "
+                    "just protein structure. Evo 2, released by the Arc Institute in 2025, is one such genomic "
+                    "foundation model, trained on a vast, diverse collection of DNA sequences across the tree "
+                    "of life to learn the statistical 'grammar' of genomes at multiple scales, from single "
+                    "mutations up to whole-genome patterns. This is clearly labeled as an active, fast-moving "
+                    "research area: it is genuinely exciting, but still early — these models assist "
+                    "hypothesis generation and should always be paired with established wet-lab validation."
+                ),
+            },
+        ],
+        "quiz": [
+            {
+                "question": "Why does biological data suit machine learning so well, according to this chapter?",
+                "options": [
+                    "Biological data is always small and simple",
+                    "It is enormous, patterned, and too large to analyze by hand",
+                    "AI models require no training data at all",
+                    "Biology has no measurable patterns",
+                ],
+                "correct_index": 1,
+                "explanation": "Large, patterned datasets (genomes, structures, images) are exactly what deep learning is designed to learn from.",
+            },
+            {
+                "question": "What breakthrough is AlphaFold best known for?",
+                "options": [
+                    "Sequencing entire genomes instantly",
+                    "Predicting 3D protein structure from amino acid sequence with high accuracy",
+                    "Replacing the need for DNA entirely",
+                    "Building phylogenetic trees automatically",
+                ],
+                "correct_index": 1,
+                "explanation": "AlphaFold predicts a protein's 3D shape directly from its sequence, rivaling experimental accuracy for many proteins.",
+            },
+            {
+                "question": "Which institute released the Evo 2 genomic foundation model?",
+                "options": ["NCBI", "DeepMind", "Arc Institute", "WHO"],
+                "correct_index": 2,
+                "explanation": "Evo 2 was released by the Arc Institute in 2025 as a DNA-sequence foundation model.",
+            },
+            {
+                "question": "What honest caveat does this course apply to AI biology predictions?",
+                "options": [
+                    "They are always 100% correct and need no verification",
+                    "They are hypotheses that still deserve experimental confirmation",
+                    "They should replace all wet-lab research immediately",
+                    "They only work on bacteria",
+                ],
+                "correct_index": 1,
+                "explanation": "AI predictions are powerful hypotheses, not guaranteed truth — real experiments still matter.",
+            },
+            {
+                "question": "AlphaFold's predictions include a confidence score because:",
+                "options": [
+                    "Every prediction is equally reliable",
+                    "Some regions of a predicted structure are more certain than others",
+                    "Confidence scores measure DNA GC content",
+                    "The model never makes mistakes",
+                ],
+                "correct_index": 1,
+                "explanation": "Per-residue confidence (like pLDDT) flags which parts of a predicted structure are trustworthy versus uncertain.",
+            },
+        ],
+    },
+]
+
+
+def main() -> None:
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUT_PATH, "w", encoding="utf-8") as handle:
+        json.dump(CHAPTERS, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
+    print(f"wrote {OUT_PATH} ({len(CHAPTERS)} chapters)")
+
+
+if __name__ == "__main__":
+    main()
