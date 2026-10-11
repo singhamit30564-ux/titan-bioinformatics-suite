@@ -126,6 +126,54 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "page:76_Bio_Olympiad_and_Practice_Arena.py": "बायो ओलंपियाड और अभ्यास मंच",
         "page:77_Batch_Processor_and_Archive.py": "बैच प्रोसेसर और संग्रह",
         "page:78_Electronic_Lab_Notebook_Audit.py": "इलेक्ट्रॉनिक लैब नोटबुक ऑडिट",
+        "page:80_Photo_Explainer.py": "फोटो से समझाओ",
+        "page:81_Flashcards.py": "फ्लैशकार्ड्स",
+        "page:82_Course.py": "टाइटन कोर्स",
+
+        # Sidebar navigation group + Home card for the v6 Learning Lab pages.
+        "🧪 18 · Learning Lab": "🧪 18 · लर्निंग लैब",
+        "18 · Learning Lab": "18 · लर्निंग लैब",
+        "3 new consoles": "3 नए कंसोल",
+
+        # Photo Se Samjhao (Feature 1) — page chrome.
+        "Photo Se Samjhao — Dr. Titan Vision": "फोटो से समझाओ — डॉ. टाइटन विज़न",
+        "Capture or upload a photo — Dr. Titan explains it in simple Hinglish.": "फोटो खींचो या अपलोड करो — डॉ. टाइटन इसे आसान हिंग्लिश में समझाएगा।",
+        "🪄 Explain This Image (Hinglish)": "🪄 इस तस्वीर को समझाओ (हिंग्लिश)",
+        "🔊 Read the explanation aloud (Voice of Dr. Titan)": "🔊 व्याख्या ज़ोर से सुनाओ (डॉ. टाइटन की आवाज़)",
+        "📎 Please capture or upload an image first.": "📎 पहले एक तस्वीर खींचें या अपलोड करें।",
+
+        # Flashcards (Feature 3) — page chrome.
+        "Flashcards & Spaced Repetition": "फ्लैशकार्ड्स और स्पेस्ड रिपीटिशन",
+        "📅 Daily Review": "📅 दैनिक समीक्षा",
+        "➕ Add / Edit / Delete": "➕ जोड़ें / बदलें / हटाएं",
+        "📊 Progress": "📊 प्रगति",
+        "Term": "शब्द",
+        "Definition": "परिभाषा",
+        "Chapter tag": "अध्याय टैग",
+        "Add Card": "कार्ड जोड़ें",
+
+        # Course Mode (Feature 4) — page chrome.
+        "Titan Bioinformatics Course": "टाइटन बायोइन्फॉर्मेटिक्स कोर्स",
+        "📚 Select a chapter": "📚 एक अध्याय चुनें",
+        "📖 Learn": "📖 सीखें",
+        "📝 Quiz (5 MCQs)": "📝 प्रश्नोत्तरी (5 MCQ)",
+        "✅ Submit Quiz": "✅ प्रश्नोत्तरी जमा करें",
+        "Course Progress": "कोर्स प्रगति",
+        "Arena XP": "एरिना XP",
+        "Chapters": "अध्याय",
+        "Passed": "उत्तीर्ण",
+        "Attempted": "प्रयास किया गया",
+        "Not started": "शुरू नहीं हुआ",
+        "📄 Generate Certificate (PDF)": "📄 प्रमाणपत्र बनाएं (PDF)",
+        "✍️ Please enter your name first.": "✍️ कृपया पहले अपना नाम लिखें।",
+        "⬇️ Download Certificate PDF": "⬇️ प्रमाणपत्र PDF डाउनलोड करें",
+
+        # PWA / Offline Mode (Feature 2) — Home page cards.
+        "📵 Offline Mode & Install App (beta)": "📵 ऑफ़लाइन मोड और ऐप इंस्टॉल करें (बीटा)",
+        "#### 🔌 Honest Offline Scope": "#### 🔌 ईमानदार ऑफ़लाइन दायरा",
+        "**Works offline:**": "**ऑफ़लाइन काम करता है:**",
+        "**Needs internet:**": "**इंटरनेट चाहिए:**",
+        "#### 📲 Install App (Android)": "#### 📲 ऐप इंस्टॉल करें (Android)",
 
         # Home page: sidebar, hero, cards, and teaching copy.
         "Home": "मुखपृष्ठ",

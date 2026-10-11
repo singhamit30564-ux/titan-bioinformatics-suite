@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Titan local JSON storage bridge</title>
+  <style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style>
+</head>
+<body>
+<script>
+(() => {
+  // Generic localStorage <-> Streamlit JSON blob bridge.
+  //
+  // Used by Flashcards (SM-2-lite card state) and Course Mode (per-chapter
+  // progress %). Nothing here is genomic/user-identifying data: flashcard
+  // review timing and course progress percentages only.
+  let initialized = false;
+  let lastReturned = "";
+
+  function post(type, payload) {
+    window.parent.postMessage({isStreamlitMessage: true, type, ...payload}, "*");
+  }
+
+  function safeParse(text) {
+    try {
+      const value = JSON.parse(text || "{}");
+      return (value && typeof value === "object") ? value : {};
+    } catch (_error) {
+      return {};
+    }
+  }
+
+  function onRender(data) {
+    if (!data || data.type !== "streamlit:render") return;
+    const args = data.args || {};
+    const storageKey = String(args.storage_key || "titan_json_blob_v1");
+    const incoming = args.payload;
+    const shouldWrite = args.write === true;
+
+    let stored = safeParse(window.localStorage.getItem(storageKey));
+
+    if (shouldWrite && incoming && typeof incoming === "object") {
+      stored = incoming;
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(stored));
+      } catch (_error) {
+        // Private browsing / storage quota exceeded: session_state still works.
+      }
+    }
+
+    const serialized = JSON.stringify(stored);
+    if (!initialized || (shouldWrite && serialized !== lastReturned)) {
+      initialized = true;
+      lastReturned = serialized;
+      post("streamlit:setComponentValue", {value: stored, dataType: "json"});
+    }
+    post("streamlit:setFrameHeight", {height: 1});
+  }
+
+  window.addEventListener("message", (event) => onRender(event.data));
+  window.parent.postMessage({isStreamlitMessage: true, type: "streamlit:componentReady", apiVersion: 1}, "*");
+  window.parent.postMessage({isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: 1}, "*");
+})();
+</script>
+</body>
+</html>

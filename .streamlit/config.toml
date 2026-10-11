@@ -5,6 +5,10 @@ gatherUsageStats = false
 headless = true
 address = "0.0.0.0"
 port = 8501
+# Serves ./static/* at /app/static/* — used by the opt-in PWA shell
+# (manifest.json, service worker, icons). Pure addition: no existing route
+# or page depends on this flag, so disabling it only turns off PWA extras.
+enableStaticServing = true
 
 [theme]
 base = "dark"

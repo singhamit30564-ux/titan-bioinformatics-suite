@@ -15,6 +15,7 @@ from titan_utils.i18n import (
     localized_page_title,
     t,
 )
+from titan_utils.pwa import ANDROID_INSTALL_STEPS, OFFLINE_CAPABLE, ONLINE_ONLY, render_pwa_injector
 from titan_utils.ui import apply_theme
 
 st.set_page_config(
@@ -165,6 +166,11 @@ cat16_studio = [
     "78_Electronic_Lab_Notebook_Audit.py",
 ]
 cat17_classroom = ["79_Classroom_Quiz_Mode.py"]
+cat18_learning_lab = [
+    "80_Photo_Explainer.py",
+    "81_Flashcards.py",
+    "82_Course.py",
+]
 
 
 def _render_home():
@@ -225,6 +231,7 @@ def _render_home():
         ("🤖", "15 · Dr. Titan AI Copilot", "Multilingual explainer, protocol generator, cloning solver, student tutor, buffer calculator, audit.", "28 tools (233–260)"),
         ("🚀", "16 · Titan Flow, Arena & ELN", "Workflow builder with ZIP packages, bio-olympiad practice arena, batch processor archive, GLP lab notebook, 3D viewer, ZDR privacy.", "4 studio consoles"),
         ("🎓", "17 · Classroom Quiz", "Teacher-led five-question MCQ sessions with four-character join codes, mobile access, and XP leaderboard.", "1 classroom mode"),
+        ("🧪", "18 · Learning Lab", "Photo Se Samjhao vision AI (opt-in), spaced-repetition flashcards, and the free Titan Bioinformatics Course with a PDF certificate.", "3 new consoles"),
     ]
     for i in range(0, len(categories), 2):
         c1, c2 = st.columns(2)
@@ -244,6 +251,34 @@ def _render_home():
         "a **Dr. Titan Student Learning Corner** with plain-language explanations, biological context, and real-world impact!"
     ))
     st.success(t("👈 **Open the sidebar (top-left) to explore all 260 tools or jump into the Master Tool Hub.**"))
+
+    # ── PWA / Offline Mode (opt-in, beta, graceful degradation) ─────────────
+    st.markdown("---")
+    st.markdown(t("## 📵 Offline Mode & Install App (beta)"))
+    pwa_col1, pwa_col2 = st.columns(2)
+    with pwa_col1:
+        with st.container(border=True):
+            st.markdown(t("#### 🔌 Honest Offline Scope"))
+            st.markdown(t("**Works offline:**"))
+            for item in OFFLINE_CAPABLE:
+                st.caption(f"✅ {t(item)}")
+            st.markdown(t("**Needs internet:**"))
+            for item in ONLINE_ONLY:
+                st.caption(f"🌐 {t(item)}")
+            st.caption(t(
+                "This is a best-effort Progressive Web App shell, not a guaranteed full offline "
+                "mode — if your browser blocks the service worker, every tool keeps working online as normal."
+            ))
+    with pwa_col2:
+        with st.container(border=True):
+            st.markdown(t("#### 📲 Install App (Android)"))
+            for i, step in enumerate(ANDROID_INSTALL_STEPS, start=1):
+                st.markdown(f"{i}. {t(step)}")
+            st.caption(t(
+                "An installable home-screen icon launches the suite in standalone mode "
+                "(no browser address bar) — it is still the same live web app underneath."
+            ))
+    render_pwa_injector()
 
     st.markdown("---")
     st.markdown(t(
@@ -282,6 +317,7 @@ try:
             t("🤖 15 · Dr. Titan AI Copilot", selected_language): [_page(f, selected_language) for f in cat15_dr_titan],
             t("🚀 16 · Flow · Arena · ELN", selected_language): [_page(f, selected_language) for f in cat16_studio],
             t("🎓 17 · Classroom Quiz", selected_language): [_page(f, selected_language) for f in cat17_classroom],
+            t("🧪 18 · Learning Lab", selected_language): [_page(f, selected_language) for f in cat18_learning_lab],
         }
     )
 
@@ -302,7 +338,7 @@ except Exception:  # pragma: no cover — older Streamlit
         cat6_agri, cat7_marine, cat8_clinical, cat9_metagenomics,
         cat10_structural, cat11_epigenetics, cat12_synthetic,
         cat13_population, cat14_ncbi, cat15_dr_titan, cat16_studio,
-        cat17_classroom,
+        cat17_classroom, cat18_learning_lab,
     ):
         for fname in group[:2]:
             st.page_link(str(PAGES_DIR / fname))
