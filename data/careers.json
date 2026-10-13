@@ -1,0 +1,134 @@
+[
+  {
+    "id": "bioinformatician",
+    "title": "Bioinformatician",
+    "icon": "🧬",
+    "what_they_do": "Analyze large-scale biological datasets (genomes, transcriptomes, proteomes) using computational tools. Build pipelines, run statistical models, and visualize results to help biologists make discoveries.",
+    "skills": ["Python/R", "Linux CLI", "Statistics", "Nextflow/Snakemake", "SQL", "Biopython", "Git"],
+    "india_colleges": ["IIT Bombay (Biosciences)", "IISc Bangalore", "JNU (School of Biotechnology)", "University of Hyderabad"],
+    "entrance_exams": ["IIT JAM (Biotechnology)", "GATE (BT/XL)", "JNU CEEB", "CUET PG"],
+    "salary_range": "₹4–15 LPA (India); $70–120K (US)",
+    "day_in_life": "Morning: check pipeline jobs on HPC cluster. Mid-day: meet wet-lab team to discuss RNA-seq experiment. Afternoon: write Snakemake pipeline for variant calling. Evening: generate publication figures in R."
+  },
+  {
+    "id": "genetic_counselor",
+    "title": "Genetic Counselor",
+    "icon": "🩺",
+    "what_they_do": "Interpret genetic test results and explain hereditary disease risks to patients and families. Help people understand genetic testing options, family planning, and medical management.",
+    "skills": ["Clinical genetics", "Communication", "Pedigree analysis", "Empathy", "Genetic testing platforms"],
+    "india_colleges": ["SGPGIMS Lucknow", "AIIMS Delhi", "Kasturba Medical College", "Manipal Academy of Higher Education"],
+    "entrance_exams": ["NEET PG", "AIIMS PG", "INI CET", "University-level MSc admissions"],
+    "salary_range": "₹3–10 LPA (India); $75–100K (US)",
+    "day_in_life": "Morning: review prenatal genetic test results. Mid-day: counsel a couple about carrier screening options. Afternoon: attend multidisciplinary genetics case conference. Evening: update patient records and follow-up plans."
+  },
+  {
+    "id": "biostatistician",
+    "title": "Biostatistician",
+    "icon": "📊",
+    "what_they_do": "Design experiments and clinical trials, apply statistical models to biological and medical data, and ensure that research conclusions are mathematically sound.",
+    "skills": ["R/SAS", "Experimental design", "Regression models", "Survival analysis", "Bayesian statistics", "Clinical trial design"],
+    "india_colleges": ["ISI Kolkata", "IISc Bangalore", "AIIMS Delhi", "CMC Vellore"],
+    "entrance_exams": ["ISI Admission Test", "GATE (Mathematics/Statistics)", "CUET PG (Statistics)"],
+    "salary_range": "₹5–18 LPA (India); $80–130K (US)",
+    "day_in_life": "Morning: design sample size calculation for a new drug trial. Mid-day: run survival analysis on oncology data in R. Afternoon: present interim results to the clinical team. Evening: draft statistical methods section for a journal paper."
+  },
+  {
+    "id": "clinical_genomics",
+    "title": "Clinical Genomics Scientist",
+    "icon": "🏥",
+    "what_they_do": "Process patient DNA/RNA samples, run sequencing pipelines, identify disease-causing variants, and write clinical reports for physicians. Work in hospitals and diagnostic labs.",
+    "skills": ["NGS pipelines", "Variant annotation (ClinVar, OMIM)", "Sanger sequencing", "CAP/CLIA lab standards", "Report writing"],
+    "india_colleges": ["AIIMS Delhi", "NIMHANS Bangalore", "SGPGIMS Lucknow", "KEM Hospital Mumbai"],
+    "entrance_exams": ["NEET PG", "INI CET", "GATE BT", "University-level PhD admissions"],
+    "salary_range": "₹5–12 LPA (India); $80–110K (US)",
+    "day_in_life": "Morning: receive trio-exome samples from neonatal ICU. Mid-day: run variant calling pipeline on the clinical HPC. Afternoon: classify a novel BRCA1 variant using ACMG criteria. Evening: sign off report for the consulting oncologist."
+  },
+  {
+    "id": "structural_biologist",
+    "title": "Structural Biologist",
+    "icon": "📐",
+    "what_they_do": "Determine 3D structures of proteins, nucleic acids, and complexes using X-ray crystallography, cryo-EM, or NMR. Use computational tools to model and interpret molecular architectures.",
+    "skills": ["Cryo-EM", "X-ray crystallography", "PyMOL/ChimeraX", "AlphaFold", "Molecular dynamics", "Python scripting"],
+    "india_colleges": ["IISc Bangalore", "NCBS Bangalore", "TIFR Mumbai", "IIT Kanpur"],
+    "entrance_exams": ["GATE (BT/XL)", "JGEEBILS (TIFR)", "CSIR NET (Life Sciences)"],
+    "salary_range": "₹4–14 LPA (India); $65–115K (US)",
+    "day_in_life": "Morning: vitrify a new protein complex for cryo-EM data collection. Mid-day: process overnight data in RELION. Afternoon: fit atomic model into density map using Coot. Evening: run molecular dynamics simulation on the HPC."
+  },
+  {
+    "id": "drug_discovery_scientist",
+    "title": "Drug Discovery Scientist",
+    "icon": "💊",
+    "what_they_do": "Identify drug targets, design molecules, run virtual screening and docking studies, and collaborate with chemists and biologists to develop new therapeutics.",
+    "skills": ["Molecular docking", "QSAR", "Cheminformatics (RDKit)", "ADMET prediction", "Python", "Drug-target databases"],
+    "india_colleges": ["NIPER Mohali", "ICT Mumbai", "IICT Hyderabad", "BITS Pilani"],
+    "entrance_exams": ["NIPER JEE", "GATE (CY/BT)", "GPAT (Pharmacy)"],
+    "salary_range": "₹5–20 LPA (India); $90–140K (US)",
+    "day_in_life": "Morning: screen 100K compounds against a kinase target in silico. Mid-day: analyse ADMET hits and remove toxic candidates. Afternoon: discuss lead compounds with medicinal chemists. Evening: write docking protocol for the next target."
+  },
+  {
+    "id": "microbiome_scientist",
+    "title": "Microbiome Scientist",
+    "icon": "🦠",
+    "what_they_do": "Study microbial communities in environments or human hosts using metagenomics, 16S rRNA analysis, and metabolomics. Link microbiome composition to health, agriculture, or environmental outcomes.",
+    "skills": ["16S/ITS amplicon analysis", "QIIME2", "Metagenomics assembly", "R (phyloseq)", "Anaerobic culture techniques"],
+    "india_colleges": ["NCBS Bangalore", "NCCS Pune", "IIT Delhi", "JNU"],
+    "entrance_exams": ["GATE BT", "CSIR NET (Life Sciences)", "DBT JRF", "CUET PG"],
+    "salary_range": "₹4–12 LPA (India); $70–105K (US)",
+    "day_in_life": "Morning: extract DNA from stool samples. Mid-day: run QIIME2 pipeline on 16S sequencing data. Afternoon: correlate gut bacteria with IBD patient outcomes. Evening: prepare seminar on probiotics research."
+  },
+  {
+    "id": "evolutionary_biologist",
+    "title": "Evolutionary Biologist",
+    "icon": "🌳",
+    "what_they_do": "Study how species evolve by analyzing DNA sequences, building phylogenetic trees, and modelling population genetics. Work in academia, museums, and conservation organizations.",
+    "skills": ["Phylogenetics (RAxML, BEAST)", "Population genetics (STRUCTURE)", "R/Python", "Field sampling", "Statistical modelling"],
+    "india_colleges": ["IISc Bangalore", "NCBS", "BHU", "Wildlife Institute of India, Dehradun"],
+    "entrance_exams": ["GATE BT/XL", "CSIR NET", "WII entrance test", "JNU CEEB"],
+    "salary_range": "₹3–12 LPA (India); $55–100K (US)",
+    "day_in_life": "Morning: collect plant leaf samples from the Western Ghats. Mid-day: extract DNA and run PCR for phylogenetic markers. Afternoon: build a maximum-likelihood tree in RAxML. Evening: draft a manuscript on cryptic species diversity."
+  },
+  {
+    "id": "epigenomics_researcher",
+    "title": "Epigenomics Researcher",
+    "icon": "🧬",
+    "what_they_do": "Study how chemical modifications to DNA and histones (methylation, acetylation) regulate gene expression without changing the sequence. Link epigenetic changes to disease, aging, and development.",
+    "skills": ["ChIP-seq / ATAC-seq analysis", "Bisulfite sequencing", "R/Bioconductor", "WGBS pipelines", "Gene regulation knowledge"],
+    "india_colleges": ["NCBS Bangalore", "CDFD Hyderabad", "CCMB Hyderabad", "AIIMS Delhi"],
+    "entrance_exams": ["CSIR NET (Life Sciences)", "GATE BT", "DBT JRF", "ICMR JRF"],
+    "salary_range": "₹4–14 LPA (India); $65–110K (US)",
+    "day_in_life": "Morning: process ChIP-seq data for histone marks in cancer cells. Mid-day: run differential methylation analysis with dmrseq in R. Afternoon: meet with oncology collaborators to discuss findings. Evening: annotate enhancer regions in the genome browser."
+  },
+  {
+    "id": "agricultural_biotechnologist",
+    "title": "Agricultural Biotechnologist",
+    "icon": "🌾",
+    "what_they_do": "Apply genomics and biotechnology to improve crop yield, disease resistance, and nutritional content. Develop GM crops, marker-assisted selection, and genome-edited plants.",
+    "skills": ["Plant transformation", "Marker-assisted selection", "Genome editing (CRISPR)", "QTL mapping", "Field trial design"],
+    "india_colleges": ["IARI New Delhi", "TNAU Coimbatore", "Pantnagar University", "IIT Kharagpur"],
+    "entrance_exams": ["ICAR AIEEA", "GATE (AG/BT)", "JNU CEEB", "State-level agriculture entrance exams"],
+    "salary_range": "₹3–12 LPA (India); $60–95K (US)",
+    "day_in_life": "Morning: genotype wheat varieties for rust resistance markers. Mid-day: review CRISPR-edited rice field trial data. Afternoon: analyze QTL mapping results for drought tolerance. Evening: write grant proposal for climate-resilient crops."
+  },
+  {
+    "id": "data_scientist_bio",
+    "title": "Biomedical Data Scientist",
+    "icon": "💻",
+    "what_they_do": "Apply machine learning and data science to electronic health records, imaging data, wearable sensor data, and clinical trial outcomes to improve healthcare decisions.",
+    "skills": ["Python (scikit-learn, TensorFlow)", "SQL", "Clinical data standards (HL7/FHIR)", "Statistics", "Data visualization"],
+    "india_colleges": ["IIT Madras", "IIT Bombay", "ISI Kolkata", "IIIT Hyderabad"],
+    "entrance_exams": ["GATE CS/DA", "IIT JAM (Mathematics/Statistics)", "CUET PG"],
+    "salary_range": "₹6–25 LPA (India); $90–150K (US)",
+    "day_in_life": "Morning: clean and preprocess 100K patient records from a hospital EHR. Mid-day: train a Random Forest model to predict sepsis onset. Afternoon: validate the model on a held-out cohort. Evening: present dashboard to hospital leadership."
+  },
+  {
+    "id": "science_communicator",
+    "title": "Science Communicator / Educator",
+    "icon": "📢",
+    "what_they_do": "Translate complex biological research into accessible content for the public, students, or policymakers. Create educational materials, write science articles, produce videos, or teach.",
+    "skills": ["Strong writing", "Public speaking", "Content creation", "Basic biology knowledge", "Social media management", "Video editing"],
+    "india_colleges": ["Any BSc/MSc in Life Sciences + journalism/diploma", "IISc (Science Communication cell)", "NCBS", "TIFR"],
+    "entrance_exams": ["CUET UG/PG", "State-level BSc entrances", "Mass communication entrances"],
+    "salary_range": "₹2.5–10 LPA (India); $45–80K (US)",
+    "day_in_life": "Morning: interview a researcher about their latest CRISPR paper. Mid-day: write a blog post explaining gene therapy to a lay audience. Afternoon: record a 3-minute explainer video for YouTube. Evening: moderate a Reddit AMA with a geneticist."
+  }
+]

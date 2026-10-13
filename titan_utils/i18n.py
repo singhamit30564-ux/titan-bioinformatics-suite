@@ -56,6 +56,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "🤖 15 · Dr. Titan AI Copilot": "🤖 15 · डॉ. टाइटन AI सहायक",
         "🚀 16 · Flow · Arena · ELN": "🚀 16 · फ्लो · अभ्यास मंच · ELN",
         "🎓 17 · Classroom Quiz": "🎓 17 · कक्षा प्रश्नोत्तरी",
+        "🧪 18 · Learning Lab": "🧪 18 · लर्निंग लैब",
+        "🎮 19 · V7 Feature Pack": "🎮 19 · V7 फीचर पैक",
 
         # Every page title in the sidebar is localized, including pages whose
         # body still uses the English fallback.
