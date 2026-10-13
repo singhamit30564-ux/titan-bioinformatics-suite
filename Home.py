@@ -171,6 +171,23 @@ cat18_learning_lab = [
     "81_Flashcards.py",
     "82_Course.py",
 ]
+cat19_v7_features = [
+    "83_Virtual_Lab.py",
+    "84_Ask_Paper.py",
+    "85_Bio_News.py",
+    "86_Teacher.py",
+    "87_Cell_Game.py",
+    "88_Titan_Eye.py",
+    "89_Plugins.py",
+    "90_NEET_Prep.py",
+    "91_Careers.py",
+    "92_Calendar.py",
+    "93_Species_Tree.py",
+    "94_Achievements.py",
+    "95_Challenge.py",
+    "96_Notebooks.py",
+    "97_Flash_Duel.py",
+]
 
 
 def _render_home():
@@ -232,6 +249,7 @@ def _render_home():
         ("🚀", "16 · Titan Flow, Arena & ELN", "Workflow builder with ZIP packages, bio-olympiad practice arena, batch processor archive, GLP lab notebook, 3D viewer, ZDR privacy.", "4 studio consoles"),
         ("🎓", "17 · Classroom Quiz", "Teacher-led five-question MCQ sessions with four-character join codes, mobile access, and XP leaderboard.", "1 classroom mode"),
         ("🧪", "18 · Learning Lab", "Photo Se Samjhao vision AI (opt-in), spaced-repetition flashcards, and the free Titan Bioinformatics Course with a PDF certificate.", "3 new consoles"),
+        ("🎮", "19 · V7 Feature Pack", "Virtual lab, paper explainer, bio-news, teacher dashboard, cell game, globe, plugins, NEET prep, careers, calendar, species tree, achievements, challenges, notebooks, flashcard duel.", "15 new consoles"),
     ]
     for i in range(0, len(categories), 2):
         c1, c2 = st.columns(2)
@@ -318,6 +336,7 @@ try:
             t("🚀 16 · Flow · Arena · ELN", selected_language): [_page(f, selected_language) for f in cat16_studio],
             t("🎓 17 · Classroom Quiz", selected_language): [_page(f, selected_language) for f in cat17_classroom],
             t("🧪 18 · Learning Lab", selected_language): [_page(f, selected_language) for f in cat18_learning_lab],
+            t("🎮 19 · V7 Feature Pack", selected_language): [_page(f, selected_language) for f in cat19_v7_features],
         }
     )
 
@@ -338,7 +357,7 @@ except Exception:  # pragma: no cover — older Streamlit
         cat6_agri, cat7_marine, cat8_clinical, cat9_metagenomics,
         cat10_structural, cat11_epigenetics, cat12_synthetic,
         cat13_population, cat14_ncbi, cat15_dr_titan, cat16_studio,
-        cat17_classroom, cat18_learning_lab,
+        cat17_classroom, cat18_learning_lab, cat19_v7_features,
     ):
         for fname in group[:2]:
             st.page_link(str(PAGES_DIR / fname))
