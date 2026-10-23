@@ -23,4 +23,3 @@ dev = ["pytest>=8.0", "numpy>=1.26"]
 # Build the `titan_core` extension module with the pyo3 extension-module feature.
 features = ["pyo3/extension-module"]
 module-name = "titan_core"
-python-source = "python"
