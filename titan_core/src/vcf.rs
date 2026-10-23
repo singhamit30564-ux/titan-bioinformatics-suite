@@ -653,9 +653,11 @@ mod tests {
 
     #[test]
     fn filter_pushdown() {
-        let mut f = VcfFilter::default();
-        f.chrom = Some("chr2".into());
-        f.af_min = Some(0.4);
+        let f = VcfFilter {
+            chrom: Some("chr2".into()),
+            af_min: Some(0.4),
+            ..Default::default()
+        };
         let table = parse_vcf_payload(&toy_vcf(), 1, &f, None, None, None).unwrap();
         assert_eq!(table.n_rows_kept, 2); // chr2 rows with AF>=0.4: rs3 (0.9), rs4 (0.5)
         assert_eq!(table.n_filtered_out, 2);
@@ -663,9 +665,11 @@ mod tests {
 
     #[test]
     fn qual_and_filter_string() {
-        let mut f = VcfFilter::default();
-        f.filter = Some("PASS".into());
-        f.qual_min = Some(40.0);
+        let f = VcfFilter {
+            filter: Some("PASS".into()),
+            qual_min: Some(40.0),
+            ..Default::default()
+        };
         let table = parse_vcf_payload(&toy_vcf(), 1, &f, None, None, None).unwrap();
         assert_eq!(table.n_rows_kept, 2); // rs1 (50), rs2 (45)
     }

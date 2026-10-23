@@ -480,7 +480,7 @@ mod tests {
             out.extend_from_slice(format!("@r{i}\n").as_bytes());
             out.extend_from_slice(b"TTTTTTTTTTAGATCGGAAGAGCCCCCCCCCC");
             out.extend_from_slice(b"\n+\n");
-            out.extend_from_slice(&vec![b'I'; 32]);
+            out.extend_from_slice(&[b'I'; 32]);
             out.extend_from_slice(b"\n");
         }
         let report = qc_payload(&out, 1, &QcParams::default(), None, None).unwrap();
