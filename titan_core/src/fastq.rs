@@ -129,7 +129,10 @@ impl InputBuffer {
                 } else {
                     bytes.to_vec()
                 };
-                Ok(InputBuffer { _mmap: None, owned: Some(owned) })
+                Ok(InputBuffer {
+                    _mmap: None,
+                    owned: Some(owned),
+                })
             }
             (Some(p), None) => {
                 let path = Path::new(p);
@@ -147,10 +150,16 @@ impl InputBuffer {
                     let mut raw = Vec::new();
                     std::fs::File::open(path)?.read_to_end(&mut raw)?;
                     let owned = crate::bgzf::decompress(&raw, threads)?;
-                    Ok(InputBuffer { _mmap: None, owned: Some(owned) })
+                    Ok(InputBuffer {
+                        _mmap: None,
+                        owned: Some(owned),
+                    })
                 } else {
                     let mmap = unsafe { Mmap::map(&file)? };
-                    Ok(InputBuffer { _mmap: Some(mmap), owned: None })
+                    Ok(InputBuffer {
+                        _mmap: Some(mmap),
+                        owned: None,
+                    })
                 }
             }
         }
@@ -176,7 +185,11 @@ struct LineIter<'a> {
 
 impl<'a> LineIter<'a> {
     fn new(buf: &'a [u8], pos: usize) -> Self {
-        LineIter { buf, pos, last_start: pos }
+        LineIter {
+            buf,
+            pos,
+            last_start: pos,
+        }
     }
 
     fn next_line(&mut self) -> Option<&'a [u8]> {
@@ -309,7 +322,10 @@ pub fn parse_block(
 
 /// Owned-record parser — used by tests and the sequential fallback; supports
 /// fully wrapped FASTQ (multi-line seq/qual) without loss.
-pub fn parse_records_owned(buf: &[u8], warnings: &mut ParseWarnings) -> Vec<(String, Vec<u8>, Vec<u8>)> {
+pub fn parse_records_owned(
+    buf: &[u8],
+    warnings: &mut ParseWarnings,
+) -> Vec<(String, Vec<u8>, Vec<u8>)> {
     let borrowed = parse_block(buf, warnings, None);
     // For wrapped FASTQ, `parse_block` skips records; re-scan linearly here.
     if warnings.wrapped_records > 0 || warnings.malformed_records > 0 {
@@ -375,7 +391,10 @@ pub struct Plan {
 /// Decide whether the payload is strict 4-line FASTQ and, when it is, cut it
 /// into record-aligned byte blocks for parallel parsing.
 pub fn plan_blocks(buf: &[u8], target_block: usize) -> Plan {
-    let mut plan = Plan { strict: true, blocks: Vec::new() };
+    let mut plan = Plan {
+        strict: true,
+        blocks: Vec::new(),
+    };
     if buf.is_empty() {
         return plan;
     }
@@ -568,9 +587,13 @@ pub fn parse_payload(
             let q0 = block.qual_offsets[i] as usize;
             let q1 = block.qual_offsets[i + 1] as usize;
             merged.names.push(name.clone());
-            merged.seq_concat.extend_from_slice(&block.seq_concat[s0..s1]);
+            merged
+                .seq_concat
+                .extend_from_slice(&block.seq_concat[s0..s1]);
             merged.seq_offsets.push(merged.seq_concat.len() as u64);
-            merged.qual_concat.extend_from_slice(&block.qual_concat[q0..q1]);
+            merged
+                .qual_concat
+                .extend_from_slice(&block.qual_concat[q0..q1]);
             merged.qual_offsets.push(merged.qual_concat.len() as u64);
             merged.lengths.push(block.lengths[i]);
         }

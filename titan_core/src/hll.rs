@@ -123,6 +123,9 @@ mod tests {
         }
         a.merge(&b);
         let est = a.estimate();
-        assert!((est - 15_000.0).abs() / 15_000.0 < 0.15, "merged estimate {est}");
+        assert!(
+            (est - 15_000.0).abs() / 15_000.0 < 0.15,
+            "merged estimate {est}"
+        );
     }
 }

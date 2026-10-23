@@ -153,7 +153,8 @@ impl QcAccum {
         }
         if self.qual_sum_by_pos.len() < other.qual_sum_by_pos.len() {
             self.qual_sum_by_pos.resize(other.qual_sum_by_pos.len(), 0);
-            self.qual_count_by_pos.resize(other.qual_count_by_pos.len(), 0);
+            self.qual_count_by_pos
+                .resize(other.qual_count_by_pos.len(), 0);
         }
         for (i, &v) in other.qual_sum_by_pos.iter().enumerate() {
             self.qual_sum_by_pos[i] += v;
@@ -243,7 +244,11 @@ fn detect_phred(hist: &[u64; 256]) -> PhredEncoding {
     PhredEncoding::Ambiguous
 }
 
-pub fn build_report(accum: QcAccum, params: &QcParams, warnings: crate::fastq::ParseWarnings) -> QcReport {
+pub fn build_report(
+    accum: QcAccum,
+    params: &QcParams,
+    warnings: crate::fastq::ParseWarnings,
+) -> QcReport {
     let phred = detect_phred(&accum.qual_byte_hist);
     let offset = u64::from(phred.offset());
     let total_bases = accum.total_bases.max(1) as f64;
@@ -360,15 +365,16 @@ pub fn qc_payload(
         }
         (accum, warnings)
     };
-    let mut results: Vec<(QcAccum, crate::fastq::ParseWarnings)> = if threads == 1 || plan.blocks.len() <= 1 {
-        plan.blocks.iter().map(|&r| per_block(r)).collect()
-    } else {
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(threads)
-            .build()
-            .map_err(|e| CoreError::Io(format!("thread pool build failed: {e}")))?;
-        pool.install(|| plan.blocks.par_iter().map(|&r| per_block(r)).collect())
-    };
+    let mut results: Vec<(QcAccum, crate::fastq::ParseWarnings)> =
+        if threads == 1 || plan.blocks.len() <= 1 {
+            plan.blocks.iter().map(|&r| per_block(r)).collect()
+        } else {
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .build()
+                .map_err(|e| CoreError::Io(format!("thread pool build failed: {e}")))?;
+            pool.install(|| plan.blocks.par_iter().map(|&r| per_block(r)).collect())
+        };
 
     let mut merged = QcAccum::new(params);
     let mut warnings = crate::fastq::ParseWarnings::default();
@@ -394,7 +400,10 @@ pub fn qc_payload(
 
 /// Convenience: quick QC over a single seq/qual pair (used by tests).
 pub fn quick_read_metrics(seq: &[u8], qual: &[u8]) -> (u64, u64, u64) {
-    let gc = seq.iter().filter(|&&b| matches!(b, b'G' | b'C' | b'g' | b'c')).count() as u64;
+    let gc = seq
+        .iter()
+        .filter(|&&b| matches!(b, b'G' | b'C' | b'g' | b'c'))
+        .count() as u64;
     let n = seq.iter().filter(|&&b| matches!(b, b'N' | b'n')).count() as u64;
     (seq.len().max(qual.len()) as u64, gc, n)
 }

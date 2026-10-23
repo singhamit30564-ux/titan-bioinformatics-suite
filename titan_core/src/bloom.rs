@@ -17,9 +17,13 @@ impl BloomFilter {
         let expected = expected.max(1) as f64;
         let fp_rate = fp_rate.clamp(1e-9, 0.5);
         // m = -n * ln(p) / (ln 2)^2
-        let n_bits = ((-expected * fp_rate.ln()) / (LN_2 * LN_2)).ceil().max(64.0) as u64;
+        let n_bits = ((-expected * fp_rate.ln()) / (LN_2 * LN_2))
+            .ceil()
+            .max(64.0) as u64;
         let n_words = ((n_bits + 63) / 64) as usize;
-        let n_hashes = (((n_bits as f64) / expected) * LN_2).ceil().clamp(1.0, 16.0) as u32;
+        let n_hashes = (((n_bits as f64) / expected) * LN_2)
+            .ceil()
+            .clamp(1.0, 16.0) as u32;
         BloomFilter {
             bits: vec![0u64; n_words],
             n_bits: n_words as u64 * 64,

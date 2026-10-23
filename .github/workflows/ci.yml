@@ -81,7 +81,7 @@ jobs:
           python3 scripts/ci_diag_comment.py \
             --marker "<!-- titan-ci-diag rust -->" \
             --title "🦀 rust job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
-            --file /tmp/titan-fmt.log --file /tmp/titan-clippy.log --file /tmp/titan-test.log --file /tmp/titan-maturin.log
+            --file /tmp/titan-clippy.log --file /tmp/titan-test.log --file /tmp/titan-maturin.log --file /tmp/titan-fmt.log
       - name: Upload rust diagnostics (logs + applyable rustfmt patch)
         if: always()
         uses: actions/upload-artifact@v4

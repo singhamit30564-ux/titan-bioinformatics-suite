@@ -165,7 +165,12 @@ impl KmerCounter {
 
 /// Parallel k-mer counting over whole sequence payloads (multi-FASTA blocks
 /// split on record boundaries by the caller).
-pub fn count_sequences(sequences: &[Vec<u8>], k: usize, max_entries: usize, threads: usize) -> KmerCounter {
+pub fn count_sequences(
+    sequences: &[Vec<u8>],
+    k: usize,
+    max_entries: usize,
+    threads: usize,
+) -> KmerCounter {
     let merged = if threads == 1 || sequences.len() <= 1 {
         let mut acc = KmerCounter::new(k, max_entries);
         for seq in sequences {
@@ -173,9 +178,7 @@ pub fn count_sequences(sequences: &[Vec<u8>], k: usize, max_entries: usize, thre
         }
         acc
     } else {
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(threads)
-            .build();
+        let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build();
         match pool {
             Ok(pool) => pool.install(|| {
                 let parts: Vec<KmerCounter> = sequences
@@ -217,12 +220,19 @@ mod tests {
     #[test]
     fn canonical_is_strand_symmetric() {
         let fwd = pack_kmer(b"ACGTACGT").unwrap();
-        let rev = pack_kmer(b"ACGTACGT".iter().rev().map(|&b| match b {
-            b'A' => b'T',
-            b'T' => b'A',
-            b'C' => b'G',
-            _ => b'C',
-        }).collect::<Vec<u8>>().as_slice())
+        let rev = pack_kmer(
+            b"ACGTACGT"
+                .iter()
+                .rev()
+                .map(|&b| match b {
+                    b'A' => b'T',
+                    b'T' => b'A',
+                    b'C' => b'G',
+                    _ => b'C',
+                })
+                .collect::<Vec<u8>>()
+                .as_slice(),
+        )
         .unwrap();
         assert_eq!(canonical(fwd, 8), canonical(rev, 8));
     }

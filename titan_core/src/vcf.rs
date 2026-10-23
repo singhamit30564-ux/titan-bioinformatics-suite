@@ -66,7 +66,10 @@ fn parse_info_af_dp(info: &str) -> (Option<f64>, Option<i64>) {
     let mut dp = None;
     for field in info.split(';') {
         if let Some(v) = field.strip_prefix("AF=") {
-            af = v.split(',').next().and_then(|s| s.trim().parse::<f64>().ok());
+            af = v
+                .split(',')
+                .next()
+                .and_then(|s| s.trim().parse::<f64>().ok());
         } else if let Some(v) = field.strip_prefix("DP=") {
             dp = v.trim().parse::<i64>().ok();
         }
@@ -115,7 +118,12 @@ fn row_passes(
 // VCF text
 // ─────────────────────────────────────────────────────────────────────────────
 
-fn parse_vcf_text(buf: &[u8], filter: &VcfFilter, max_rows: Option<u64>, cancel: Option<&AtomicBool>) -> VcfTable {
+fn parse_vcf_text(
+    buf: &[u8],
+    filter: &VcfFilter,
+    max_rows: Option<u64>,
+    cancel: Option<&AtomicBool>,
+) -> VcfTable {
     let mut table = VcfTable::default();
     table.format = "vcf";
     let mut pos = 0usize;
@@ -248,7 +256,11 @@ fn read_typed(buf: &[u8], pos: &mut usize) -> Result<Typed> {
                 }
                 let v = buf[*pos] as i8;
                 *pos += 1;
-                out.push(if v as u8 == 0x80 { None } else { Some(i64::from(v)) });
+                out.push(if v as u8 == 0x80 {
+                    None
+                } else {
+                    Some(i64::from(v))
+                });
             }
             Ok(Typed::Int(out))
         }
@@ -260,7 +272,11 @@ fn read_typed(buf: &[u8], pos: &mut usize) -> Result<Typed> {
                 }
                 let v = i16::from_le_bytes(buf[*pos..*pos + 2].try_into().unwrap());
                 *pos += 2;
-                out.push(if v as u16 == 0x8000 { None } else { Some(i64::from(v)) });
+                out.push(if v as u16 == 0x8000 {
+                    None
+                } else {
+                    Some(i64::from(v))
+                });
             }
             Ok(Typed::Int(out))
         }
@@ -272,7 +288,11 @@ fn read_typed(buf: &[u8], pos: &mut usize) -> Result<Typed> {
                 }
                 let v = i32::from_le_bytes(buf[*pos..*pos + 4].try_into().unwrap());
                 *pos += 4;
-                out.push(if v as u32 == 0x8000_0000 { None } else { Some(i64::from(v)) });
+                out.push(if v as u32 == 0x8000_0000 {
+                    None
+                } else {
+                    Some(i64::from(v))
+                });
             }
             Ok(Typed::Int(out))
         }
@@ -296,7 +316,9 @@ fn read_typed(buf: &[u8], pos: &mut usize) -> Result<Typed> {
             let raw = &buf[*pos..*pos + count];
             *pos += count;
             let end = raw.iter().position(|&b| b == 0).unwrap_or(raw.len());
-            Ok(Typed::Str(String::from_utf8_lossy(&raw[..end]).into_owned()))
+            Ok(Typed::Str(
+                String::from_utf8_lossy(&raw[..end]).into_owned(),
+            ))
         }
         other => Err(CoreError::Parse(format!("unknown BCF type id {other}"))),
     }
@@ -310,7 +332,9 @@ fn read_typed_count(buf: &[u8], mut pos: usize) -> Result<(usize, usize)> {
         pos += 1;
         match type_byte >> 4 {
             1 => {
-                let v = *buf.get(pos).ok_or_else(|| CoreError::Parse("truncated BCF length".into()))?;
+                let v = *buf
+                    .get(pos)
+                    .ok_or_else(|| CoreError::Parse("truncated BCF length".into()))?;
                 (v as usize, pos + 1)
             }
             2 => {
@@ -337,7 +361,12 @@ fn read_typed_count(buf: &[u8], mut pos: usize) -> Result<(usize, usize)> {
     Ok((value, new_pos))
 }
 
-fn parse_bcf(buf: &[u8], filter: &VcfFilter, max_rows: Option<u64>, cancel: Option<&AtomicBool>) -> Result<VcfTable> {
+fn parse_bcf(
+    buf: &[u8],
+    filter: &VcfFilter,
+    max_rows: Option<u64>,
+    cancel: Option<&AtomicBool>,
+) -> Result<VcfTable> {
     if buf.len() < 9 || &buf[0..5] != b"BCF\x02\x02" {
         return Err(CoreError::Parse("not a BCF stream (bad magic)".into()));
     }
@@ -364,7 +393,11 @@ fn parse_bcf(buf: &[u8], filter: &VcfFilter, max_rows: Option<u64>, cancel: Opti
     let mut dict: Vec<String> = Vec::new();
     for line in &table.header_lines {
         let text = line.as_str();
-        for (prefix, suffix) in [("##INFO=<ID=", ","), ("##FORMAT=<ID=", ","), ("##contig=<ID=", ">")] {
+        for (prefix, suffix) in [
+            ("##INFO=<ID=", ","),
+            ("##FORMAT=<ID=", ","),
+            ("##contig=<ID=", ">"),
+        ] {
             if let Some(rest) = text.strip_prefix(prefix) {
                 let name = rest.split(suffix).next().unwrap_or("").to_string();
                 if !name.is_empty() {
@@ -378,7 +411,12 @@ fn parse_bcf(buf: &[u8], filter: &VcfFilter, max_rows: Option<u64>, cancel: Opti
     let mut dict_full: Vec<String> = Vec::new();
     for line in &table.header_lines {
         let text = line.as_str();
-        for prefix in ["##FILTER=<ID=", "##contig=<ID=", "##INFO=<ID=", "##FORMAT=<ID="] {
+        for prefix in [
+            "##FILTER=<ID=",
+            "##contig=<ID=",
+            "##INFO=<ID=",
+            "##FORMAT=<ID=",
+        ] {
             if let Some(rest) = text.strip_prefix(prefix) {
                 let stop = rest.find([',', '>']).unwrap_or(rest.len());
                 let name = rest[..stop].to_string();
@@ -505,7 +543,10 @@ fn parse_bcf(buf: &[u8], filter: &VcfFilter, max_rows: Option<u64>, cancel: Opti
                 Ok(Typed::Float(vals)) => {
                     let rendered = vals
                         .iter()
-                        .map(|v| v.map(|x| format!("{x:.6}")).unwrap_or_else(|| ".".to_string()))
+                        .map(|v| {
+                            v.map(|x| format!("{x:.6}"))
+                                .unwrap_or_else(|| ".".to_string())
+                        })
                         .collect::<Vec<_>>()
                         .join(",");
                     if key == "AF" {
@@ -605,7 +646,8 @@ mod tests {
 
     #[test]
     fn parses_all_rows() {
-        let table = parse_vcf_payload(&toy_vcf(), 2, &VcfFilter::default(), None, None, None).unwrap();
+        let table =
+            parse_vcf_payload(&toy_vcf(), 2, &VcfFilter::default(), None, None, None).unwrap();
         assert_eq!(table.n_rows_kept, 4);
         assert_eq!(table.pos, vec![100, 150, 50, 100]);
         assert_eq!(table.samples.len(), 0);

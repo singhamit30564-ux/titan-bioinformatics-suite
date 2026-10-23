@@ -99,7 +99,11 @@ impl Region {
     pub fn parse(text: &str) -> Result<Region> {
         let text = text.trim();
         if text.is_empty() {
-            return Ok(Region { chrom: None, start: 1, end: i64::MAX });
+            return Ok(Region {
+                chrom: None,
+                start: 1,
+                end: i64::MAX,
+            });
         }
         // "chr1:100-200" or "chr1" or "chr1:100" (open end).
         let (chrom, rest) = match text.split_once(':') {
@@ -183,7 +187,14 @@ fn ref_span(ops: &[(u32, u32)]) -> u64 {
         .sum()
 }
 
-fn add_coverage(coverage: &mut HashMap<String, Vec<u64>>, ref_name: &str, ref_len: i64, pos0: i64, ops: &[(u32, u32)], region: Option<&Region>) {
+fn add_coverage(
+    coverage: &mut HashMap<String, Vec<u64>>,
+    ref_name: &str,
+    ref_len: i64,
+    pos0: i64,
+    ops: &[(u32, u32)],
+    region: Option<&Region>,
+) {
     if ref_len <= 0 {
         return;
     }
@@ -267,7 +278,11 @@ fn decode_bam_header(buf: &[u8]) -> Result<BamHeader> {
         pos += 4;
         references.push((name, i64::from(l_ref)));
     }
-    Ok(BamHeader { text, references, records_start: pos })
+    Ok(BamHeader {
+        text,
+        references,
+        records_start: pos,
+    })
 }
 
 /// Walk record headers (block_size only) to find record-boundary offsets for
@@ -357,7 +372,11 @@ fn decode_bam_records(
         }
         let mut ops: Vec<(u32, u32)> = Vec::with_capacity(n_cigar_op);
         for i in 0..n_cigar_op {
-            let v = u32::from_le_bytes(rec[cigar_off + i * 4..cigar_off + i * 4 + 4].try_into().unwrap());
+            let v = u32::from_le_bytes(
+                rec[cigar_off + i * 4..cigar_off + i * 4 + 4]
+                    .try_into()
+                    .unwrap(),
+            );
             ops.push((v >> 4, v & 0xf));
         }
         let in_region = ref_id >= 0
@@ -370,11 +389,19 @@ fn decode_bam_records(
             stats.flagstat.observe(flag);
             stats.mapq_hist[mapq as usize] += 1;
             if ref_id >= 0 {
-                add_coverage(&mut stats.coverage, &ref_name, ref_len, i64::from(rpos), &ops, region);
+                add_coverage(
+                    &mut stats.coverage,
+                    &ref_name,
+                    ref_len,
+                    i64::from(rpos),
+                    &ops,
+                    region,
+                );
             }
             if collect_samples && stats.sample.len() < SAMPLE_LIMIT {
                 stats.sample.push(RecordSample {
-                    name: String::from_utf8_lossy(&rec[32..name_end.saturating_sub(1)]).into_owned(),
+                    name: String::from_utf8_lossy(&rec[32..name_end.saturating_sub(1)])
+                        .into_owned(),
                     ref_name,
                     pos_1based,
                     mapq,
@@ -460,7 +487,14 @@ fn decode_sam(
                         .unwrap_or(0);
                     if pos_1based > 0 {
                         let ops = parse_cigar_str(&cigar);
-                        add_coverage(&mut stats.coverage, &ref_name, ref_len, pos_1based - 1, &ops, region);
+                        add_coverage(
+                            &mut stats.coverage,
+                            &ref_name,
+                            ref_len,
+                            pos_1based - 1,
+                            &ops,
+                            region,
+                        );
                     }
                     if collect_samples && stats.sample.len() < SAMPLE_LIMIT {
                         stats.sample.push(RecordSample {
@@ -594,7 +628,15 @@ pub fn read_alignment_payload(
     let mut per_block: Vec<BlockStats> = if threads == 1 || blocks.len() <= 1 {
         blocks
             .iter()
-            .map(|&(s, e)| decode_bam_records(&raw[s..e], &header.references, region.as_ref(), true, cancel))
+            .map(|&(s, e)| {
+                decode_bam_records(
+                    &raw[s..e],
+                    &header.references,
+                    region.as_ref(),
+                    true,
+                    cancel,
+                )
+            })
             .collect()
     } else {
         let pool = rayon::ThreadPoolBuilder::new()
@@ -605,7 +647,13 @@ pub fn read_alignment_payload(
             blocks
                 .par_iter()
                 .map(|&(s, e)| {
-                    decode_bam_records(&raw[s..e], &header.references, region.as_ref(), true, cancel)
+                    decode_bam_records(
+                        &raw[s..e],
+                        &header.references,
+                        region.as_ref(),
+                        true,
+                        cancel,
+                    )
                 })
                 .collect()
         })
@@ -622,7 +670,10 @@ pub fn read_alignment_payload(
             merged.mapq_hist[idx] += v;
         }
         for (ref_name, bins) in block.coverage {
-            let entry = merged.coverage.entry(ref_name).or_insert_with(|| vec![0; COVERAGE_BINS]);
+            let entry = merged
+                .coverage
+                .entry(ref_name)
+                .or_insert_with(|| vec![0; COVERAGE_BINS]);
             for (dst, src) in entry.iter_mut().zip(bins.iter()) {
                 *dst += src;
             }

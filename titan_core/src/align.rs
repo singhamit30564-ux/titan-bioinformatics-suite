@@ -84,10 +84,14 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
     let m = q.len();
     let n = t.len();
     if m == 0 || n == 0 {
-        return Err(CoreError::Input("align() requires non-empty sequences".into()));
+        return Err(CoreError::Input(
+            "align() requires non-empty sequences".into(),
+        ));
     }
     if m > 100_000 || n > 100_000 {
-        return Err(CoreError::Input("align() input limited to 100 kb per sequence".into()));
+        return Err(CoreError::Input(
+            "align() input limited to 100 kb per sequence".into(),
+        ));
     }
     let d0 = n as isize - m as isize;
     let half_band = (p.band as isize).max(d0.abs() + 1).min((m + n) as isize);
@@ -124,7 +128,11 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
             } else if p.mode == AlignMode::Global {
                 m_prev[slot] = neg_inf;
                 y_prev[slot] = -(p.gap_open + p.gap_extend * (j as i32 - 1));
-                trace[0 * width + slot][2] = if j == 1 { PRED_DIAG_M } else { PRED_LEFT_FROM_Y };
+                trace[0 * width + slot][2] = if j == 1 {
+                    PRED_DIAG_M
+                } else {
+                    PRED_LEFT_FROM_Y
+                };
             } else {
                 m_prev[slot] = 0;
             }
@@ -252,7 +260,11 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
                 "global alignment band does not reach the end cell; increase band".into(),
             ));
         }
-        let candidates = [(m_prev[slot], 0u8), (x_prev[slot], 1u8), (y_prev[slot], 2u8)];
+        let candidates = [
+            (m_prev[slot], 0u8),
+            (x_prev[slot], 1u8),
+            (y_prev[slot], 2u8),
+        ];
         let mut best_cell = (neg_inf, 0u8);
         for (score, state) in candidates {
             if score > best_cell.0 {
@@ -530,10 +542,14 @@ pub fn map_reads(
     threads: usize,
 ) -> Result<Vec<Placement>> {
     if reference.len() < k || k < 5 || k > 32 {
-        return Err(CoreError::Input("map_reads: k must be in 5..=32 and fit the reference".into()));
+        return Err(CoreError::Input(
+            "map_reads: k must be in 5..=32 and fit the reference".into(),
+        ));
     }
     if reference.len() > 5_000_000 {
-        return Err(CoreError::Input("map_reads: reference limited to 5 Mbp".into()));
+        return Err(CoreError::Input(
+            "map_reads: reference limited to 5 Mbp".into(),
+        ));
     }
     let index = index_reference(reference, k);
     let map_one = |read_index: usize, read: &[u8]| -> Option<Placement> {
@@ -591,7 +607,11 @@ pub fn map_reads(
     };
 
     let placements: Vec<Option<Placement>> = if threads == 1 || reads.len() <= 1 {
-        reads.iter().enumerate().map(|(i, r)| map_one(i, r)).collect()
+        reads
+            .iter()
+            .enumerate()
+            .map(|(i, r)| map_one(i, r))
+            .collect()
     } else {
         use rayon::prelude::*;
         match rayon::ThreadPoolBuilder::new().num_threads(threads).build() {
@@ -602,7 +622,11 @@ pub fn map_reads(
                     .map(|(i, r)| map_one(i, r))
                     .collect()
             }),
-            Err(_) => reads.iter().enumerate().map(|(i, r)| map_one(i, r)).collect(),
+            Err(_) => reads
+                .iter()
+                .enumerate()
+                .map(|(i, r)| map_one(i, r))
+                .collect(),
         }
     };
     Ok(placements.into_iter().flatten().collect())
@@ -627,7 +651,10 @@ mod tests {
 
     #[test]
     fn local_alignment_finds_exact_match() {
-        let p = AlignParams { mode: AlignMode::Local, ..Default::default() };
+        let p = AlignParams {
+            mode: AlignMode::Local,
+            ..Default::default()
+        };
         let aln = align(b"ACGTACGT", b"TTACGTACGTAA", &p).unwrap();
         assert!(aln.score >= 16);
         assert_eq!(aln.matches, 8);

@@ -72,13 +72,19 @@ fn resolve_threads(threads: usize) -> usize {
     }
 }
 
-fn load_input(path: Option<String>, data: Option<Vec<u8>>, threads: usize) -> PyResult<fastq::InputBuffer> {
+fn load_input(
+    path: Option<String>,
+    data: Option<Vec<u8>>,
+    threads: usize,
+) -> PyResult<fastq::InputBuffer> {
     fastq::InputBuffer::load(path.as_deref(), data.as_deref(), threads)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
 }
 
 fn check_cancel(py: Python<'_>, cancel: &Option<Py<CancelToken>>) -> Option<Arc<AtomicBool>> {
-    cancel.as_ref().map(|token| token.bind(py).borrow().inner.clone())
+    cancel
+        .as_ref()
+        .map(|token| token.bind(py).borrow().inner.clone())
 }
 
 /// progress closure adapter: FnMut(u64,u64) over the Python callback.
@@ -119,12 +125,16 @@ fn parse_fastq(
             &bytes,
             threads,
             max_records,
-            progress_cb.as_mut().map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
+            progress_cb
+                .as_mut()
+                .map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
             cancel_flag.as_deref(),
         )
     });
     let output = output.map_err(|e| match e {
-        error::CoreError::Cancelled => PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled"),
+        error::CoreError::Cancelled => {
+            PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled")
+        }
         other => PyErr::new::<pyo3::exceptions::PyValueError, _>(other.to_string()),
     })?;
 
@@ -173,19 +183,26 @@ fn qc_fastq(
     let cancel_flag = check_cancel(py, &cancel);
     let mut progress_cb = make_progress(progress);
     let bytes = input.as_slice().to_vec();
-    let params = qc::QcParams { k: k.clamp(1, 32), ..Default::default() };
+    let params = qc::QcParams {
+        k: k.clamp(1, 32),
+        ..Default::default()
+    };
 
     let report = py.allow_threads(|| {
         qc::qc_payload(
             &bytes,
             threads,
             &params,
-            progress_cb.as_mut().map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
+            progress_cb
+                .as_mut()
+                .map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
             cancel_flag.as_deref(),
         )
     });
     let report = report.map_err(|e| match e {
-        error::CoreError::Cancelled => PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled"),
+        error::CoreError::Cancelled => {
+            PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled")
+        }
         other => PyErr::new::<pyo3::exceptions::PyValueError, _>(other.to_string()),
     })?;
     qc_report_to_py(py, &report)
@@ -209,14 +226,20 @@ fn qc_report_to_py(py: Python<'_>, report: &qc::QcReport) -> PyResult<PyObject> 
     dict.set_item("length_histogram", hist)?;
     dict.set_item("gc_percent", report.gc_percent)?;
     dict.set_item("n_content_percent", report.n_content_percent)?;
-    dict.set_item("per_base_mean_quality", report.per_base_mean_quality.to_object(py))?;
+    dict.set_item(
+        "per_base_mean_quality",
+        report.per_base_mean_quality.to_object(py),
+    )?;
     dict.set_item("q20_percent", report.q20_percent)?;
     dict.set_item("q30_percent", report.q30_percent)?;
     dict.set_item("phred_encoding", report.phred_encoding.as_str())?;
     let dup = PyDict::new_bound(py);
     dup.set_item("method", report.duplication.method)?;
     dup.set_item("distinct_estimate", report.duplication.distinct_estimate)?;
-    dup.set_item("duplication_rate_percent", report.duplication.duplication_rate_percent)?;
+    dup.set_item(
+        "duplication_rate_percent",
+        report.duplication.duplication_rate_percent,
+    )?;
     dup.set_item(
         "bloom_duplicate_rate_percent",
         report.duplication.bloom_duplicate_rate_percent,
@@ -275,12 +298,16 @@ fn read_bam(
             &bytes,
             threads,
             region.as_deref(),
-            progress_cb.as_mut().map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
+            progress_cb
+                .as_mut()
+                .map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
             cancel_flag.as_deref(),
         )
     });
     let report = report.map_err(|e| match e {
-        error::CoreError::Cancelled => PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled"),
+        error::CoreError::Cancelled => {
+            PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled")
+        }
         other => PyErr::new::<pyo3::exceptions::PyValueError, _>(other.to_string()),
     })?;
 
@@ -391,12 +418,16 @@ fn parse_vcf(
             threads,
             &filter_spec,
             max_rows,
-            progress_cb.as_mut().map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
+            progress_cb
+                .as_mut()
+                .map(|cb| cb.as_mut() as &mut dyn FnMut(u64, u64)),
             cancel_flag.as_deref(),
         )
     });
     let table = table.map_err(|e| match e {
-        error::CoreError::Cancelled => PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled"),
+        error::CoreError::Cancelled => {
+            PyErr::new::<pyo3::exceptions::PyKeyboardInterrupt, _>("cancelled")
+        }
         other => PyErr::new::<pyo3::exceptions::PyValueError, _>(other.to_string()),
     })?;
 
@@ -493,10 +524,10 @@ fn map_reads(
     let threads = resolve_threads(threads);
     let read_bytes: Vec<Vec<u8>> = reads.iter().map(|s| s.as_bytes().to_vec()).collect();
     let reference_bytes = reference.as_bytes().to_vec();
-    let placements = py.allow_threads(|| {
-        align::map_reads(&read_bytes, &reference_bytes, ref_name, k, threads)
-    });
-    let placements = placements.map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+    let placements =
+        py.allow_threads(|| align::map_reads(&read_bytes, &reference_bytes, ref_name, k, threads));
+    let placements =
+        placements.map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
     let dict = PyDict::new_bound(py);
     dict.set_item("engine", "rust")?;
     let list = PyList::empty_bound(py);

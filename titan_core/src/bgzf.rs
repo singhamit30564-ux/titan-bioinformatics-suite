@@ -78,7 +78,8 @@ fn split_bgzf_members(input: &[u8]) -> Result<Vec<(usize, usize)>> {
             }
             i += 4 + slen;
         }
-        let bsize = bsize.ok_or_else(|| CoreError::Parse("BGZF block missing BC subfield".into()))?;
+        let bsize =
+            bsize.ok_or_else(|| CoreError::Parse("BGZF block missing BC subfield".into()))?;
         let total = bsize as usize + 1;
         if pos + total > input.len() {
             return Err(CoreError::Parse("truncated BGZF block payload".into()));
