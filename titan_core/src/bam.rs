@@ -623,6 +623,7 @@ pub fn read_alignment_payload(
                 (ref_name, bins, bin_size)
             })
             .collect();
+        let n_records_scanned = stats.flagstat.total;
         return Ok(BamReport {
             format: "sam",
             header_text,
@@ -631,7 +632,7 @@ pub fn read_alignment_payload(
             mapq_histogram: stats.mapq_hist.to_vec(),
             coverage,
             records_sample: stats.sample,
-            n_records_scanned: stats.flagstat.total,
+            n_records_scanned,
             n_records_in_region: stats.in_region,
             region: region.map(|r| format_region(&r)),
         });
@@ -724,6 +725,7 @@ pub fn read_alignment_payload(
         })
         .collect();
 
+    let n_records_scanned = merged.flagstat.total;
     Ok(BamReport {
         format: "bam",
         header_text: header.text,
@@ -732,7 +734,7 @@ pub fn read_alignment_payload(
         mapq_histogram: merged.mapq_hist.to_vec(),
         coverage,
         records_sample: merged.sample,
-        n_records_scanned: merged.flagstat.total,
+        n_records_scanned,
         n_records_in_region: merged.in_region,
         region: region.map(|r| format_region(&r)),
     })

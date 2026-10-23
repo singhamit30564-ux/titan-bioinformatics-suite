@@ -210,11 +210,11 @@ impl<'a> LineIter<'a> {
 /// Robust FASTQ record parser over one buffer. Handles wrapped sequence/quality
 /// lines, CRLF, malformed records (skip + resync at the next '@' line) and a
 /// truncated trailing record.
-pub fn parse_block(
-    buf: &[u8],
+pub fn parse_block<'a>(
+    buf: &'a [u8],
     warnings: &mut ParseWarnings,
     cancel: Option<&AtomicBool>,
-) -> Vec<RawRecord<'_>> {
+) -> Vec<RawRecord<'a>> {
     let mut records = Vec::new();
     let mut it = LineIter::new(buf, 0);
     let mut checked = 0u64;
