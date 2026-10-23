@@ -191,6 +191,10 @@ def _fallback_de(
     normalized_out = pd.DataFrame(
         lognorm, index=filtered.index.astype(str), columns=normalized.columns
     )
+    outliers = _mad_outlier_flags(normalized_out)
+    results["outlier_samples"] = [
+        ";".join(outliers["flagged_genes"].get(gene, [])) for gene in results["gene"]
+    ]
     provenance = stats_provenance(
         analysis="differential_expression",
         inputs={
@@ -219,9 +223,37 @@ def _fallback_de(
         "n_genes_tested": int(results.shape[0]),
         "n_genes_significant_fdr05": int((results["padj"] < 0.05).sum()),
         "contrast": {"factor": factor_col, "treated": treated_level, "control": control_level},
+        "outliers": outliers,
         "warnings": warnings
         + ["fallback-ttest: no negative-binomial GLM, no dispersion shrinkage — labelled honestly."],
         "provenance": provenance,
+    }
+
+
+def _mad_outlier_flags(lognorm: pd.DataFrame) -> dict[str, Any]:
+    """Robust per-gene outlier detection on log-normalized counts.
+
+    A sample is flagged for a gene when its value deviates from the gene
+    median by more than 3.5 scaled MADs (1.4826*MAD — consistent with a
+    normal distribution's sigma). Pure-NumPy; no optional dependencies.
+    """
+    values = np.asarray(lognorm.values, dtype=float)
+    medians = np.median(values, axis=1, keepdims=True)
+    mad = np.median(np.abs(values - medians), axis=1, keepdims=True) * 1.4826
+    with np.errstate(divide="ignore", invalid="ignore"):
+        z = np.where(mad > 0, (values - medians) / mad, 0.0)
+    flagged: dict[str, list[str]] = {}
+    sample_names = [str(c) for c in lognorm.columns]
+    for i, gene in enumerate(lognorm.index.astype(str)):
+        hits = [sample_names[j] for j in range(values.shape[1]) if abs(z[i, j]) > 3.5]
+        if hits:
+            flagged[gene] = hits
+    return {
+        "engine": "robust-MAD",
+        "flagged_genes": flagged,
+        "notes": [
+            f"Robust MAD outlier screen (|z|>3.5): {len(flagged)} gene×sample outlier(s) flagged."
+        ],
     }
 
 
@@ -327,6 +359,7 @@ def _pydeseq2_de(
         "n_genes_tested": int(res.shape[0]),
         "n_genes_significant_fdr05": int((pd.to_numeric(res["padj"], errors="coerce") < 0.05).sum()),
         "contrast": {"factor": factor_col, "treated": treated_level, "control": control_level},
+        "outliers": _mad_outlier_flags(normalized),
         "warnings": [],
         "provenance": provenance,
     }
@@ -353,8 +386,8 @@ def run_differential_expression(
 
     Returns dict with keys: ``method``, ``results`` (DataFrame: gene, baseMean,
     log2FC, stat, pvalue, padj), ``normalized_counts``, ``size_factors``,
-    ``dispersion``, ``n_genes_*`` counters, ``contrast``, ``warnings``,
-    ``provenance``.
+    ``dispersion``, ``n_genes_*`` counters, ``contrast``, ``outliers``
+    (per-gene robust flags), ``warnings``, ``provenance``.
     """
     if not isinstance(counts, pd.DataFrame) or not isinstance(metadata, pd.DataFrame):
         raise TypeError("counts and metadata must be pandas DataFrames")

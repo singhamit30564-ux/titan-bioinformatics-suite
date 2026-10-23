@@ -17,7 +17,6 @@ fastapi = pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from titan_utils import engine  # noqa: E402
-from titan_utils.jobs import get_job_manager  # noqa: E402
 
 
 @pytest.fixture()
@@ -168,3 +167,83 @@ def test_no_store_headers_everywhere(client):
     for url in ("/api/v2/jobs", "/api/v2/engine"):
         response = client.get(url)
         assert response.headers.get("cache-control", "").startswith("no-store"), url
+
+
+def test_v2_vcf_query_server_side_filter_sort_pagination(client):
+    lines = ["##fileformat=VCFv4.2", "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"]
+    for i in range(1, 21):
+        af = 0.001 * i
+        lines.append(f"chr{i % 3}\t{i * 10}\trs{i}\tA\tG\t{i}\tPASS\tAF={af};Consequence=missense_variant;CLNSIG=Pathogenic")
+    vcf = "\n".join(lines) + "\n"
+
+    # server-side pagination: page 1 and page 2 are disjoint
+    p1 = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "sort_by": "POS", "offset": 0, "limit": 5},
+    ).json()
+    p2 = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "sort_by": "POS", "offset": 5, "limit": 5},
+    ).json()
+    assert p1["total"] == 20 and p1["filtered"] == 20
+    assert [r["POS"] for r in p1["rows"]] == [10, 20, 30, 40, 50]
+    assert [r["POS"] for r in p2["rows"]] == [60, 70, 80, 90, 100]
+
+    # server-side sort (descending)
+    desc = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "sort_by": "POS", "sort_desc": True, "offset": 0, "limit": 3},
+    ).json()
+    assert [r["POS"] for r in desc["rows"]] == [200, 190, 180]
+
+    # server-side filters
+    by_chrom = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "filters": {"chrom": "chr1"}, "limit": 50},
+    ).json()
+    assert by_chrom["filtered"] == 7
+    assert all(r["CHROM"] == "chr1" for r in by_chrom["rows"])
+
+    by_af = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "filters": {"af_min": 0.01}, "limit": 50},
+    ).json()
+    assert by_af["filtered"] == 11  # AF >= 0.01 → i = 10..20
+
+    by_qual = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "filters": {"qual_min": 15}, "limit": 50},
+    ).json()
+    assert by_qual["filtered"] == 6
+
+    by_cons = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "filters": {"consequence": "missense"}, "limit": 50},
+    ).json()
+    assert by_cons["filtered"] == 20
+
+    by_clin = client.post(
+        "/api/v2/vcf/query",
+        json={"vcf": vcf, "filters": {"clinvar": "benign"}, "limit": 50},
+    ).json()
+    assert by_clin["filtered"] == 0
+
+
+def test_v2_vcf_query_rejects_bad_input(client):
+    assert client.post("/api/v2/vcf/query", json={}).status_code == 400
+    bad_sort = client.post("/api/v2/vcf/query", json={"vcf": "##x\n", "sort_by": "DROP TABLE"})
+    assert bad_sort.status_code == 400
+    missing_upload = client.post("/api/v2/vcf/query", json={"upload_id": "doesnotexist1"})
+    assert missing_upload.status_code == 404
+
+
+def test_v2_vcf_query_over_upload_id(client):
+    upload_id = "vcfqueryupload1"
+    vcf = "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\nchr1\t5\trs1\tA\tT\t9\tPASS\tAF=0.1\n"
+    client.post(
+        "/api/v2/upload/chunk",
+        json={"upload_id": upload_id, "offset": 0, "data_b64": base64.b64encode(vcf.encode()).decode(), "final": True},
+    )
+    body = client.post("/api/v2/vcf/query", json={"upload_id": upload_id, "limit": 10}).json()
+    assert body["filtered"] == 1
+    assert body["rows"][0]["CHROM"] == "chr1"

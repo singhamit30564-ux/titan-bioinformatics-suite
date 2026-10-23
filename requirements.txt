@@ -10,6 +10,7 @@ streamlit==1.41.1
 
 # Developer / v2 API (separate lightweight ASGI process)
 fastapi==0.115.6
+starlette==0.41.3
 uvicorn==0.34.0
 websockets==14.1
 pydantic==2.10.4

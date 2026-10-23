@@ -17,6 +17,7 @@ import base64
 import json
 import os
 import urllib.request
+from pathlib import Path
 from typing import Optional
 
 __all__ = [
@@ -59,16 +60,23 @@ def get_groq_api_key(explicit: Optional[str] = None) -> str:
     """Resolve the Groq API key: explicit value > ``st.secrets`` > env var.
 
     Returns ``""`` (never raises) when nothing is configured, so pages can
-    render an opt-in setup card instead of crashing.
+    render an opt-in setup card instead of crashing. ``st.secrets`` is only
+    consulted when a secrets file actually exists — some Streamlit versions
+    render a visible error element even for caught missing-secrets errors.
     """
     if explicit:
         return explicit
     try:
         import streamlit as st
 
-        value = st.secrets.get("GROQ_API_KEY")  # type: ignore[union-attr]
-        if value:
-            return str(value)
+        secrets_paths = (
+            Path.home() / ".streamlit" / "secrets.toml",
+            Path.cwd() / ".streamlit" / "secrets.toml",
+        )
+        if any(path.is_file() for path in secrets_paths):
+            value = st.secrets.get("GROQ_API_KEY")  # type: ignore[union-attr]
+            if value:
+                return str(value)
     except Exception:
         pass
     return os.environ.get("GROQ_API_KEY", "") or ""

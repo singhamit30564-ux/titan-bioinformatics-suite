@@ -89,6 +89,53 @@ class UploadChunkResponse(BaseModel):
     complete: bool
 
 
+class VcfQueryFilters(BaseModel):
+    chrom: Optional[str] = None
+    qual_min: Optional[float] = None
+    qual_max: Optional[float] = None
+    af_min: Optional[float] = None
+    af_max: Optional[float] = None
+    consequence: Optional[str] = None
+    clinvar: Optional[str] = None
+    filter: Optional[str] = None
+    search: Optional[str] = Field(default=None, max_length=256)
+
+
+class VcfQueryRequest(BaseModel):
+    """Server-side filter + sort + pagination over a VCF payload (1M-row safe)."""
+
+    upload_id: Optional[str] = Field(default=None, min_length=8, max_length=64)
+    vcf: Optional[str] = Field(default=None, max_length=MAX_PARAM_TEXT_BYTES)
+    filters: VcfQueryFilters = Field(default_factory=VcfQueryFilters)
+    sort_by: str = Field(default="POS", max_length=16)
+    sort_desc: bool = False
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=100, ge=1, le=500)
+
+
+class VcfQueryRow(BaseModel):
+    CHROM: str
+    POS: int
+    ID: str
+    REF: str
+    ALT: str
+    QUAL: Optional[float] = None
+    FILTER: str
+    AF: Optional[float] = None
+    Consequence: Optional[str] = None
+    ClinVar: Optional[str] = None
+
+
+class VcfQueryResponse(BaseModel):
+    rows: list[VcfQueryRow]
+    total: int
+    filtered: int
+    offset: int
+    limit: int
+    sort_by: str
+    sort_desc: bool
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Job runners (each returns {artifact_name: bytes|json-serializable})
 # ─────────────────────────────────────────────────────────────────────────────
@@ -412,6 +459,105 @@ def create_v2_router() -> APIRouter:
         except Exception:
             status["r_available"] = False
         return status
+
+    @router.post("/vcf/query", response_model=VcfQueryResponse)
+    def vcf_query(payload: VcfQueryRequest, request: Request) -> dict[str, Any]:
+        """Server-side VCF filter + sort + pagination (for 1M-row tables).
+
+        Accepts an in-RAM ``upload_id`` (from /api/v2/upload/chunk) or inline
+        ``vcf`` text. Filtering, sorting and slicing all happen on the server;
+        only one page of rows crosses the wire.
+        """
+        _enforce_rate_limit(request)
+        if not payload.upload_id and not payload.vcf:
+            raise HTTPException(status_code=400, detail="provide upload_id or vcf text")
+        if payload.sort_by.upper() not in {"CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "AF"}:
+            raise HTTPException(status_code=400, detail=f"unsupported sort_by '{payload.sort_by}'")
+        try:
+            data = _upload_bytes({"upload_id": payload.upload_id}) if payload.upload_id else (payload.vcf or "").encode("utf-8")
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        try:
+            parsed = titan_engine.parse_vcf(data=data)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+        n_total = len(parsed["chrom"])
+        rows: list[dict[str, Any]] = []
+        filters = payload.filters
+        for i in range(n_total):
+            info_raw = parsed["info_raw"][i] or ""
+            info = {}
+            for entry in info_raw.split(";"):
+                if "=" in entry:
+                    key, value = entry.split("=", 1)
+                    info[key] = value
+            af = None
+            if info.get("AF") not in (None, "."):
+                try:
+                    af = float(str(info["AF"]).split(",")[0])
+                except ValueError:
+                    af = None
+            consequence = info.get("Consequence", info.get("CSQ", ""))
+            clinvar = info.get("CLNSIG", info.get("ClinVar", ""))
+            qual = parsed["qual"][i]
+            row = {
+                "CHROM": str(parsed["chrom"][i]),
+                "POS": int(parsed["pos"][i]),
+                "ID": str(parsed["id"][i]),
+                "REF": str(parsed["ref"][i]),
+                "ALT": str(parsed["alt"][i]),
+                "QUAL": None if qual is None else float(qual),
+                "FILTER": str(parsed["filter"][i]),
+                "AF": af,
+                "Consequence": consequence or None,
+                "ClinVar": clinvar or None,
+            }
+            f = filters
+            if f.chrom and row["CHROM"] != f.chrom:
+                continue
+            if f.qual_min is not None and (row["QUAL"] or 0) < f.qual_min:
+                continue
+            if f.qual_max is not None and (row["QUAL"] or 0) > f.qual_max:
+                continue
+            if f.af_min is not None and (af if af is not None else 0) < f.af_min:
+                continue
+            if f.af_max is not None and (af if af is not None else 1) > f.af_max:
+                continue
+            if f.consequence and f.consequence.lower() not in (consequence or "").lower():
+                continue
+            if f.clinvar and f.clinvar.lower() not in (clinvar or "").lower():
+                continue
+            if f.filter and f.filter.lower() not in (row["FILTER"] or "").lower():
+                continue
+            if f.search:
+                haystack = f"{row['CHROM']}:{row['POS']} {row['ID']} {row['REF']}>{row['ALT']}".lower()
+                if f.search.lower() not in haystack:
+                    continue
+            rows.append(row)
+
+        sort_key = payload.sort_by.upper()
+
+        def _sort_value(row: dict[str, Any]) -> Any:
+            if sort_key == "POS":
+                return row["POS"]
+            if sort_key == "QUAL":
+                return row["QUAL"] if row["QUAL"] is not None else -1.0
+            if sort_key == "AF":
+                return row["AF"] if row["AF"] is not None else -1.0
+            return str(row.get(sort_key, ""))
+
+        rows.sort(key=_sort_value, reverse=payload.sort_desc)
+        page = rows[payload.offset:payload.offset + payload.limit]
+        return {
+            "rows": page,
+            "total": n_total,
+            "filtered": len(rows),
+            "offset": payload.offset,
+            "limit": payload.limit,
+            "sort_by": sort_key,
+            "sort_desc": payload.sort_desc,
+        }
 
     @router.websocket("/jobs/{job_id}/stream")
     async def job_stream(websocket: WebSocket, job_id: str) -> None:

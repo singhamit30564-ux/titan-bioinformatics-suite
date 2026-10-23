@@ -262,13 +262,34 @@ Capacitor shell at the new `web/` PWA.
 
 ```
 $ .venv/bin/python -m pytest tests/
-388 passed, 5 skipped in 53.03s
+396 passed, 5 skipped in 14.88s
 ```
 
 **Web summary shape (real run, this workspace):**
 
 ```
 $ npx tsc --noEmit          → clean
-$ npx vitest run            → Test Files 1 passed · Tests 7 passed
-$ npm run build             → dist/assets/index-*.js 235.96 kB │ gzip: 74.20 kB
+$ npx vitest run            → Test Files 1 passed · Tests 8 passed
+$ npm run build             → dist/assets/index-*.js 238.35 kB │ gzip: 74.92 kB
 ```
+
+## Prompt-conformance audit (follow-up pass)
+
+Gap-closure commit covering every remaining prompt clause:
+
+| Requirement | Status |
+|---|---|
+| SVG/PNG + **CSV/TSV** export (web) | `downloadTsv` in client + TSV buttons in Variant Explorer & DE panel |
+| **Server-side filter/sort/pagination** for 1M-row VCFs | `POST /api/v2/vcf/query` (filter/sort/slice on server, one page over the wire) + "Table engine" toggle in Variant Explorer |
+| Heatmap zoom/brush/linked selection/**clustering** | client-side average-linkage agglomerative reorder (rows & cols) on the canvas heatmap |
+| DE **outliers** handling | R: DESeq2 Cook's flags / edgeR robust QL / limma eBayes robust; Python: robust-MAD screen — `outliers` section in every result |
+| **GO-KEGG** plot-ready JSON | `plots.go_kegg_json` (up/down candidates + ranked GSEA list) |
+| Zero-copy to NumPy via **np.frombuffer** | `engine.fastq_numpy_views` (uint8 views over PyBytes buffers) |
+| Benchmark **machine specs block** | CPU model, cores, RAM, platform in every report header |
+| Logs never contain sequence data | `_TitanLogFilter` redacts ≥24-nt ACGTN tokens from root/uvicorn loggers |
+| Pinned coherent core deps | `streamlit==1.41.1` + `fastapi==0.115.6` + `starlette==0.41.3` (streamlit ≥1.66 pulls starlette 1.x which breaks fastapi 0.115 — pinned combo tested) |
+
+R-bridge testthat suite extended with outlier assertions; `tests/test_api_v2.py`
+covers server-side filter/sort/pagination, bad-input 400s and upload_id mode;
+`tests/test_engine.py` covers zero-copy views + log redaction; `tests/test_stats.py`
+covers outlier flags + GO/KEGG payload + injected-outlier detection.

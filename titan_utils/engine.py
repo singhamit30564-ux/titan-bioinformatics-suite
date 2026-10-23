@@ -42,7 +42,7 @@ import os
 import struct
 import time
 from collections import Counter
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence
 
 __all__ = [
     "PythonCancelToken",
@@ -1602,6 +1602,36 @@ def parse_fastq(
         result = _py_parse_fastq(path, data, max_records, progress, cancel)
     result.update(_flatten_fastq(result))
     return result
+
+
+
+def fastq_numpy_views(parsed: Mapping[str, Any]) -> dict[str, Any]:
+    """Zero-copy NumPy views over a ``parse_fastq`` result.
+
+    The concatenated sequence/quality buffers are exposed through
+    ``numpy.frombuffer`` on the underlying bytes (the Rust path stores them as
+    PyBytes so no copy is made); the offset tables give per-read slices.
+    Requires numpy (core dependency). Byte copies only happen when a caller
+    mutates a returned array (NumPy copy-on-write semantics).
+    """
+    import numpy as np
+
+    seq_concat = parsed.get("seq_concat", b"")
+    qual_concat = parsed.get("qual_concat", b"")
+    seq_offsets = parsed.get("seq_offsets") or [0]
+    qual_offsets = parsed.get("qual_offsets") or [0]
+    n_reads = int(parsed.get("n_reads", 0))
+    seq_bases = np.frombuffer(seq_concat, dtype=np.uint8)
+    qual_ascii = np.frombuffer(qual_concat, dtype=np.uint8)
+    lengths = np.fromiter(parsed.get("lengths") or [], dtype=np.int64, count=n_reads)
+    return {
+        "seq_bases": seq_bases,          # uint8 view, no copy
+        "qual_ascii": qual_ascii,        # uint8 view (ASCII codes), no copy
+        "lengths": lengths,
+        "seq_offsets": np.asarray(seq_offsets, dtype=np.int64),
+        "qual_offsets": np.asarray(qual_offsets, dtype=np.int64),
+        "n_reads": n_reads,
+    }
 
 
 def qc_fastq(

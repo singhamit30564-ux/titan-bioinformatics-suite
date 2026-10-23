@@ -20,6 +20,7 @@ __all__ = [
     "sample_distance_json",
     "top_heatmap_json",
     "enrichment_lists",
+    "go_kegg_json",
 ]
 
 
@@ -212,3 +213,30 @@ def enrichment_lists(
         .tolist()
     )
     return {"up": up, "down": down, "ranked_all": ranked_all}
+
+
+def go_kegg_json(
+    results: pd.DataFrame,
+    fdr_threshold: float = 0.05,
+    lfc_threshold: float = 1.0,
+) -> dict[str, Any]:
+    """Plot-ready GO/KEGG payload: up/down candidate genes + ranked list.
+
+    Output is the standard enrichment-tool input shape (g:Profiler, DAVID,
+    clusterProfiler ``TERM2GENE`` pipelines) plus a ranking suitable for GSEA.
+    """
+    lists = enrichment_lists(results, fdr_threshold=fdr_threshold, lfc_threshold=lfc_threshold)
+    return {
+        "type": "go_kegg",
+        "thresholds": {"fdr": fdr_threshold, "log2fc": lfc_threshold},
+        "go_kegg": {
+            "up_candidates": lists["up"],
+            "down_candidates": lists["down"],
+            "ranked_all": lists["ranked_all"],
+        },
+        "counts": {
+            "up": len(lists["up"]),
+            "down": len(lists["down"]),
+            "ranked": len(lists["ranked_all"]),
+        },
+    }

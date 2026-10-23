@@ -148,6 +148,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/vcf/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vcf Query
+         * @description Server-side VCF filter + sort + pagination (for 1M-row tables).
+         *
+         *     Accepts an in-RAM ``upload_id`` (from /api/v2/upload/chunk) or inline
+         *     ``vcf`` text. Filtering, sorting and slicing all happen on the server;
+         *     only one page of rows crosses the wire.
+         */
+        post: operations["vcf_query_api_v2_vcf_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -208,9 +232,7 @@ export interface components {
         /** JobCreateRequest */
         JobCreateRequest: {
             /** Params */
-            params?: {
-                [key: string]: unknown;
-            };
+            params?: Record<string, never>;
             /** Type */
             type: string;
         };
@@ -231,9 +253,7 @@ export interface components {
             /** Engine */
             engine?: string | null;
             /** Engine Stats */
-            engine_stats?: {
-                [key: string]: unknown;
-            };
+            engine_stats?: Record<string, never>;
             /** Error */
             error?: string | null;
             /** Finished Utc */
@@ -292,16 +312,104 @@ export interface components {
         };
         /** ValidationError */
         ValidationError: {
-            /** Context */
-            ctx?: Record<string, never>;
-            /** Input */
-            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VcfQueryFilters */
+        VcfQueryFilters: {
+            /** Af Max */
+            af_max?: number | null;
+            /** Af Min */
+            af_min?: number | null;
+            /** Chrom */
+            chrom?: string | null;
+            /** Clinvar */
+            clinvar?: string | null;
+            /** Consequence */
+            consequence?: string | null;
+            /** Filter */
+            filter?: string | null;
+            /** Qual Max */
+            qual_max?: number | null;
+            /** Qual Min */
+            qual_min?: number | null;
+            /** Search */
+            search?: string | null;
+        };
+        /**
+         * VcfQueryRequest
+         * @description Server-side filter + sort + pagination over a VCF payload (1M-row safe).
+         */
+        VcfQueryRequest: {
+            filters?: components["schemas"]["VcfQueryFilters"];
+            /**
+             * Limit
+             * @default 100
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Sort By
+             * @default POS
+             */
+            sort_by: string;
+            /**
+             * Sort Desc
+             * @default false
+             */
+            sort_desc: boolean;
+            /** Upload Id */
+            upload_id?: string | null;
+            /** Vcf */
+            vcf?: string | null;
+        };
+        /** VcfQueryResponse */
+        VcfQueryResponse: {
+            /** Filtered */
+            filtered: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Rows */
+            rows: components["schemas"]["VcfQueryRow"][];
+            /** Sort By */
+            sort_by: string;
+            /** Sort Desc */
+            sort_desc: boolean;
+            /** Total */
+            total: number;
+        };
+        /** VcfQueryRow */
+        VcfQueryRow: {
+            /** Af */
+            AF?: number | null;
+            /** Alt */
+            ALT: string;
+            /** Chrom */
+            CHROM: string;
+            /** Clinvar */
+            ClinVar?: string | null;
+            /** Consequence */
+            Consequence?: string | null;
+            /** Filter */
+            FILTER: string;
+            /** Id */
+            ID: string;
+            /** Pos */
+            POS: number;
+            /** Qual */
+            QUAL?: number | null;
+            /** Ref */
+            REF: string;
         };
     };
     responses: never;
@@ -337,9 +445,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -372,9 +478,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -403,9 +507,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
         };
@@ -619,6 +721,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UploadChunkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vcf_query_api_v2_vcf_query_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VcfQueryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VcfQueryResponse"];
                 };
             };
             /** @description Validation Error */

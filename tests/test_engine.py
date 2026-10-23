@@ -267,3 +267,38 @@ def test_schemas_match_across_engines_when_rust_present():
     assert rust_result["n_reads"] == py_result["n_reads"]
     assert rust_result["lengths"] == py_result["lengths"]
     assert rust_result["seq_concat"] == py_result["seq_concat"]
+
+
+def test_fastq_numpy_views_are_zero_copy():
+    """np.frombuffer views over the concatenated buffers — no copies made."""
+    import numpy as np
+
+    fastq = "@r1\nACGTACGTAC\n+\nIIIIIIIIII\n@r2\nTTTTGGGGCC\n+\nAAAAAAAAAA\n"
+    parsed = engine.parse_fastq(data=fastq)
+    views = engine.fastq_numpy_views(parsed)
+    assert views["n_reads"] == 2
+    assert isinstance(views["seq_bases"], np.ndarray)
+    assert views["seq_bases"].dtype == np.uint8
+    # zero-copy: the view shares memory with the underlying buffer
+    assert views["seq_bases"].base is not None or views["seq_bases"].flags["OWNDATA"] is False
+    # offsets slice per read
+    s0, s1 = views["seq_offsets"][0], views["seq_offsets"][1]
+    assert bytes(views["seq_bases"][s0:s1]).decode() == parsed["seqs"][0]
+    assert list(views["lengths"]) == [10, 10]
+
+
+def test_log_redaction_strips_sequence_tokens():
+    from titan_utils.api import _redact_sequence_tokens, _TitanLogFilter
+    import logging
+
+    seq = "ACGT" * 20  # 80 nt — sequence-like
+    message = f"user pasted {seq} into input"
+    redacted = _redact_sequence_tokens(message)
+    assert seq not in redacted
+    assert "<sequence-redacted>" in redacted
+    short = "ACGT"  # not sequence-like at 4 nt
+    assert _redact_sequence_tokens(short) == short
+
+    record = logging.LogRecord("titan.test", logging.INFO, __file__, 1, message, (), None)
+    assert _TitanLogFilter().filter(record) is True
+    assert seq not in record.getMessage()

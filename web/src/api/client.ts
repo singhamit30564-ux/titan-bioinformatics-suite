@@ -53,6 +53,26 @@ export const api = {
       body: JSON.stringify({ type, params }),
     });
   },
+  /** Server-side VCF filter + sort + pagination (one page crosses the wire). */
+  queryVcf(body: {
+    upload_id?: string;
+    vcf?: string;
+    filters?: Record<string, string | number | undefined>;
+    sort_by?: string;
+    sort_desc?: boolean;
+    offset?: number;
+    limit?: number;
+  }): Promise<{
+    rows: Record<string, unknown>[];
+    total: number;
+    filtered: number;
+    offset: number;
+    limit: number;
+    sort_by: string;
+    sort_desc: boolean;
+  }> {
+    return request("/api/v2/vcf/query", { method: "POST", body: JSON.stringify(body) });
+  },
   listJobs(limit = 100): Promise<{ jobs: JobSummary[] }> {
     return request<{ jobs: JobSummary[] }>(`/api/v2/jobs?limit=${limit}`);
   },
@@ -188,15 +208,23 @@ export function downloadJson(filename: string, data: unknown): void {
 }
 
 export function downloadCsv(filename: string, rows: Record<string, unknown>[]): void {
+  downloadDelimited(filename, rows, ",");
+}
+
+export function downloadTsv(filename: string, rows: Record<string, unknown>[]): void {
+  downloadDelimited(filename, rows, "\t");
+}
+
+function downloadDelimited(filename: string, rows: Record<string, unknown>[], separator: string): void {
   if (rows.length === 0) {
-    downloadBlob(filename, new Blob([""], { type: "text/csv" }));
+    downloadBlob(filename, new Blob([""], { type: "text/plain" }));
     return;
   }
   const columns = Object.keys(rows[0]);
   const escape = (value: unknown) => {
     const text = value === null || value === undefined ? "" : String(value);
-    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    return text.includes(separator) || /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
-  const csv = [columns.join(","), ...rows.map((row) => columns.map((c) => escape(row[c])).join(","))].join("\n");
-  downloadBlob(filename, new Blob([csv], { type: "text/csv" }));
+  const body = [columns.join(separator), ...rows.map((row) => columns.map((c) => escape(row[c])).join(separator))].join("\n");
+  downloadBlob(filename, new Blob([body], { type: "text/plain" }));
 }

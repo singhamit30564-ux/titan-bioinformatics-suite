@@ -85,7 +85,13 @@ export default function App() {
         {view === "qc" && <QCReport language={language} upload={upload} />}
         {view === "de" && <DEPanel language={language} />}
         {view === "variants" && (
-          <VariantExplorer language={language} vcfText={vcfText} onVcfTextChange={setVcfText} demoVcf={DEMO_VCF} />
+          <VariantExplorer
+            language={language}
+            vcfText={vcfText}
+            onVcfTextChange={setVcfText}
+            demoVcf={DEMO_VCF}
+            uploadId={upload?.uploadId ?? null}
+          />
         )}
         {view === "genome" && <GenomeBrowser language={language} referenceUrl={referenceUrl} />}
         {view === "jobs" && <JobHistory language={language} />}

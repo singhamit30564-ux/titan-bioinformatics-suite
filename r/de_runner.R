@@ -87,6 +87,13 @@ sample_order <- colnames(counts)
 meta <- meta[sample_order, , drop = FALSE]
 group <- factor(meta[[factor_col]], levels = c(control, treated))
 
+# ── Outlier detection (per engine) ─────────────────────────────────────────
+# DESeq2: Cook's distance gene flags (standard DESeq2 semantics: F-distribution
+# cutoff at 99%). edgeR: robust QL estimation (statmod) down-weights outlier
+# samples. limma: eBayes robust = TRUE (M-estimation outlier resistance).
+cooks_matrix <- NULL
+outlier_info <- list(engine = method, flagged_genes = list(), notes = character(0))
+
 results <- NULL
 normalized <- NULL
 dispersion <- NULL
@@ -107,13 +114,30 @@ if (method == "deseq2" && requireNamespace("DESeq2", quietly = TRUE)) {
   dispersion <- as.list(mcols(dds)$dispGeneEst)
   names(dispersion) <- rownames(dds)
   size_factors <- as.list(sizeFactors(dds))
+  # Cook's-distance outlier flags (DESeq2 standard: F(p, m-p) 99% cutoff).
+  cooks_matrix <- assays(dds)[["cooks"]]
+  if (!is.null(cooks_matrix)) {
+    p_params <- ncol(model.matrix(design(dds), colData(dds)))
+    m_samples <- ncol(dds)
+    cooks_cutoff <- qf(0.99, p_params, m_samples - p_params)
+    flagged <- apply(cooks_matrix, 1, function(row) any(row > cooks_cutoff, na.rm = TRUE))
+    outlier_info$cooks_cutoff <- cooks_cutoff
+    outlier_info$flagged_genes <- as.list(rownames(dds)[flagged])
+    outlier_info$notes <- c(
+      outlier_info$notes,
+      sprintf("DESeq2 Cook's distance cutoff %.3f (F(%d,%d), 99%%); %d gene(s) flagged.", cooks_cutoff, p_params, m_samples - p_params, sum(flagged))
+    )
+  } else {
+    outlier_info$notes <- c(outlier_info$notes, "Cook's distances unavailable (replicates too few); no outlier flags computed.")
+  }
 } else if (method == "edger" && requireNamespace("edgeR", quietly = TRUE)) {
   suppressPackageStartupMessages(library(edgeR))
   y <- DGEList(counts = round(as.matrix(counts)), group = group)
   y <- calcNormFactors(y)
   design_matrix <- model.matrix(~ group)
-  y <- estimateDisp(y, design_matrix)
-  fit <- glmQLFit(y, design_matrix)
+  robust_ok <- TRUE
+  y <- tryCatch(estimateDisp(y, design_matrix, robust = TRUE), error = function(e) { robust_ok <<- FALSE; estimateDisp(y, design_matrix) })
+  fit <- tryCatch(glmQLFit(y, design_matrix, robust = TRUE), error = function(e) { robust_ok <<- FALSE; glmQLFit(y, design_matrix) })
   qlf <- glmQLFTest(fit, coef = 2)
   tab <- as.data.frame(topTags(qlf, n = nrow(counts), sort.by = "none")$table)
   tab$gene <- rownames(tab)
@@ -130,11 +154,16 @@ if (method == "deseq2" && requireNamespace("DESeq2", quietly = TRUE)) {
   normalized$gene <- rownames(normalized)
   size_factors <- as.list(y$samples$norm.factors)
   method_label <- "r-edger"
+  outlier_info$notes <- c(
+    outlier_info$notes,
+    if (robust_ok) "edgeR robust QL estimation active (statmod) — outlier samples down-weighted."
+    else "edgeR robust QL unavailable (statmod missing); standard estimation used — no outlier down-weighting."
+  )
 } else if (method == "limma" && requireNamespace("limma", quietly = TRUE)) {
   suppressPackageStartupMessages(library(limma))
   logcpm <- cpm(as.matrix(counts), log = TRUE, prior.count = 3)
   design_matrix <- model.matrix(~ group)
-  fit <- eBayes(lmFit(logcpm, design_matrix))
+  fit <- eBayes(lmFit(logcpm, design_matrix), robust = TRUE)
   tab <- topTable(fit, coef = 2, number = nrow(counts), sort.by = "none")
   tab$gene <- rownames(tab)
   results <- data.frame(
@@ -149,12 +178,14 @@ if (method == "deseq2" && requireNamespace("DESeq2", quietly = TRUE)) {
   normalized <- as.data.frame(2^logcpm)
   normalized$gene <- rownames(normalized)
   method_label <- "r-limma"
+  outlier_info$notes <- c(outlier_info$notes, "limma eBayes(robust = TRUE) — outlier variance observations down-weighted.")
 } else {
   cat("ERROR:requested_package_absent\n", file = stderr())
   quit(status = 7)
 }
 
 if (method == "deseq2") method_label <- "r-deseq2"
+outlier_info$engine <- method_label
 
 results <- results[order(results$padj, na.last = TRUE), , drop = FALSE]
 contrast_out <- list(factor = factor_col, treated = treated, control = control)
@@ -174,6 +205,7 @@ out <- list(
   size_factors = size_factors,
   n_genes_filtered = n_filtered,
   contrast = contrast_out,
+  outliers = outlier_info,
   warnings = warnings_out,
   versions = versions
 )

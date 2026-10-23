@@ -330,6 +330,42 @@ class APIRunRequest(BaseModel):
     frame: int = Field(default=0, ge=0, le=2)
 
 
+# ── Log hygiene: sequence data must never reach logs ────────────────────────
+import logging  # noqa: E402
+import re as _re  # noqa: E402
+
+_SEQ_TOKEN = _re.compile(r"[ACGTNacgtn]{24,}")
+
+
+def _redact_sequence_tokens(message: str) -> str:
+    """Replace sequence-like tokens (>= 24 nt runs of ACGTN) in log lines."""
+    return _SEQ_TOKEN.sub("<sequence-redacted>", message)
+
+
+class _TitanLogFilter(logging.Filter):
+    """Logging filter that redacts sequence-like tokens from every record."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            message = record.getMessage()
+        except Exception:
+            return True
+        redacted = _redact_sequence_tokens(message)
+        if redacted != message:
+            record.msg = redacted
+            record.args = ()
+        return True
+
+
+def install_log_redaction(logger_names: "tuple[str, ...]" = ("", "uvicorn", "uvicorn.error", "uvicorn.access")) -> None:
+    """Attach the redaction filter to the root and uvicorn loggers."""
+    for name in logger_names:
+        logging.getLogger(name).addFilter(_TitanLogFilter())
+
+
+install_log_redaction()
+
+
 app = FastAPI(
     title="Titan Bioinformatics Tool API",
     version="2.0.0",

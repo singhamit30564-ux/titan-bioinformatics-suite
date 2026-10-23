@@ -57,3 +57,21 @@ describe("i18n", () => {
     }
   });
 });
+
+describe("heatmap clustering", () => {
+  it("hierarchicalOrder groups similar rows", async () => {
+    const { hierarchicalOrder } = await import("../src/components/Heatmap");
+    const matrix = [
+      [10, 10, 10],
+      [1, 1, 1],
+      [10, 11, 10],
+      [0.9, 1.1, 1],
+    ];
+    const order = hierarchicalOrder(matrix);
+    expect(order).toHaveLength(4);
+    // similar rows end up adjacent in the order
+    const position = (idx: number) => order.indexOf(idx);
+    expect(Math.abs(position(0) - position(2))).toBe(1);
+    expect(Math.abs(position(1) - position(3))).toBe(1);
+  });
+});

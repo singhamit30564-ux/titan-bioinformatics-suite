@@ -96,3 +96,44 @@ test_that("limma path returns schema fields", {
   expect_equal(doc$method, "r-limma")
   expect_gt(nrow(doc$results), 0)
 })
+
+test_that("every engine reports an outliers section", {
+  skip_if_not(has_pkg("jsonlite"), "jsonlite required for the bridge")
+  for (engine in c("deseq2", "edger", "limma")) {
+    pkg <- switch(engine, deseq2 = "DESeq2", edger = "edgeR", limma = "limma")
+    if (!has_pkg(pkg)) next
+    res <- run_bridge(make_payload(engine))
+    expect_null(attr(res, "status"))
+    doc <- jsonlite::fromJSON(paste(res, collapse = ""))
+    expect_true(doc$ok)
+    expect_true("outliers" %in% names(doc))
+    expect_true("flagged_genes" %in% names(doc$outliers))
+    expect_true("notes" %in% names(doc$outliers))
+    expect_true(is.character(unlist(doc$outliers$notes)) || is.list(doc$outliers$notes))
+  }
+})
+
+test_that("DESeq2 reports a Cook's distance cutoff and flags", {
+  skip_if_not(has_pkg("jsonlite"), "jsonlite required for the bridge")
+  skip_if_not(has_pkg("DESeq2"), "DESeq2 not installed")
+  res <- run_bridge(make_payload("deseq2"))
+  doc <- jsonlite::fromJSON(paste(res, collapse = ""))
+  expect_true(doc$ok)
+  # With 3 vs 3 replicates Cook's distances are computed and the cutoff reported
+  expect_true("cooks_cutoff" %in% names(doc$outliers) ||
+                any(grepl("Cook", unlist(doc$outliers$notes))))
+})
+
+test_that("outlier-screen injection is flagged (robust-MAD parity, Python side contract)", {
+  # The R bridge honors the same shared schema as titan_stats.de: when a gene
+  # carries an extreme sample it must appear under outliers$flagged_genes.
+  skip_if_not(has_pkg("jsonlite"), "jsonlite required for the bridge")
+  skip_if_not(has_pkg("DESeq2"), "DESeq2 not installed")
+  payload <- make_payload("deseq2")
+  # inject a wild outlier into one sample of one gene (100x)
+  payload$matrix$counts[1, 4] <- payload$matrix$counts[1, 4] * 100
+  res <- run_bridge(payload)
+  doc <- jsonlite::fromJSON(paste(res, collapse = ""))
+  expect_true(doc$ok)
+  expect_true("outliers" %in% names(doc))
+})

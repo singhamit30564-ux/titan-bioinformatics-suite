@@ -1,6 +1,6 @@
 /** Differential-expression job panel (PyDESeq2 / R / fallback-ttest). */
 import { useState } from "react";
-import { api, downloadCsv, downloadJson } from "../api/client";
+import { api, downloadCsv, downloadJson, downloadTsv } from "../api/client";
 import { translate, type Language } from "../i18n";
 import { useJob } from "../hooks/useJobs";
 import { Panel, Progress, StatusBadge } from "./common";
@@ -137,6 +137,12 @@ export function DEPanel({ language }: { language: Language }) {
               onClick={() => downloadCsv("titan_de_results.csv", result.results as unknown as Record<string, unknown>[])}
             >
               {translate("export.csv", language)}
+            </button>
+            <button
+              className="action secondary"
+              onClick={() => downloadTsv("titan_de_results.tsv", result.results as unknown as Record<string, unknown>[])}
+            >
+              {translate("export.tsv", language)}
             </button>
             <button className="action secondary" onClick={() => downloadJson("titan_de_results.json", result)}>
               {translate("export.json", language)}

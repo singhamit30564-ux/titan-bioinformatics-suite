@@ -226,3 +226,36 @@ def test_stats_provenance_shape():
     assert prov["python"]
     assert "numpy" in prov["package_versions"]
     json.dumps(prov, default=str)
+
+
+def test_de_results_include_outlier_flags():
+    result = run_differential_expression(COUNTS, META, method="fallback")
+    assert "outliers" in result
+    outliers = result["outliers"]
+    assert outliers["engine"] == "robust-MAD"
+    assert isinstance(outliers["flagged_genes"], dict)
+    assert outliers["notes"]
+    assert "outlier_samples" in result["results"].columns
+
+
+def test_go_kegg_json_shape():
+    result = run_differential_expression(COUNTS, META, method="fallback")
+    payload = plots.go_kegg_json(result["results"], fdr_threshold=1.0, lfc_threshold=0.0)
+    assert payload["type"] == "go_kegg"
+    assert set(payload["go_kegg"]) == {"up_candidates", "down_candidates", "ranked_all"}
+    assert payload["counts"]["up"] + payload["counts"]["down"] >= 1
+    json.dumps(payload, default=str)
+
+
+def test_mad_outlier_detection_flags_injected_outlier():
+    from titan_stats.de import _mad_outlier_flags
+
+    frame = pd.DataFrame(
+        [[10.0, 10.2, 10.1, 100.0]] * 30,  # 4th sample is a huge outlier
+        columns=["s1", "s2", "s3", "s4"],
+        index=[f"g{i}" for i in range(30)],
+    )
+    flags = _mad_outlier_flags(frame)
+    assert flags["engine"] == "robust-MAD"
+    flagged_count = sum(1 for hits in flags["flagged_genes"].values() if hits == ["s4"])
+    assert flagged_count == 30

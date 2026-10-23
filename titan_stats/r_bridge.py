@@ -196,6 +196,8 @@ def run_r_de(
         "n_genes_significant_fdr05": int((pd.to_numeric(results["padj"], errors="coerce") < 0.05).sum()),
         "contrast": decoded.get("contrast")
         or {"factor": factor_col, "treated": treated, "control": control},
+        "outliers": decoded.get("outliers")
+        or {"engine": f"r-{method_key}", "flagged_genes": [], "notes": ["R engine returned no outlier section."]},
         "warnings": warnings,
         "provenance": provenance,
         "eln_parameters": provenance_to_eln_parameters(provenance),

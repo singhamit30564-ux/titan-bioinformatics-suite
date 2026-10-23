@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -32,6 +33,28 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 MEASURED = "MEASURED"
+
+
+def cpu_model() -> str:
+    """CPU model string from /proc/cpuinfo (or 'unknown')."""
+    try:
+        for line in pathlib.Path("/proc/cpuinfo").read_text().splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "unknown"
+
+
+def total_ram_gb() -> float:
+    """Total system RAM in GiB from /proc/meminfo (or 0.0)."""
+    try:
+        for line in pathlib.Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemTotal:"):
+                return float(line.split()[1]) / (1024.0 * 1024.0)
+    except OSError:
+        pass
+    return 0.0
 
 
 def peak_rss_mb() -> float:
@@ -214,6 +237,12 @@ def main() -> int:
 
     header = [
         "# Titan engine benchmark",
+        "",
+        "## Machine specs (MEASURED at run time)",
+        f"- cpu: {cpu_model()}",
+        f"- cores: {os.cpu_count()}",
+        f"- memory: {total_ram_gb():.1f} GiB",
+        f"- platform: {platform.platform()}",
         "",
         f"- generated_utc: {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} ({MEASURED})",
         f"- titan engine: {engine_info.get('active')} / rust={engine_info.get('rust_version')}",
