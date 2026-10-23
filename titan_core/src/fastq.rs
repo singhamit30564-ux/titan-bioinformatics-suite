@@ -6,7 +6,6 @@
 //! when the input is strict 4-line FASTQ (the NGS norm); anything else falls
 //! back to the same robust state machine, sequentially.
 
-use std::borrow::Cow;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -535,7 +534,7 @@ pub fn parse_payload(
     data: &[u8],
     threads: usize,
     max_records: Option<u64>,
-    progress: Option<&mut dyn FnMut(u64, u64)>,
+    mut progress: Option<&mut dyn FnMut(u64, u64)>,
     cancel: Option<&AtomicBool>,
 ) -> Result<ParseOutput> {
     let plan = plan_blocks(data, 8 * 1024 * 1024);

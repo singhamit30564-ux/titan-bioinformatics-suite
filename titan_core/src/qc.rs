@@ -49,7 +49,7 @@ impl Default for QcParams {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct QcAccum {
     pub n_reads: u64,
     pub total_bases: u64,
@@ -69,6 +69,31 @@ pub struct QcAccum {
     pub kmers: KmerCounter,
     pub adapter_hits: Vec<u64>,
     pub empty_reads: u64,
+}
+
+impl Default for QcAccum {
+    fn default() -> Self {
+        Self {
+            n_reads: 0,
+            total_bases: 0,
+            gc_bases: 0,
+            n_bases: 0,
+            len_min: 0,
+            len_max: 0,
+            length_histogram: BTreeMap::new(),
+            qual_sum_by_pos: Vec::new(),
+            qual_count_by_pos: Vec::new(),
+            qual_byte_hist: [0; 256],
+            qmin: 0,
+            qmax: 0,
+            dup_hll: HyperLogLog::default(),
+            dup_bloom: BloomFilter::default(),
+            bloom_seen_before: 0,
+            kmers: KmerCounter::default(),
+            adapter_hits: Vec::new(),
+            empty_reads: 0,
+        }
+    }
 }
 
 impl QcAccum {
@@ -352,7 +377,7 @@ pub fn qc_payload(
     data: &[u8],
     threads: usize,
     params: &QcParams,
-    progress: Option<&mut dyn FnMut(u64, u64)>,
+    mut progress: Option<&mut dyn FnMut(u64, u64)>,
     cancel: Option<&AtomicBool>,
 ) -> Result<QcReport> {
     let plan = plan_blocks(data, 8 * 1024 * 1024);
@@ -389,7 +414,8 @@ pub fn qc_payload(
         done += 1;
         if let Some(cb) = progress.as_mut() {
             let frac = (done as f64 / plan.blocks.len().max(1) as f64) * total as f64;
-            cb(frac.min(total), total);
+            let done_bytes = (frac as u64).min(total);
+            cb(done_bytes, total);
         }
     }
     if let Some(cb) = progress.as_mut() {

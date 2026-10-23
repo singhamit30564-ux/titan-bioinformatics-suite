@@ -139,7 +139,9 @@ impl Region {
         if let Some(ref c) = self.chrom {
             if c != chrom && !(c == "*" && chrom == "*") {
                 // tolerate 'chr' prefix differences
-                let strip = |s: &str| s.strip_prefix("chr").unwrap_or(s);
+                fn strip(s: &str) -> &str {
+                    s.strip_prefix("chr").unwrap_or(s)
+                }
                 if strip(c) != strip(chrom) {
                     return false;
                 }
@@ -160,13 +162,25 @@ pub struct RecordSample {
     pub seq_len: usize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct BlockStats {
     flagstat: FlagStats,
     mapq_hist: [u64; 256],
     coverage: HashMap<String, Vec<u64>>, // ref → per-bin aligned-base depth sums
     sample: Vec<RecordSample>,
     in_region: u64,
+}
+
+impl Default for BlockStats {
+    fn default() -> Self {
+        Self {
+            flagstat: FlagStats::default(),
+            mapq_hist: [0; 256],
+            coverage: HashMap::new(),
+            sample: Vec::new(),
+            in_region: 0,
+        }
+    }
 }
 
 fn cigar_string(ops: &[(u32, u32)]) -> String {
@@ -571,7 +585,7 @@ pub fn read_alignment_payload(
     data: &[u8],
     threads: usize,
     region: Option<&str>,
-    progress: Option<&mut dyn FnMut(u64, u64)>,
+    mut progress: Option<&mut dyn FnMut(u64, u64)>,
     cancel: Option<&AtomicBool>,
 ) -> Result<BamReport> {
     let region = match region {
@@ -683,7 +697,8 @@ pub fn read_alignment_payload(
         merged.in_region += block.in_region;
         if let Some(cb) = progress.as_mut() {
             let frac = ((i + 1) as f64 / blocks.len().max(1) as f64) * total_bytes as f64;
-            cb(frac.min(total_bytes), total_bytes);
+            let done = (frac as u64).min(total_bytes);
+            cb(done, total_bytes);
         }
     }
     if let Some(cb) = progress.as_mut() {

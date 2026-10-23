@@ -463,9 +463,9 @@ fn parse_vcf(
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[pyfunction]
-#[pyo3(signature = (query, target, mode="local", match_score=2, mismatch_score=-3, gap_open=5, gap_extend=2, band=64))]
+#[pyo3(name = "align", signature = (query, target, mode="local", match_score=2, mismatch_score=-3, gap_open=5, gap_extend=2, band=64))]
 #[allow(clippy::too_many_arguments)]
-fn align(
+fn align_seqs(
     py: Python<'_>,
     query: String,
     target: String,
@@ -648,7 +648,7 @@ fn titan_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(qc_fastq, m)?)?;
     m.add_function(wrap_pyfunction!(read_bam, m)?)?;
     m.add_function(wrap_pyfunction!(parse_vcf, m)?)?;
-    m.add_function(wrap_pyfunction!(align, m)?)?;
+    m.add_function(wrap_pyfunction!(align_seqs, m)?)?;
     m.add_function(wrap_pyfunction!(map_reads, m)?)?;
     m.add_function(wrap_pyfunction!(kmer_count, m)?)?;
     m.add_function(wrap_pyfunction!(engine_info, m)?)?;

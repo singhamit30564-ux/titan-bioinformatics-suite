@@ -45,7 +45,8 @@ impl BloomFilter {
     /// (probabilistically — bounded by the configured false-positive rate).
     pub fn insert_if_absent(&mut self, key: u64) -> bool {
         let mut present = true;
-        for pos in self.positions(key) {
+        let positions: Vec<u64> = self.positions(key).collect();
+        for pos in positions {
             let word = (pos / 64) as usize;
             let mask = 1u64 << (pos % 64);
             if self.bits[word] & mask == 0 {

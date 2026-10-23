@@ -171,7 +171,7 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
                 continue;
             }
             // Diagonal predecessor (i-1, j-1) must lie in the previous row's band.
-            let diag_in_band = (j - 1 >= p_lo) && (j - 1 <= p_hi);
+            let diag_in_band = (j > p_lo) && (j - 1 <= p_hi);
             let up_in_band = (j >= p_lo) && (j <= p_hi);
             let diag_slot = (j - 1 - p_lo) as usize;
             let up_slot = (j - p_lo) as usize;
@@ -194,7 +194,7 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
                 }
             }
             if best_m > neg_inf / 2 {
-                best_m += subst(q[i - 1], t[j - 1], p);
+                best_m += subst(q[i - 1], t[(j - 1) as usize], p);
             }
             if p.mode == AlignMode::Local && best_m < 0 {
                 best_m = 0;
@@ -224,7 +224,7 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
             // Y state: gap in query (consume t[j-1]) — left neighbor in this row.
             let mut best_y = neg_inf;
             let mut pred_y = PRED_STOP;
-            if j - 1 >= j_lo {
+            if j > j_lo {
                 let ls = (j - 1 - j_lo) as usize;
                 let open = m_cur[ls] - p.gap_open;
                 let extend = y_cur[ls] - p.gap_extend;
@@ -241,7 +241,7 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
 
             if p.mode == AlignMode::Local {
                 if best_m > best.0 {
-                    best = (best_m, i, j, 0);
+                    best = (best_m, i, j as usize, 0);
                 }
             }
         }
@@ -255,7 +255,7 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
         let j_lo = j_lo_of(m as isize);
         let j_hi = j_hi_of(m as isize);
         let slot = (n as isize - j_lo) as usize;
-        if n < j_lo || n > j_hi || slot >= width {
+        if (n as isize) < j_lo || (n as isize) > j_hi || slot >= width {
             return Err(CoreError::Input(
                 "global alignment band does not reach the end cell; increase band".into(),
             ));

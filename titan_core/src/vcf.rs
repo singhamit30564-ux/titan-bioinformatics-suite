@@ -616,7 +616,7 @@ pub fn parse_vcf_payload(
     threads: usize,
     filter: &VcfFilter,
     max_rows: Option<u64>,
-    progress: Option<&mut dyn FnMut(u64, u64)>,
+    mut progress: Option<&mut dyn FnMut(u64, u64)>,
     cancel: Option<&AtomicBool>,
 ) -> Result<VcfTable> {
     let raw: Vec<u8> = if crate::bgzf::is_gzip(data) {
