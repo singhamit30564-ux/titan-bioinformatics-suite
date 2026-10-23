@@ -110,6 +110,7 @@ class ProvenanceRecord:
     created_utc: str = ""
     label: str = ""
     truncated: bool = False
+    engine: str = "python"
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -120,6 +121,7 @@ class ProvenanceRecord:
             "created_utc": self.created_utc,
             "label": self.label,
             "truncated": self.truncated,
+            "engine": self.engine,
         }
 
     @property
@@ -136,11 +138,15 @@ def provenance_record(
     kind: str = "sequence",
     label: str = "",
     max_bytes: int = 0,
+    engine: str = "python",
 ) -> ProvenanceRecord:
     """Fingerprint an ephemeral payload with SHA-256.
 
     ``max_bytes`` optionally bounds hashing to the first N bytes of very
     large payloads; the record is flagged ``truncated`` when applied.
+    ``engine`` names the compute engine that produced/transformed the payload
+    (``python`` | ``rust`` | ``R``) so Rust/R runs carry the same verifiable
+    provenance as pure-Python ones.
     """
     raw: bytes
     if data is None:
@@ -160,6 +166,7 @@ def provenance_record(
         created_utc=_utc_now(),
         label=label,
         truncated=truncated,
+        engine=str(engine or "python"),
     )
 
 

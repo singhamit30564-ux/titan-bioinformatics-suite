@@ -3,11 +3,13 @@ import pandas as pd
 import plotly.express as px
 import io
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils import engine as pro_engine
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 titan_title("🧬", "Module 3.09: VCF Variant Viewer", "Refactored with Titan validation & export.")
 st.markdown("Parse and visualize Variant Call Format (VCF) files to analyze SNPs and Indels.")
+st.caption(pro_engine.engine_badge(), help="Parsing runs through titan_utils.engine (Rust titan_core when available, pure-Python fallback otherwise) — identical output schema either way.")
 st.markdown("---")
 
 # --- INPUT SECTION ---
@@ -34,27 +36,31 @@ if st.button("🔬 Parse VCF Data", type="primary", use_container_width=True):
     else:
         with st.spinner(" Parsing Variants..."):
             try:
-                # Parse VCF
-                lines = data_to_parse.strip().split('\n')
-                header_line = ""
-                data_lines = []
-                
-                for line in lines:
-                    if line.startswith('#CHROM'):
-                        # The column header line begins with a single '#'.
-                        # Slicing [2:] used to eat two characters and rename the
-                        # first column to 'HROM', which made df['CHROM'] below
-                        # raise KeyError and killed the whole chromosome chart.
-                        header_line = line.lstrip('#')
-                    elif not line.startswith('#'):
-                        data_lines.append(line)
-                
-                if not header_line or not data_lines:
+                # Parse VCF via the Pro Engine (Rust titan_core when available,
+                # pure-Python fallback otherwise) — identical output schema.
+                parsed = pro_engine.parse_vcf(data=data_to_parse)
+                if not parsed["chrom"]:
                     st.warning("⚠️ No valid VCF data found. Ensure it has a #CHROM header line.")
                 else:
-                    # Create DataFrame
-                    columns = header_line.split('\t')
-                    df = pd.DataFrame([line.split('\t') for line in data_lines], columns=columns)
+                    # Create DataFrame (same columns as the legacy text parser)
+                    def _qual_text(value):
+                        if value is None:
+                            return "."
+                        number = float(value)
+                        return str(int(number)) if number.is_integer() else str(number)
+
+                    df = pd.DataFrame({
+                        "CHROM": parsed["chrom"],
+                        "POS": parsed["pos"],
+                        "ID": parsed["id"],
+                        "REF": parsed["ref"],
+                        "ALT": parsed["alt"],
+                        "QUAL": [_qual_text(v) for v in parsed["qual"]],
+                        "FILTER": parsed["filter"],
+                        "INFO": parsed["info_raw"],
+                    })
+                    for sample_name in parsed["samples"]:
+                        df[sample_name] = parsed["samples"][sample_name]
                     
                     # Convert POS to numeric
                     df['POS'] = pd.to_numeric(df['POS'], errors='coerce')

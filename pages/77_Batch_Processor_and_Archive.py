@@ -27,6 +27,10 @@ titan_title(
     "Multi-FASTA batch analysis with consolidated ZIP archive downloads — powered by 100% ephemeral in-RAM execution.",
 )
 
+from titan_utils import engine as pro_engine  # noqa: E402
+
+st.caption(pro_engine.engine_badge(), help="The batch analysis loop dispatches through titan_utils.engine (Rust titan_core when available, pure-Python fallback otherwise).")
+
 # ── Input ───────────────────────────────────────────────────────────────────
 st.markdown("#### 📥 Multi-FASTA Batch Input")
 c_load, c_clear = st.columns([1, 1])
@@ -86,6 +90,13 @@ m2.metric("Total bp", str(summary.get("total_bp", 0)))
 m3.metric("Mean Length", f"{summary.get('mean_length_bp', 0)} bp")
 m4.metric("Mean GC", f"{summary.get('mean_gc_percent', 0)} %")
 m5.metric("Input SHA-256", prov.short + "…", help=prov.digest)
+engine_stats = result.engine_stats or {}
+if engine_stats.get("engine"):
+    st.caption(
+        f"⚙️ Engine: **{engine_stats.get('engine')}**"
+        + (f" · {engine_stats.get('engine_version')}" if engine_stats.get("engine_version") else "")
+        + f" · {engine_stats.get('wall_seconds', 0):.3f}s wall"
+    )
 
 if result.rows:
     df = result.to_frame()

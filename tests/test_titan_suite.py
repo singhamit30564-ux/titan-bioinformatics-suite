@@ -113,13 +113,15 @@ def test_no_paywall_gating():
 def test_master_registry_completeness():
     from titan_utils.registry import get_all_tools, get_tool_by_id, search_tools, CATEGORIES
     tools = get_all_tools()
-    assert len(tools) == 260, f"expected 260 tools in registry, got {len(tools)}"
-    assert len(CATEGORIES) == 15, f"expected 15 categories, got {len(CATEGORIES)}"
+    # 260 legacy tools + 5 Pro Engine tools (261-265) — registry growth is
+    # append-only; legacy IDs are never renumbered (see MASTERPLAN migration notes).
+    assert len(tools) == 265, f"expected 265 tools in registry, got {len(tools)}"
+    assert len(CATEGORIES) == 16, f"expected 16 categories, got {len(CATEGORIES)}"
     
     # Check bounds
     assert get_tool_by_id(1) is not None
-    assert get_tool_by_id(260) is not None
-    assert get_tool_by_id(261) is None
+    assert get_tool_by_id(265) is not None
+    assert get_tool_by_id(266) is None
 
     # Search check
     crispr_hits = search_tools("CRISPR")

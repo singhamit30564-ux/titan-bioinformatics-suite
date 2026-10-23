@@ -82,3 +82,16 @@ Play Console developer account, and a store listing — all outside this
 repo's scope. Start here when you are ready:
 <https://developer.android.com/studio/publish> (placeholder link — follow
 Google's current Play Console onboarding flow).
+
+---
+
+## v3.5 update — the `web/` dashboard is the PWA
+
+The React+TS dashboard in `web/` now ships its own PWA layer
+(`web/public/manifest.webmanifest`, `web/public/sw.js` — API traffic is never
+cached, honoring Zero Data Retention). To wrap THAT app in this Capacitor
+shell instead of the classic Streamlit site, point `server.url` at your
+deployed Express gateway (`web/server/index.js`, default port 4173) and set
+`webDir` to `../web/dist` (the built dashboard bundle). The wrapper still
+needs network access to the API backend; sequences are processed in server
+RAM only (ZDR) regardless of client.

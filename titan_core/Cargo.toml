@@ -1,0 +1,46 @@
+[package]
+name = "titan_core"
+version = "0.1.0"
+edition = "2021"
+description = "Titan Bioinformatics Suite — native processing core (FASTQ/BAM/VCF parsing, streaming QC, banded alignment, k-mer counting) exposed to Python via PyO3."
+license = "AGPL-3.0"
+repository = "https://github.com/singhamit30564-ux/titan-bioinformatics-suite"
+readme = "README.md"
+
+[lib]
+name = "titan_core"
+# cdylib: the importable Python extension module.
+# rlib:   lets unit tests, integration tests and criterion benches link against
+#         the same code without going through Python.
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# `extension-module` must stay optional so `cargo test --no-default-features`
+# can link test binaries (extension modules intentionally do not link
+# libpython). CI builds the wheel with default features via maturin.
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = [] }
+rayon = "1.10"
+memmap2 = "0.9"
+flate2 = "1.0"
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.5"
+
+[[bench]]
+name = "fastq_bench"
+harness = false
+
+[[bench]]
+name = "align_bench"
+harness = false
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+panic = "unwind"

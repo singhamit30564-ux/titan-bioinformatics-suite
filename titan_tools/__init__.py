@@ -14,3 +14,10 @@ from .ncbi_db import *
 from .dr_titan import *
 from .student_tutor import *
 from .legacy_adapters import *
+from .pro import (
+    tool_pro_bam_stats,
+    tool_pro_differential_expression,
+    tool_pro_fast_qc,
+    tool_pro_fast_vcf,
+    tool_pro_variant_ml,
+)

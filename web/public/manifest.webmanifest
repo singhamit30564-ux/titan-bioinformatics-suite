@@ -1,0 +1,19 @@
+{
+  "name": "Titan Bioinformatics Suite",
+  "short_name": "Titan Bio",
+  "description": "QC, differential expression, variant ML and genome browsing with Zero Data Retention.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e17",
+  "theme_color": "#d4af37",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/titan-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

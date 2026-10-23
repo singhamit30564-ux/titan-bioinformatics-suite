@@ -1,24 +1,31 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 🧬 TITAN BIOINFORMATICS — DEPENDENCIES
+# 🧬 TITAN BIOINFORMATICS — CORE DEPENDENCIES (pinned)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Core is fully functional with THIS file alone: every page, every export and
+# every engine fallback works. Heavy optional stacks live in
+# requirements-optional.txt (PyDESeq2 / XGBoost / SHAP / UMAP / R packages).
 
 # Core web framework
-streamlit>=1.37.0
+streamlit==1.41.1
 
-# Optional developer API (separate lightweight ASGI process)
-fastapi>=0.110.0
-uvicorn>=0.29.0
+# Developer / v2 API (separate lightweight ASGI process)
+fastapi==0.115.6
+uvicorn==0.34.0
+websockets==14.1
+pydantic==2.10.4
 
 # Bioinformatics core
-biopython>=1.83
+biopython==1.85
 
 # Data processing & math
-pandas>=2.2.0
-numpy>=1.26.0
+pandas==2.2.3
+numpy==2.2.1
+scikit-learn==1.6.1
+pyarrow==18.1.0
 
 # Visualization
-matplotlib>=3.8.0
-plotly>=5.18.0
+matplotlib==3.10.0
+plotly==5.24.1
 
 # Scientific PDF report generation (ReportLab)
-reportlab>=4.0.0
+reportlab==4.2.5

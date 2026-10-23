@@ -170,6 +170,7 @@ class BatchResult:
     input_digest: str = ""
     input_size: int = 0
     started_utc: str = ""
+    engine_stats: Dict[str, Any] = field(default_factory=dict)
 
     def to_frame(self) -> pd.DataFrame:
         if not self.rows:
@@ -196,6 +197,8 @@ class BatchResult:
             summary["min_length_bp"] = int(df["Length_bp"].min())
         if not df.empty and "GC_Percent" in df.columns:
             summary["mean_gc_percent"] = round(float(df["GC_Percent"].mean()), 2)
+        if self.engine_stats:
+            summary["engine_stats"] = dict(self.engine_stats)
         return summary
 
 
@@ -203,8 +206,15 @@ def run_batch(
     payload: str,
     analyses: Sequence[str] | None = None,
 ) -> BatchResult:
-    """Run the selected analyses across every record in ``payload``."""
+    """Run the selected analyses across every record in ``payload``.
+
+    The analysis loop is dispatched through :mod:`titan_utils.engine` so the
+    active compute engine (Rust ``titan_core`` or pure-Python fallback) is
+    recorded in ``engine_stats``; results are identical either way.
+    """
     from datetime import datetime, timezone
+
+    from titan_utils import engine as pro_engine
 
     records = parse_multi_fasta(payload)
     chosen = [a for a in (analyses or DEFAULT_ANALYSES) if a in BATCH_ANALYSES]
@@ -216,12 +226,18 @@ def run_batch(
         input_size=rec.size_bytes,
         started_utc=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
     )
-    for i, fasta_rec in enumerate(records, start=1):
-        row: Dict[str, Any] = {"Index": i, "Record_ID": fasta_rec.name}
-        for analysis_id in chosen:
-            label, fn, column = BATCH_ANALYSES[analysis_id]
-            row[column] = fn(fasta_rec)
-        result.rows.append(row)
+
+    def _analyze_all() -> int:
+        for i, fasta_rec in enumerate(records, start=1):
+            row: Dict[str, Any] = {"Index": i, "Record_ID": fasta_rec.name}
+            for analysis_id in chosen:
+                label, fn, column = BATCH_ANALYSES[analysis_id]
+                row[column] = fn(fasta_rec)
+            result.rows.append(row)
+        return len(result.rows)
+
+    _, engine_stats = pro_engine.run_with_stats(_analyze_all)
+    result.engine_stats = engine_stats
     return result
 
 

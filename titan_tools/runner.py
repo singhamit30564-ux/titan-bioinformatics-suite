@@ -13,8 +13,11 @@ Renders any registered tool (1-260) with:
 """
 from __future__ import annotations
 
+import time
 from typing import Any, Dict
 import streamlit as st
+
+from titan_utils import engine as titan_engine
 
 from titan_utils.eln import get_session_log, sequence_digest
 from titan_utils.export import EXPORT_FORMATS, build_export, export_filename, export_mime
@@ -85,6 +88,7 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
     # Execute tool on button click or default initial render
     if run_btn or auto_run:
         handler = spec.get_handler()
+        run_started = time.perf_counter()
         if handler is None:
             # Fallback legacy adapter
             from titan_tools.legacy_adapters import tool_legacy_generic
@@ -98,6 +102,16 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
             except Exception as ex:
                 st.warning(f"Note: Running with standard baseline parameters. Detail: {ex}")
                 res = handler()
+        # Surface which engine ran the computation (Rust/Python), wall time and
+        # thread count in the Advanced Export Center below.
+        run_stats = dict(getattr(res, "extra_data", {}).get("engine_stats") or {})
+        status = titan_engine.engine_status()
+        run_stats.setdefault("engine", run_stats.get("engine") or titan_engine.active_engine())
+        run_stats.setdefault("wall_seconds", round(time.perf_counter() - run_started, 6))
+        run_stats.setdefault(
+            "threads",
+            (status.get("rust_threads_default") or 1) if run_stats.get("engine") == "rust" else 1,
+        )
 
         # Render Tool Results
         st.markdown("---")
@@ -152,7 +166,7 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
                     st.markdown(f"- {note}")
 
         # ── Advanced Export Center · ZDR Provenance · ELN · PDF ────────────
-        _render_export_center(spec, inputs_dict, res, prefix)
+        _render_export_center(spec, inputs_dict, res, prefix, run_stats)
 
         # 🎓 Dr. Titan Student Tutor Learning Card
         st.markdown("---")
@@ -182,7 +196,13 @@ def render_tool_runner(spec: Any, auto_run: bool = True, key_prefix: str = "") -
                 )
 
 
-def _render_export_center(spec: Any, inputs_dict: Dict[str, Any], res: Any, prefix: str) -> None:
+def _render_export_center(
+    spec: Any,
+    inputs_dict: Dict[str, Any],
+    res: Any,
+    prefix: str,
+    run_stats: Dict[str, Any] | None = None,
+) -> None:
     """Advanced Export Center — multi-format downloads, ZDR provenance, ELN, PDF, voice."""
     st.markdown("---")
     with st.container(border=True):
@@ -192,6 +212,14 @@ def _render_export_center(spec: Any, inputs_dict: Dict[str, Any], res: Any, pref
             "provenance hashing and 1-click Electronic Lab Notebook logging. "
             "All data processed in 100% ephemeral in-RAM buffers — Zero Data Retention."
         )
+        if run_stats:
+            engine_name = str(run_stats.get("engine", "python"))
+            engine_version = run_stats.get("engine_version") or ""
+            st.caption(
+                f"⚙️ Engine: **{engine_name}** {('· v' + str(engine_version)) if engine_version else ''} "
+                f"· {run_stats.get('wall_seconds', 0)} s wall time "
+                f"· {run_stats.get('threads', 1)} thread(s)"
+            )
 
         # Canonical input payload for fingerprinting (in-RAM only).
         input_payload = "; ".join(f"{k}={v}" for k, v in (inputs_dict or {}).items()) or f"tool:{spec.id}"

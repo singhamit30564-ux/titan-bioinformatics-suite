@@ -119,3 +119,73 @@ def test_every_button_runs_cleanly(page: pathlib.Path):
             failures.append(f"button {label!r}:\n    " + "\n    ".join(problems))
 
     assert not failures, f"{page.name} broke on click:\n  " + "\n  ".join(failures)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pro Engine additions (Layer A/B): pages 98/99/100 + console tools 261–265
+# ─────────────────────────────────────────────────────────────────────────────
+
+PRO_PAGES = ["98_Differential_Expression.py", "99_Variant_ML.py", "100_Expression_Explorer.py"]
+
+PRO_PRIMARY_BUTTONS = {
+    "98_Differential_Expression.py": "🧬 Run Differential Expression",
+    "99_Variant_ML.py": "🧪 Train on SYNTHETIC dataset",
+    "100_Expression_Explorer.py": "🧭 Run PCA & Clustering",
+}
+
+
+def test_pro_engine_pages_are_discovered():
+    """The Layer B pages must be in the auto-glob, not just on disk."""
+    for name in PRO_PAGES:
+        assert name in PAGE_IDS, f"{name} missing from page discovery"
+
+
+@pytest.mark.parametrize("page_name", PRO_PAGES)
+def test_pro_page_primary_action_runs_cleanly(page_name: str):
+    """Click the main analysis button and assert a clean happy path (no
+    st.error banners on success — export buttons are no-ops on fresh state)."""
+    page = ROOT / "pages" / page_name
+    label = PRO_PRIMARY_BUTTONS[page_name]
+    at = _fresh(page, RENDER_TIMEOUT)
+    matching = [b for b in at.button if b.label == label]
+    assert matching, f"{page_name}: primary button {label!r} not found"
+    at.button[[b.label for b in at.button].index(label)].click().run(timeout=CLICK_TIMEOUT)
+    assert not _problems(at), f"{page_name} broke on {label!r}:\n  " + "\n  ".join(_problems(at))
+
+
+def test_pro_tool_handlers_return_toolresults():
+    """Console tools 261–265 must produce the shared ToolResult contract."""
+    from titan_tools.common import ToolResult
+    from titan_tools.pro import (
+        tool_pro_bam_stats,
+        tool_pro_differential_expression,
+        tool_pro_fast_qc,
+        tool_pro_fast_vcf,
+        tool_pro_variant_ml,
+    )
+
+    tiny_fastq = "@r1\nACGTACGTACGTACGTACGT\n+\nIIIIIIIIIIIIIIIIIIII\n"
+    tiny_vcf = (
+        "##fileformat=VCFv4.2\n"
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n"
+        "chr1\t100\trs1\tA\tG\t50\tPASS\tAF=0.001;Consequence=frameshift_variant\n"
+    )
+    tiny_sam = (
+        "@HD\tVN:1.6\tSO:unsorted\n"
+        "@SQ\tSN:chr1\tLN:1000\n"
+        "read1\t0\tchr1\t100\t60\t4M\t*\t0\t0\tACGT\tIIII\n"
+    )
+    counts_csv = "gene,s1,s2,s3,s4\ngeneA,100,120,400,420\ngeneB,200,210,50,60\n"
+    meta_csv = "sample,condition\ns1,control\ns2,control\ns3,treated\ns4,treated\n"
+
+    results = {
+        "fast_qc": tool_pro_fast_qc(fastq_data=tiny_fastq, k=8),
+        "fast_vcf": tool_pro_fast_vcf(vcf_data=tiny_vcf),
+        "bam_stats": tool_pro_bam_stats(sam_data=tiny_sam),
+        "de": tool_pro_differential_expression(counts_data=counts_csv, metadata=meta_csv),
+        "variant_ml": tool_pro_variant_ml(n_synthetic=300),
+    }
+    for name, res in results.items():
+        assert isinstance(res, ToolResult), name
+        assert res.title and res.summary, name
+        assert res.extra_data.get("engine_stats", {}).get("engine"), f"{name} missing engine_stats"

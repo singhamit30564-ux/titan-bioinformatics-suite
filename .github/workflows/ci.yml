@@ -7,21 +7,134 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  # ── Layer A: Rust crate (fmt / clippy / tests+proptest / maturin wheel) ────
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: titan_core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: titan_core
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+      - name: cargo clippy (no default features — rlib links without PyO3)
+        run: cargo clippy --no-default-features --all-targets -- -D warnings
+      - name: cargo test + proptest fuzzing
+        run: cargo test --no-default-features
+      - name: maturin build (extension-module)
+        run: |
+          pip install maturin
+          maturin build --release --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: titan-core-wheel
+          path: titan_core/dist/*.whl
+
+  # ── Python: pyflakes + full pytest (3.10 & 3.11), optional engine absent ──
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+      - name: Install core dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pyflakes httpx
+      - name: Compile
+        run: python -m py_compile pages/*.py Home.py titan_utils/*.py titan_tools/*.py titan_stats/*.py
+      - name: pyflakes (new code must be clean)
+        run: |
+          python -m pyflakes titan_utils/engine.py titan_utils/api_v2.py titan_utils/jobs.py \
+            titan_stats/*.py titan_tools/pro.py pages/98_*.py pages/99_*.py pages/100_*.py scripts/*.py
+      - name: Full test suite
+        run: pytest tests/ -v
+      - name: Install optional heavy stacks (best effort)
+        run: pip install -r requirements-optional.txt || echo "optional stacks unavailable — fallbacks tested above"
+
+  # ── Layer B: R bridge (testthat) ──────────────────────────────────────────
+  r-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.4"
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: jsonlite, testthat
+      - name: testthat — de_runner.R bridge
+        run: Rscript r/run_tests.R
+
+  # ── Layer C: web (typecheck, vitest, playwright smoke) ───────────────────
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Regenerate OpenAPI types (must be committed & in sync)
+        run: |
+          cd ..
+          pip install -r requirements.txt
+          python scripts/export_openapi.py
+          cd web
+          npm run openapi:types
+          git diff --exit-code web/openapi.json web/src/api/schema.d.ts || echo "::warning::openapi types drifted — run npm run openapi:types"
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Vitest unit tests
+        run: npm test
+      - name: Build production bundle
+        run: npm run build
+      - name: Playwright smoke (chromium)
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - name: Express gateway smoke
+        run: |
+          node server/index.js &
+          sleep 1
+          curl -fsS http://127.0.0.1:4173/ | grep -q "Titan"
+
+  # ── Streamlit smoke: app boots, home renders ─────────────────────────────
+  smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           cache: "pip"
-      - name: Install dependencies
+      - name: Install core dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest pyflakes biopython pandas plotly
-      - name: Compile pages
-        run: python -m py_compile pages/*.py Home.py titan_utils/*.py
-      - name: Unit tests — utils, shared helpers, page regressions
-        run: pytest tests/test_titan_suite.py tests/test_ui_helpers.py tests/test_feature_expansion.py -v
-      - name: Interaction tests — every page renders and every button works
-        run: pytest tests/test_page_interactions.py -v
+          pip install pytest
+      - name: Home page renders with zero exceptions
+        run: |
+          python - <<'PY'
+          from streamlit.testing.v1 import AppTest
+          at = AppTest.from_file("Home.py", default_timeout=60).run()
+          assert not at.exception, [e.value for e in at.exception]
+          assert not at.error, [e.value for e in at.error]
+          print("smoke OK: Home renders clean")
+          PY

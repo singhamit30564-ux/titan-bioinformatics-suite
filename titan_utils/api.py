@@ -332,10 +332,17 @@ class APIRunRequest(BaseModel):
 
 app = FastAPI(
     title="Titan Bioinformatics Tool API",
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/api/docs",
     redoc_url=None,
 )
+
+# ── API v2 (job-oriented endpoints for the web dashboard) ────────────────────
+# Keeps every /api/run contract above intact (rate limit, no-store, SHA-256
+# provenance, no sequence access logs) and adds /api/v2/jobs … /api/v2/upload.
+from titan_utils.api_v2 import register_v2_routes  # noqa: E402
+
+register_v2_routes(app)
 
 
 @app.middleware("http")
