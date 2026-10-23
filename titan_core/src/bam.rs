@@ -340,7 +340,7 @@ fn decode_bam_records(
     let mut pos = 0usize;
     let mut checked = 0u64;
     while pos + 4 <= buf.len() {
-        if checked % 4096 == 0 {
+        if checked.is_multiple_of(4096) {
             if let Some(flag) = cancel {
                 if flag.load(Ordering::Relaxed) {
                     break;
@@ -449,7 +449,7 @@ fn decode_sam(
         if pos == buf.len() || buf[pos] == b'\n' {
             let line = trim_cr(&buf[line_start..pos]);
             line_start = pos + 1;
-            if checked % 4096 == 0 {
+            if checked.is_multiple_of(4096) {
                 if let Some(flag) = cancel {
                     if flag.load(Ordering::Relaxed) {
                         break;

@@ -124,8 +124,10 @@ fn parse_vcf_text(
     max_rows: Option<u64>,
     cancel: Option<&AtomicBool>,
 ) -> VcfTable {
-    let mut table = VcfTable::default();
-    table.format = "vcf";
+    let mut table = VcfTable {
+        format: "vcf",
+        ..Default::default()
+    };
     let mut pos = 0usize;
     let mut line_start = 0usize;
     let mut saw_header = false;
@@ -135,7 +137,7 @@ fn parse_vcf_text(
         if at_end || buf[pos] == b'\n' {
             let line = trim_cr(&buf[line_start..pos]);
             line_start = pos + 1;
-            if checked % 4096 == 0 {
+            if checked.is_multiple_of(4096) {
                 if let Some(flag) = cancel {
                     if flag.load(Ordering::Relaxed) {
                         break;
@@ -180,10 +182,9 @@ fn parse_vcf_text(
                 let id = String::from_utf8_lossy(fields[2]).into_owned();
                 let reference = String::from_utf8_lossy(fields[3]).into_owned();
                 let alt = String::from_utf8_lossy(fields[4]).into_owned();
-                let qual: f64 = match String::from_utf8_lossy(fields[5]).parse() {
-                    Ok(v) => v,
-                    Err(_) => f64::NAN,
-                };
+                let qual: f64 = String::from_utf8_lossy(fields[5])
+                    .parse()
+                    .unwrap_or(f64::NAN);
                 let filt = String::from_utf8_lossy(fields[6]).into_owned();
                 let info = String::from_utf8_lossy(fields[7]).into_owned();
                 let (af, dp) = parse_info_af_dp(&info);
@@ -433,7 +434,7 @@ fn parse_bcf(
     let mut pos = 9 + l_text;
     let mut checked = 0u64;
     while pos + 8 <= buf.len() {
-        if checked % 1024 == 0 {
+        if checked.is_multiple_of(1024) {
             if let Some(flag) = cancel {
                 if flag.load(Ordering::Relaxed) {
                     break;
@@ -480,25 +481,22 @@ fn parse_bcf(
         // FILTER: typed int vector of IDs (0 = PASS).
         let mut filter_text = ".".to_string();
         if sp < shared.len() {
-            match read_typed(shared, &mut sp) {
-                Ok(Typed::Int(ids)) => {
-                    if ids.is_empty() {
-                        filter_text = ".".to_string();
-                    } else {
-                        let names: Vec<String> = ids
-                            .iter()
-                            .map(|id| match id {
-                                Some(v) => dict
-                                    .get(*v as usize)
-                                    .cloned()
-                                    .unwrap_or_else(|| format!("id{v}")),
-                                None => "PASS".to_string(),
-                            })
-                            .collect();
-                        filter_text = names.join(";");
-                    }
+            if let Ok(Typed::Int(ids)) = read_typed(shared, &mut sp) {
+                if ids.is_empty() {
+                    filter_text = ".".to_string();
+                } else {
+                    let names: Vec<String> = ids
+                        .iter()
+                        .map(|id| match id {
+                            Some(v) => dict
+                                .get(*v as usize)
+                                .cloned()
+                                .unwrap_or_else(|| format!("id{v}")),
+                            None => "PASS".to_string(),
+                        })
+                        .collect();
+                    filter_text = names.join(";");
                 }
-                _ => {}
             }
         }
         // INFO pairs: key id + typed value. Keep AF/DP + raw rendering.

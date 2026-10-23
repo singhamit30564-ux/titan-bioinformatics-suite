@@ -150,7 +150,7 @@ impl QcAccum {
         // Duplication sketches.
         let h = crate::util::fnv1a64(seq);
         self.dup_hll.add(h);
-        if self.dup_bloom.insert_if_absent(h) {
+        if !self.dup_bloom.insert_if_absent(h) {
             self.bloom_seen_before += 1;
         }
 
@@ -260,13 +260,17 @@ fn detect_phred(hist: &[u64; 256]) -> PhredEncoding {
     if qmin == u8::MAX {
         return PhredEncoding::Ambiguous;
     }
-    if qmin >= 64 {
+    // Phred33 (Sanger / Illumina 1.8+) is the modern default; Phred64 is
+    // legacy Illumina 1.3–1.7. Claim Phred64 only with positive evidence:
+    // every observed byte inside the Phred64 range AND at least one byte
+    // above 73 ('I' — the practical Phred33 ceiling for real instruments).
+    if qmin >= 64 && qmax > 73 {
         return PhredEncoding::Phred64;
     }
-    if qmax <= 60 || (qmin < 59 && qmax <= 74) {
-        return PhredEncoding::Phred33;
+    if qmin < 33 {
+        return PhredEncoding::Ambiguous;
     }
-    PhredEncoding::Ambiguous
+    PhredEncoding::Phred33
 }
 
 pub fn build_report(
@@ -281,12 +285,9 @@ pub fn build_report(
         .qual_sum_by_pos
         .iter()
         .zip(accum.qual_count_by_pos.iter())
-        .map(|(&s, &c)| {
-            if c == 0 {
-                0.0
-            } else {
-                (s / c) as f64 - offset as f64
-            }
+        .map(|(&s, &c)| match s.checked_div(c) {
+            Some(mean) => mean as f64 - offset as f64,
+            None => 0.0,
         })
         .collect();
     let mut q20 = 0u64;

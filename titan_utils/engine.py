@@ -287,11 +287,15 @@ def _iter_fastq(raw: bytes, warnings: dict[str, int]):
 def _detect_phred(qmin: int, qmax: int) -> str:
     if qmin == 255:
         return "ambiguous"
-    if qmin >= 64:
+    # Phred33 (Sanger / Illumina 1.8+) is the modern default; Phred64 is
+    # legacy Illumina 1.3-1.7. Claim phred64 only with positive evidence:
+    # every observed byte inside the Phred64 range AND at least one byte
+    # above 73 ("I" - the practical Phred33 ceiling for real instruments).
+    if qmin >= 64 and qmax > 73:
         return "phred64"
-    if qmax <= 60 or (qmin < 59 and qmax <= 74):
-        return "phred33"
-    return "ambiguous"
+    if qmin < 33:
+        return "ambiguous"
+    return "phred33"
 
 
 def _phred_offset(encoding: str) -> int:

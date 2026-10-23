@@ -20,7 +20,7 @@ impl BloomFilter {
         let n_bits = ((-expected * fp_rate.ln()) / (LN_2 * LN_2))
             .ceil()
             .max(64.0) as u64;
-        let n_words = ((n_bits + 63) / 64) as usize;
+        let n_words = (n_bits.div_ceil(64)) as usize;
         let n_hashes = (((n_bits as f64) / expected) * LN_2)
             .ceil()
             .clamp(1.0, 16.0) as u32;
@@ -44,20 +44,20 @@ impl BloomFilter {
     /// Returns true when the key was newly inserted, false if already present
     /// (probabilistically — bounded by the configured false-positive rate).
     pub fn insert_if_absent(&mut self, key: u64) -> bool {
-        let mut present = true;
+        let mut already_present = true;
         let positions: Vec<u64> = self.positions(key).collect();
         for pos in positions {
             let word = (pos / 64) as usize;
             let mask = 1u64 << (pos % 64);
             if self.bits[word] & mask == 0 {
                 self.bits[word] |= mask;
-                present = false;
+                already_present = false;
             }
         }
-        if !present {
+        if !already_present {
             self.n_inserted += 1;
         }
-        present
+        !already_present
     }
 
     pub fn contains(&self, key: u64) -> bool {

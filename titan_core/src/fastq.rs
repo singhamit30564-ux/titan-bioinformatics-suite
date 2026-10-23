@@ -90,13 +90,17 @@ impl ParseOutput {
         if self.qmin == u8::MAX {
             return PhredEncoding::Ambiguous;
         }
-        if self.qmin >= 64 {
+        // Phred33 (Sanger / Illumina 1.8+) is the modern default; Phred64 is
+        // legacy Illumina 1.3–1.7. Claim Phred64 only with positive evidence:
+        // every observed byte inside the Phred64 range AND at least one byte
+        // above 73 ('I' — the practical Phred33 ceiling for real instruments).
+        if self.qmin >= 64 && self.qmax > 73 {
             return PhredEncoding::Phred64;
         }
-        if self.qmax <= 60 || (self.qmin < 59 && self.qmax <= 74) {
-            return PhredEncoding::Phred33;
+        if self.qmin < 33 {
+            return PhredEncoding::Ambiguous;
         }
-        PhredEncoding::Ambiguous
+        PhredEncoding::Phred33
     }
 
     pub fn n_reads(&self) -> u64 {
@@ -241,11 +245,7 @@ pub fn parse_block<'a>(
         let mut seq_len = 0usize;
         let mut seq_lines = 0usize;
         let mut sep_found = false;
-        loop {
-            let line = match it.next_line() {
-                Some(line) => line,
-                None => break,
-            };
+        while let Some(line) = it.next_line() {
             if line.first() == Some(&b'+') {
                 sep_found = true;
                 break;
@@ -308,7 +308,7 @@ pub fn parse_block<'a>(
             records.push(RawRecord { name, seq, qual });
         }
         checked += 1;
-        if checked % 65536 == 0 {
+        if checked.is_multiple_of(65536) {
             if let Some(flag) = cancel {
                 if flag.load(Ordering::Relaxed) {
                     break;
@@ -331,11 +331,8 @@ pub fn parse_records_owned(
         let mut out = Vec::new();
         let mut w2 = ParseWarnings::default();
         let mut it = LineIter::new(buf, 0);
-        loop {
-            let header = match it.next_line() {
-                Some(l) => l.to_vec(),
-                None => break,
-            };
+        while let Some(l) = it.next_line() {
+            let header = l.to_vec();
             if header.is_empty() || header[0] != b'@' {
                 continue;
             }
@@ -418,10 +415,8 @@ pub fn plan_blocks(buf: &[u8], target_block: usize) -> Plan {
                     strict = false; // zero-length sequence with immediate '+'
                 }
             }
-            2 => {
-                if line.first() != Some(&b'+') {
-                    strict = false;
-                }
+            2 if line.first() != Some(&b'+') => {
+                strict = false;
             }
             _ => {}
         }
@@ -430,7 +425,7 @@ pub fn plan_blocks(buf: &[u8], target_block: usize) -> Plan {
         if !strict {
             break;
         }
-        if line_no % 4 == 0 && line_start - block_start >= target_block {
+        if line_no.is_multiple_of(4) && line_start - block_start >= target_block {
             plan.blocks.push((block_start, line_start));
             block_start = line_start;
         }

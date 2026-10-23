@@ -102,6 +102,7 @@ fn make_progress(progress: Option<PyObject>) -> Option<Box<dyn FnMut(u64, u64) +
 // parse_fastq
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(signature = (path=None, data=None, threads=0, progress=None, cancel=None, max_records=None))]
 #[allow(clippy::too_many_arguments)]
@@ -166,6 +167,7 @@ fn parse_fastq(
 // qc_fastq
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(signature = (path=None, data=None, threads=0, progress=None, cancel=None, k=8))]
 #[allow(clippy::too_many_arguments)]
@@ -275,6 +277,7 @@ fn qc_report_to_py(py: Python<'_>, report: &qc::QcReport) -> PyResult<PyObject> 
 // read_bam
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(signature = (path=None, data=None, threads=0, region=None, progress=None, cancel=None))]
 #[allow(clippy::too_many_arguments)]
@@ -374,6 +377,7 @@ fn read_bam(
 // parse_vcf
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(signature = (
     path=None, data=None, threads=0, chrom=None, pos_min=None, pos_max=None,
@@ -462,6 +466,7 @@ fn parse_vcf(
 // align / map_reads
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(name = "align", signature = (query, target, mode="local", match_score=2, mismatch_score=-3, gap_open=5, gap_extend=2, band=64))]
 #[allow(clippy::too_many_arguments)]
@@ -511,6 +516,7 @@ fn align_seqs(
     Ok(dict.into_any().unbind())
 }
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(signature = (reads, reference, ref_name="ref", k=12, threads=0))]
 fn map_reads(
@@ -552,6 +558,7 @@ fn map_reads(
 // kmer_count
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 #[pyo3(signature = (path=None, data=None, k=8, threads=0, top=20, max_entries=200000, progress=None, cancel=None))]
 #[allow(clippy::too_many_arguments)]
@@ -615,6 +622,7 @@ fn kmer_count(
 // engine_info
 // ─────────────────────────────────────────────────────────────────────────────
 
+#[allow(clippy::useless_conversion)] // pyo3 macro emits identity PyErr conversions
 #[pyfunction]
 fn engine_info(py: Python<'_>) -> PyResult<PyObject> {
     let dict = PyDict::new_bound(py);

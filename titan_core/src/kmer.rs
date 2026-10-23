@@ -71,7 +71,7 @@ impl KmerCounter {
     pub fn new(k: usize, max_entries: usize) -> Self {
         KmerCounter {
             k: k.clamp(1, 32),
-            max_entries: max_entries.max(16),
+            max_entries: max_entries.max(1),
             counts: HashMap::new(),
             total: 0,
             distinct_skipped: 0,
@@ -86,8 +86,11 @@ impl KmerCounter {
         self.total
     }
 
+    /// True when the bounded map has dropped (or would immediately drop) any
+    /// distinct k-mer: either a key was skipped at the bound, or the map is
+    /// full, so estimates are truncated from here on.
     pub fn truncated(&self) -> bool {
-        self.distinct_skipped > 0
+        self.distinct_skipped > 0 || self.counts.len() >= self.max_entries
     }
 
     pub fn unique(&self) -> u64 {
