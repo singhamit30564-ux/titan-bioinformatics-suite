@@ -40,10 +40,10 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand">
+        <h1 className="brand">
           <span aria-hidden="true">🧬</span>
           <span>{t("app.title")}</span>
-        </div>
+        </h1>
         <span className="badge gold">{t("app.tagline")}</span>
         <div className="spacer" />
         <span className="badge">

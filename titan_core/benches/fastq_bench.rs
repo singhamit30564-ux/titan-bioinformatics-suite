@@ -4,7 +4,7 @@
 //! never invents figures.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use titan_core::align::{align, AlignParams, AlignMode};
+use titan_core::align::{align, AlignMode, AlignParams};
 use titan_core::fastq::parse_payload;
 use titan_core::qc::{qc_payload, QcParams};
 

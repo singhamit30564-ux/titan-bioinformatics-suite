@@ -42,6 +42,7 @@ jobs:
           cat /tmp/titan-fmt.log
           exit $status
       - name: cargo clippy (no default features — rlib links without PyO3)
+        if: always()
         shell: bash
         run: |
           set +e
@@ -50,6 +51,7 @@ jobs:
           cat /tmp/titan-clippy.log
           exit $status
       - name: cargo test + proptest fuzzing
+        if: always()
         shell: bash
         run: |
           set +e

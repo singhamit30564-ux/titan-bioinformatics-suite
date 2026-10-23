@@ -596,7 +596,7 @@ mod tests {
         let mut out = Vec::new();
         for i in 0..n {
             out.extend_from_slice(format!("@read{} desc\n", i).as_bytes());
-            out.extend_from_slice(&vec![b'ACGT'[i % 4]; len]);
+            out.extend_from_slice(&vec![b"ACGT"[i % 4]; len]);
             out.extend_from_slice(b"\n+\n");
             out.extend_from_slice(&vec![b'I'; len]);
             out.extend_from_slice(b"\n");

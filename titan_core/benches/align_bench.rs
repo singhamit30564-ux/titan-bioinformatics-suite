@@ -1,7 +1,7 @@
 //! Alignment kernel benchmarks (criterion). See fastq_bench.rs for parse/QC.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use titan_core::align::{map_reads, ungapped_score, AlignParams, AlignMode};
+use titan_core::align::{map_reads, ungapped_score, AlignMode, AlignParams};
 
 fn bench_ungapped(c: &mut Criterion) {
     let a: Vec<u8> = (0..4096usize).map(|i| b"ACGT"[i % 4]).collect();
@@ -21,7 +21,9 @@ fn bench_global(c: &mut Criterion) {
         ..Default::default()
     };
     c.bench_function("global_200x220_band32", |ben| {
-        ben.iter(|| titan_core::align::align(black_box(&query), black_box(&target), &params).unwrap())
+        ben.iter(|| {
+            titan_core::align::align(black_box(&query), black_box(&target), &params).unwrap()
+        })
     });
 }
 

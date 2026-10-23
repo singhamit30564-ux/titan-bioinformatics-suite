@@ -240,10 +240,13 @@ def test_v2_vcf_query_rejects_bad_input(client):
 def test_v2_vcf_query_over_upload_id(client):
     upload_id = "vcfqueryupload1"
     vcf = "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\nchr1\t5\trs1\tA\tT\t9\tPASS\tAF=0.1\n"
-    client.post(
+    uploaded = client.post(
         "/api/v2/upload/chunk",
         json={"upload_id": upload_id, "offset": 0, "data_b64": base64.b64encode(vcf.encode()).decode(), "final": True},
     )
-    body = client.post("/api/v2/vcf/query", json={"upload_id": upload_id, "limit": 10}).json()
-    assert body["filtered"] == 1
+    assert uploaded.status_code == 200, uploaded.text
+    query = client.post("/api/v2/vcf/query", json={"upload_id": upload_id, "limit": 10})
+    assert query.status_code == 200, query.text
+    body = query.json()
+    assert body.get("filtered") == 1, body
     assert body["rows"][0]["CHROM"] == "chr1"
