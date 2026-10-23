@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn bounded_map_sets_truncated_flag() {
         let mut counter = KmerCounter::new(3, 4);
-        counter.add_sequence(b"ACGTACGTACGTACGTACGTACGTACGTACGT");
+        counter.add_sequence(b"AAAACCCCGGGGTTTT");
         assert!(counter.truncated());
     }
 

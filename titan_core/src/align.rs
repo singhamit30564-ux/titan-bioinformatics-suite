@@ -128,7 +128,7 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
             } else if p.mode == AlignMode::Global {
                 m_prev[slot] = neg_inf;
                 y_prev[slot] = -(p.gap_open + p.gap_extend * (j as i32 - 1));
-                trace[0 * width + slot][2] = if j == 1 {
+                trace[slot][2] = if j == 1 {
                     PRED_DIAG_M
                 } else {
                     PRED_LEFT_FROM_Y
@@ -239,10 +239,8 @@ pub fn align(q: &[u8], t: &[u8], p: &AlignParams) -> Result<Alignment> {
             y_cur[slot] = best_y;
             trace[row_base][2] = pred_y;
 
-            if p.mode == AlignMode::Local {
-                if best_m > best.0 {
-                    best = (best_m, i, j as usize, 0);
-                }
+            if p.mode == AlignMode::Local && best_m > best.0 {
+                best = (best_m, i, j as usize, 0);
             }
         }
         std::mem::swap(&mut m_prev, &mut m_cur);
@@ -494,7 +492,7 @@ unsafe fn ungapped_score_avx2(a: &[u8], b: &[u8]) -> i32 {
 pub fn simd_extension_available() -> bool {
     #[cfg(target_arch = "x86_64")]
     {
-        return is_x86_feature_detected!("avx2");
+        is_x86_feature_detected!("avx2")
     }
     #[cfg(not(target_arch = "x86_64"))]
     {
@@ -541,7 +539,7 @@ pub fn map_reads(
     k: usize,
     threads: usize,
 ) -> Result<Vec<Placement>> {
-    if reference.len() < k || k < 5 || k > 32 {
+    if reference.len() < k || !(5..=32).contains(&k) {
         return Err(CoreError::Input(
             "map_reads: k must be in 5..=32 and fit the reference".into(),
         ));
