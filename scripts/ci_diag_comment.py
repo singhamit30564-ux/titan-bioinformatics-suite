@@ -74,12 +74,17 @@ def main() -> int:
         sections.append(f"<details><summary><code>{path}</code></summary>")
         sections.append("")
         if p.is_file():
+            import re
+
             text = p.read_text(errors="replace") or "(empty)"
             text = text.replace("\r\n", "\n")
+            text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+            # Diagnostics live at the END of tool logs (heads are download noise).
+            chunk = "\n".join(text.splitlines()[-250:])
             sections.append("```text")
-            sections.append(text[:MAX_BODY])
-            if len(text) > MAX_BODY:
-                sections.append(f"... truncated ({len(text) - MAX_BODY} more chars)")
+            sections.append(chunk[:MAX_BODY])
+            if len(chunk) > MAX_BODY:
+                sections.append(f"... truncated ({len(chunk) - MAX_BODY} more chars)")
             sections.append("```")
         else:
             sections.append("(file not produced — step failed before writing it)")
