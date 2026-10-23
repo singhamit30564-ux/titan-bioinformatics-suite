@@ -1,6 +1,7 @@
 name: CI — Titan Bioinformatics Suite
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, arena/*, fix/*]
   pull_request:
@@ -39,7 +40,9 @@ jobs:
           set +e
           cargo fmt --all -- --check > /tmp/titan-fmt.log 2>&1
           status=$?
-          cat /tmp/titan-fmt.log
+          cargo fmt --all
+          git diff > /tmp/titan-fmt.patch
+          echo "fmt-check exit=$status; patch lines=$(wc -l < /tmp/titan-fmt.patch)"
           exit $status
       - name: cargo clippy (no default features — rlib links without PyO3)
         if: always()
@@ -79,6 +82,19 @@ jobs:
             --marker "<!-- titan-ci-diag rust -->" \
             --title "🦀 rust job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
             --file /tmp/titan-fmt.log --file /tmp/titan-clippy.log --file /tmp/titan-test.log --file /tmp/titan-maturin.log
+      - name: Upload rust diagnostics (logs + applyable rustfmt patch)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-ci-diag
+          path: |
+            /tmp/titan-fmt.log
+            /tmp/titan-fmt.patch
+            /tmp/titan-clippy.log
+            /tmp/titan-test.log
+            /tmp/titan-maturin.log
+          if-no-files-found: ignore
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -117,6 +133,14 @@ jobs:
           status=$?
           tail -40 /tmp/titan-pytest.log
           exit $status
+      - name: Upload pytest diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-ci-diag-${{ matrix.python-version }}
+          path: /tmp/titan-pytest.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Post python diagnostics comment
         if: failure()
         env:
@@ -192,6 +216,16 @@ jobs:
           node server/index.js &
           sleep 1
           curl -fsS http://127.0.0.1:4173/ | grep -q "Titan"
+      - name: Upload web diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-ci-diag
+          path: |
+            /tmp/titan-playwright.log
+            /tmp/titan-pw-install.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Post web diagnostics comment
         if: failure()
         working-directory: .
