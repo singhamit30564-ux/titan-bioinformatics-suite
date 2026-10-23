@@ -74,7 +74,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 scripts/ci_diag_comment.py \
-            --marker "$DIAG_MARKER" \
+            --marker "<!-- titan-ci-diag rust -->" \
             --title "🦀 rust job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
             --file /tmp/titan-fmt.log --file /tmp/titan-clippy.log --file /tmp/titan-test.log --file /tmp/titan-maturin.log
       - uses: actions/upload-artifact@v4
@@ -111,7 +111,7 @@ jobs:
       - name: Full test suite
         run: |
           set +e
-          pytest tests/ -x -p no:cacheprovider > /tmp/titan-pytest.log 2>&1
+          pytest tests/ -p no:cacheprovider > /tmp/titan-pytest.log 2>&1
           status=$?
           tail -40 /tmp/titan-pytest.log
           exit $status
@@ -121,7 +121,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 scripts/ci_diag_comment.py \
-            --marker "$DIAG_MARKER" \
+            --marker "<!-- titan-ci-diag python-${{ matrix.python-version }} -->" \
             --title "🐍 python ${{ matrix.python-version }} job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
             --file /tmp/titan-pytest.log
       - name: Install optional heavy stacks (best effort)
@@ -178,9 +178,13 @@ jobs:
       - name: Build production bundle
         run: npm run build
       - name: Playwright smoke (chromium)
+        shell: bash
         run: |
-          npx playwright install --with-deps chromium
-          npx playwright test
+          npx playwright install --with-deps chromium > /tmp/titan-pw-install.log 2>&1
+          npx playwright test > /tmp/titan-playwright.log 2>&1
+          status=$?
+          tail -40 /tmp/titan-playwright.log
+          exit $status
       - name: Express gateway smoke
         run: |
           node server/index.js &
@@ -193,10 +197,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 scripts/ci_diag_comment.py \
-            --marker "$DIAG_MARKER" \
+            --marker "<!-- titan-ci-diag web -->" \
             --title "🌐 web job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
-            --note "Inspect the failed step above; this comment carries the OpenAPI export output." \
-            --file web/openapi.json
+            --file /tmp/titan-playwright.log --file /tmp/titan-pw-install.log
 
   # ── Streamlit smoke: app boots, home renders ─────────────────────────────
   smoke:

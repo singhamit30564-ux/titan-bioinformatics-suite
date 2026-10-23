@@ -46,7 +46,7 @@ def main() -> int:
         print("no GH_TOKEN — skipping diagnostics comment", file=sys.stderr)
         return 0
 
-    ref = os.environ.get("GITHUB_REF_NAME", "")
+    ref = os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME", "")
     repo = os.environ.get("GITHUB_REPOSITORY", "")
     if not repo:
         print("no GITHUB_REPOSITORY — skipping", file=sys.stderr)
