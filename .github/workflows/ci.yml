@@ -6,10 +6,19 @@ on:
   pull_request:
     branches: [main]
 
+# Diagnostics comment on failure carries full tool output to the PR
+# (the same output the job log shows) so red runs are self-explanatory.
+env:
+  DIAG_MARKER: "<!-- titan-ci-diag -->"
+
 jobs:
   # ── Layer A: Rust crate (fmt / clippy / tests+proptest / maturin wheel) ────
   rust:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
     defaults:
       run:
         working-directory: titan_core
@@ -21,17 +30,55 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: titan_core
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: cargo fmt
-        run: cargo fmt --all -- --check
-      - name: cargo clippy (no default features — rlib links without PyO3)
-        run: cargo clippy --no-default-features --all-targets -- -D warnings
-      - name: cargo test + proptest fuzzing
-        run: cargo test --no-default-features
-      - name: maturin build (extension-module)
+        shell: bash
         run: |
-          pip install maturin
-          maturin build --release --out dist
+          set +e
+          cargo fmt --all -- --check > /tmp/titan-fmt.log 2>&1
+          status=$?
+          cat /tmp/titan-fmt.log
+          exit $status
+      - name: cargo clippy (no default features — rlib links without PyO3)
+        shell: bash
+        run: |
+          set +e
+          cargo clippy --no-default-features --all-targets -- -D warnings > /tmp/titan-clippy.log 2>&1
+          status=$?
+          cat /tmp/titan-clippy.log
+          exit $status
+      - name: cargo test + proptest fuzzing
+        shell: bash
+        run: |
+          set +e
+          cargo test --no-default-features > /tmp/titan-test.log 2>&1
+          status=$?
+          cat /tmp/titan-test.log
+          exit $status
+      - name: maturin build (extension-module)
+        shell: bash
+        run: |
+          set +e
+          python -m pip install maturin > /tmp/titan-maturin-install.log 2>&1
+          maturin build --release --out dist > /tmp/titan-maturin.log 2>&1
+          status=$?
+          cat /tmp/titan-maturin.log
+          exit $status
+      - name: Post rust diagnostics comment
+        if: failure()
+        shell: bash
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci_diag_comment.py \
+            --marker "$DIAG_MARKER" \
+            --title "🦀 rust job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
+            --file /tmp/titan-fmt.log --file /tmp/titan-clippy.log --file /tmp/titan-test.log --file /tmp/titan-maturin.log
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: titan-core-wheel
           path: titan_core/dist/*.whl
@@ -43,6 +90,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11"]
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -60,7 +109,21 @@ jobs:
           python -m pyflakes titan_utils/engine.py titan_utils/api_v2.py titan_utils/jobs.py \
             titan_stats/*.py titan_tools/pro.py pages/98_*.py pages/99_*.py pages/100_*.py scripts/*.py
       - name: Full test suite
-        run: pytest tests/ -v
+        run: |
+          set +e
+          pytest tests/ -x -p no:cacheprovider > /tmp/titan-pytest.log 2>&1
+          status=$?
+          tail -40 /tmp/titan-pytest.log
+          exit $status
+      - name: Post python diagnostics comment
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci_diag_comment.py \
+            --marker "$DIAG_MARKER" \
+            --title "🐍 python ${{ matrix.python-version }} job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
+            --file /tmp/titan-pytest.log
       - name: Install optional heavy stacks (best effort)
         run: pip install -r requirements-optional.txt || echo "optional stacks unavailable — fallbacks tested above"
 
@@ -81,6 +144,8 @@ jobs:
   # ── Layer C: web (typecheck, vitest, playwright smoke) ───────────────────
   web:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     defaults:
       run:
         working-directory: web
@@ -91,15 +156,21 @@ jobs:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
       - run: npm ci
       - name: Regenerate OpenAPI types (must be committed & in sync)
+        working-directory: .
         run: |
-          cd ..
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
           python scripts/export_openapi.py
           cd web
           npm run openapi:types
-          git diff --exit-code web/openapi.json web/src/api/schema.d.ts || echo "::warning::openapi types drifted — run npm run openapi:types"
+          if ! git diff --quiet -- web/openapi.json web/src/api/schema.d.ts; then
+            echo "::warning::openapi types drifted — run: python scripts/export_openapi.py && cd web && npm run openapi:types"
+          fi
       - name: Typecheck
         run: npm run typecheck
       - name: Vitest unit tests
@@ -115,6 +186,17 @@ jobs:
           node server/index.js &
           sleep 1
           curl -fsS http://127.0.0.1:4173/ | grep -q "Titan"
+      - name: Post web diagnostics comment
+        if: failure()
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci_diag_comment.py \
+            --marker "$DIAG_MARKER" \
+            --title "🌐 web job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
+            --note "Inspect the failed step above; this comment carries the OpenAPI export output." \
+            --file web/openapi.json
 
   # ── Streamlit smoke: app boots, home renders ─────────────────────────────
   smoke:

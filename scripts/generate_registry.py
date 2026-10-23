@@ -1,9 +1,7 @@
 """Script to build titan_utils/registry.py for all 260 tools."""
 import inspect
-import json
 import re
 from pathlib import Path
-import titan_tools as tt
 
 def main():
     content = Path("Home.py").read_text()
@@ -205,7 +203,7 @@ def main():
                 f"        ToolInputSpec(id={repr(inp['id'])}, label={repr(inp['label'])}, type={repr(inp['type'])}, default={repr(inp['default'])}, help={repr(inp.get('help', ''))})"
             )
         inputs_block = "[\n" + ",\n".join(inputs_code) + "\n    ]" if inputs_code else "[]"
-        lines.append(f"    ToolSpec(")
+        lines.append("    ToolSpec(")
         lines.append(f"        id={t['id']},")
         lines.append(f"        name={repr(t['name'])},")
         lines.append(f"        domain={repr(t['domain'])},")
@@ -216,7 +214,7 @@ def main():
         lines.append(f"        inputs={inputs_block},")
         lines.append(f"        handler_name={repr(t['handler_name'])},")
         lines.append(f"        student_tip={repr(t['student_tip'])},")
-        lines.append(f"    ),")
+        lines.append("    ),")
 
     lines.extend([
         ']',
