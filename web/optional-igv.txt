@@ -1,0 +1,10 @@
+# Optional Genome Browser dependency (igv.js).
+#
+# The Genome Browser panel dynamically imports igv.js and degrades gracefully
+# when it is missing (every other view works). To enable it:
+#
+#     npm install igv@3.2.0
+#
+# igv.js is kept OUT of package.json core dependencies so that
+# `npm ci` stays fully offline-reproducible in restricted environments and so
+# the main bundle stays small; the panel reports unavailability honestly.

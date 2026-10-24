@@ -3,11 +3,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils import engine as pro_engine
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 titan_title("📉", "📉 Module 3.10: Read Quality Control (FastQC Style)", "Refactored with Titan validation & export.")
 st.markdown("Analyze per-base sequence quality from FASTQ data, just like the industry-standard FastQC tool.")
+st.caption(pro_engine.engine_badge(), help="FASTQ parsing runs through titan_utils.engine (Rust titan_core when available, pure-Python fallback otherwise).")
 st.markdown("---")
 
 # Mock FASTQ data for demonstration
@@ -27,23 +29,29 @@ IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII"""
 fastq_input = st.text_area("Paste FASTQ Data (or use default mock data)", default_fastq, height=200)
 
 if st.button("🔬 Run Quality Control", type="primary", use_container_width=True):
-    lines = fastq_input.strip().split('\n')
-    
-    # Parse FASTQ (every 4th line is quality)
-    quality_lines = [lines[i] for i in range(3, len(lines), 4)]
-    
+    # Parse FASTQ via the Pro Engine (Rust titan_core when available,
+    # pure-Python fallback otherwise) — tolerant of CRLF/truncation.
+    try:
+        parsed_fastq = pro_engine.parse_fastq(data=fastq_input)
+        quality_lines = parsed_fastq["qualities"]
+    except ValueError:
+        quality_lines = []
+
     if not quality_lines:
         st.error("❌ No valid FASTQ quality lines found! Ensure format is: Header, Seq, +, Quality")
     else:
         with st.spinner("🧮 Calculating Phred Scores..."):
-            # Convert ASCII to Phred scores (Sanger format: ASCII - 33)
+            # Convert ASCII to Phred scores with the engine's autodetected
+            # offset (Phred+33 unless the data is clearly Phred+64).
+            flat_min = min((ord(c) for q in quality_lines for c in q), default=33)
+            phred_offset = 33 if flat_min < 64 else 64
             max_len = max(len(q) for q in quality_lines)
             quality_matrix = np.zeros((len(quality_lines), max_len))
             
             for i, q_line in enumerate(quality_lines):
                 for j, char in enumerate(q_line):
                     if j < max_len:
-                        quality_matrix[i, j] = max(0, ord(char) - 33) # Phred+33
+                        quality_matrix[i, j] = max(0, ord(char) - phred_offset)
             
             # Calculate stats per base position
             positions = list(range(1, max_len + 1))

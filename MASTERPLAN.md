@@ -165,3 +165,48 @@ All 260 bioinformatics tools have been fully implemented, registered, and integr
 13. **Lab Error Troubleshooter** ("Mera PCR fail ho gaya, kyun?" - AI answers)
 14. **Research Hypothesis Generator** (AI suggests new experiment ideas based on data)
 15. **"Explain Like I'm 5" (ELI5) Concept Generator** (Complex biology to simple analogies)
+
+# Pro Engine · Stats · Web Dashboard (v3.5) — architecture & honest status
+
+## Layout
+- Layer A: `titan_core/` (Rust crate, PyO3+maturin, `crate-type=["cdylib","rlib"]`)
+  - `src/`: error, util, bloom, hll, bgzf, fastq, qc, kmer, bam, vcf, align, lib
+  - `benches/`: fastq_bench, align_bench (Criterion)
+  - `tests/fuzz_parsers.rs` (proptest fuzzing)
+- Layer B: `titan_stats/` (Python) + `r/` (Rscript bridge at repo root)
+  - de.py (PyDESeq2 → R DESeq2/edgeR/limma → labeled t-test fallback)
+  - r_bridge.py (Rscript subprocess JSON in/out — NOT rpy2), r/de_runner.R + testthat
+  - ml_variants.py (xgboost → sklearn → numpy-GNB; SYNTHETIC-labelled data; model card; optional SHAP)
+  - dimred.py (PCA-SVD, UMAP→PCA fallback, k-means, hierarchical, cluster metrics)
+  - plots.py (volcano/MA/PCA/sample-distance/heatmap/enrichment plot-ready JSON)
+  - provenance.py (SHA-256 + package versions + seed → privacy.py/ELN)
+- Engine dispatcher: `titan_utils/engine.py` (Rust if importable else pure-Python, identical schemas)
+- API v1+v2: `titan_utils/api.py` (+ `api_v2.py`, `jobs.py`) — /api/run kept (60 req/min/IP, no-store,
+  SHA-256 provenance); v2 adds jobs CRUD, WS progress, cancel/retry, chunked upload, artifacts
+- Web dashboard: `web/` (React+TS+Vite+TanStack, Express gateway, i18n EN/हिंदी, PWA manifest)
+- Console tools 261–265: `titan_tools/pro.py`; pages 98_DE / 99_Variant_ML / 100_Expression_Explorer
+
+## DONE (delivered in this workspace)
+- Layer A source-complete; two known Rust defects fixed (CRLF test byte-replace; parse_payload qmin sentinel)
+  — NOT compiled locally (no cargo in sandbox); CI compiles and tests it
+- Layer B modules + pages + tools 261–265; full pytest green locally
+- API v2 + job manager + tests (11 tests); pages 27/20/28/75/77 engine routing (outputs unchanged)
+- web/ typed client + 7 views + vitest (7 tests) + typecheck + production build verified locally
+- requirements.txt pinned core / requirements-optional.txt split
+- CI matrix (Rust fmt/clippy/test/maturin, pytest 3.10/3.11, R testthat, web typecheck/vitest/playwright, smoke)
+- Dockerfile + .devcontainer (Rust, R+DESeq2/edgeR/limma, Node 20)
+- scripts/benchmark.py + scripts/run_benchmarks.sh (MEASURED vs "not measured" — never fabricated)
+
+## PLANNED / REQUIRES CI-OR-HARDWARE VERIFICATION
+- cargo test/clippy pass + maturin wheel install (no local Rust toolchain)
+- R testthat run (no local Rscript)
+- Playwright browser install + e2e run (browsers not downloadable in sandbox)
+- Real 1M/10M/50M benchmark numbers (scripts exist; runs must happen on real hardware)
+- Android wrapper store packaging (android-wrapper/ + web PWA ready; signing keys not in repo)
+
+## Invariants
+- registry IDs 261–265 stable, append-only; no renumbering of 1–260
+- pages 20/27/28/75/77 outputs & schemas unchanged (engine swap is internal)
+- Python fallback for Rust/R/Node always present; app never crashes from missing optional engine
+- ZDR: RAM only, SHA-256 provenance, guard_disk_write, no sequence data in logs
+- Synthetic ML data labelled SYNTHETIC in code, UI and exports

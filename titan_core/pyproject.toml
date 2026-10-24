@@ -1,0 +1,25 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "titan-core"
+version = "0.1.0"
+description = "Titan Bioinformatics Suite native core — FASTQ/BAM/VCF parsing, streaming QC, banded SIMD-friendly alignment, k-mer counting (PyO3 extension)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0" }
+authors = [{ name = "Titan Bioinformatics Suite" }]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "numpy>=1.26"]
+
+[tool.maturin]
+# Build the `titan_core` extension module with the pyo3 extension-module feature.
+features = ["pyo3/extension-module"]
+module-name = "titan_core"

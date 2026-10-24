@@ -1,0 +1,1145 @@
+{
+  "components": {
+    "schemas": {
+      "APIRunRequest": {
+        "description": "Privacy-friendlier JSON POST equivalent of the GET query endpoint.",
+        "properties": {
+          "frame": {
+            "default": 0,
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Frame",
+            "type": "integer"
+          },
+          "k": {
+            "default": 3,
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "transcribe",
+            "maxLength": 32,
+            "title": "Mode",
+            "type": "string"
+          },
+          "nuclease": {
+            "default": "SpCas9",
+            "maxLength": 32,
+            "title": "Nuclease",
+            "type": "string"
+          },
+          "pam": {
+            "default": "",
+            "maxLength": 32,
+            "title": "Pam",
+            "type": "string"
+          },
+          "pattern": {
+            "default": "",
+            "maxLength": 1100,
+            "title": "Pattern",
+            "type": "string"
+          },
+          "seq": {
+            "default": "",
+            "maxLength": 50100,
+            "title": "Seq",
+            "type": "string"
+          },
+          "seq2": {
+            "default": "",
+            "maxLength": 50100,
+            "title": "Seq2",
+            "type": "string"
+          },
+          "tool": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "APIRunRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "JobCreateRequest": {
+        "properties": {
+          "params": {
+            "title": "Params",
+            "type": "object"
+          },
+          "type": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "JobCreateRequest",
+        "type": "object"
+      },
+      "JobListModel": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/JobSummaryModel"
+            },
+            "title": "Jobs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "jobs"
+        ],
+        "title": "JobListModel",
+        "type": "object"
+      },
+      "JobSummaryModel": {
+        "description": "JSON-safe job status document (no sequence payloads).",
+        "properties": {
+          "artifacts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "created_utc": {
+            "title": "Created Utc",
+            "type": "string"
+          },
+          "engine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine"
+          },
+          "engine_stats": {
+            "title": "Engine Stats",
+            "type": "object"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_utc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished Utc"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "number"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceSummary"
+          },
+          "started_utc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started Utc"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "progress",
+          "created_utc"
+        ],
+        "title": "JobSummaryModel",
+        "type": "object"
+      },
+      "ProvenanceSummary": {
+        "properties": {
+          "input_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Sha256"
+          },
+          "output_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Sha256"
+          },
+          "zero_data_retention": {
+            "default": true,
+            "title": "Zero Data Retention",
+            "type": "boolean"
+          }
+        },
+        "title": "ProvenanceSummary",
+        "type": "object"
+      },
+      "UploadChunkRequest": {
+        "properties": {
+          "data_b64": {
+            "minLength": 1,
+            "title": "Data B64",
+            "type": "string"
+          },
+          "final": {
+            "default": false,
+            "title": "Final",
+            "type": "boolean"
+          },
+          "name": {
+            "default": "upload.bin",
+            "maxLength": 256,
+            "title": "Name",
+            "type": "string"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "upload_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "title": "Upload Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "upload_id",
+          "offset",
+          "data_b64"
+        ],
+        "title": "UploadChunkRequest",
+        "type": "object"
+      },
+      "UploadChunkResponse": {
+        "properties": {
+          "bytes_received": {
+            "title": "Bytes Received",
+            "type": "integer"
+          },
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "upload_id": {
+            "title": "Upload Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "upload_id",
+          "bytes_received",
+          "complete"
+        ],
+        "title": "UploadChunkResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VcfQueryFilters": {
+        "properties": {
+          "af_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Af Max"
+          },
+          "af_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Af Min"
+          },
+          "chrom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chrom"
+          },
+          "clinvar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinvar"
+          },
+          "consequence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consequence"
+          },
+          "filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filter"
+          },
+          "qual_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qual Max"
+          },
+          "qual_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qual Min"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
+          }
+        },
+        "title": "VcfQueryFilters",
+        "type": "object"
+      },
+      "VcfQueryRequest": {
+        "description": "Server-side filter + sort + pagination over a VCF payload (1M-row safe).",
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/VcfQueryFilters"
+          },
+          "limit": {
+            "default": 100,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "sort_by": {
+            "default": "POS",
+            "maxLength": 16,
+            "title": "Sort By",
+            "type": "string"
+          },
+          "sort_desc": {
+            "default": false,
+            "title": "Sort Desc",
+            "type": "boolean"
+          },
+          "upload_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 8,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upload Id"
+          },
+          "vcf": {
+            "anyOf": [
+              {
+                "maxLength": 67108864,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vcf"
+          }
+        },
+        "title": "VcfQueryRequest",
+        "type": "object"
+      },
+      "VcfQueryResponse": {
+        "properties": {
+          "filtered": {
+            "title": "Filtered",
+            "type": "integer"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/VcfQueryRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "sort_by": {
+            "title": "Sort By",
+            "type": "string"
+          },
+          "sort_desc": {
+            "title": "Sort Desc",
+            "type": "boolean"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "total",
+          "filtered",
+          "offset",
+          "limit",
+          "sort_by",
+          "sort_desc"
+        ],
+        "title": "VcfQueryResponse",
+        "type": "object"
+      },
+      "VcfQueryRow": {
+        "properties": {
+          "AF": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Af"
+          },
+          "ALT": {
+            "title": "Alt",
+            "type": "string"
+          },
+          "CHROM": {
+            "title": "Chrom",
+            "type": "string"
+          },
+          "ClinVar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinvar"
+          },
+          "Consequence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consequence"
+          },
+          "FILTER": {
+            "title": "Filter",
+            "type": "string"
+          },
+          "ID": {
+            "title": "Id",
+            "type": "string"
+          },
+          "POS": {
+            "title": "Pos",
+            "type": "integer"
+          },
+          "QUAL": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qual"
+          },
+          "REF": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "CHROM",
+          "POS",
+          "ID",
+          "REF",
+          "ALT",
+          "FILTER"
+        ],
+        "title": "VcfQueryRow",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Titan Bioinformatics Tool API",
+    "version": "2.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/run": {
+      "get": {
+        "description": "GET /api/run?tool=gc_content&seq=ATGC",
+        "operationId": "run_api_get_api_run_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tool",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "title": "Tool",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seq",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 50100,
+              "title": "Seq",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seq2",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 50100,
+              "title": "Seq2",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pattern",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 1100,
+              "title": "Pattern",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "transcribe",
+              "maxLength": 32,
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "nuclease",
+            "required": false,
+            "schema": {
+              "default": "SpCas9",
+              "maxLength": 32,
+              "title": "Nuclease",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pam",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 32,
+              "title": "Pam",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "k",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "maximum": 12,
+              "minimum": 1,
+              "title": "K",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "frame",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 2,
+              "minimum": 0,
+              "title": "Frame",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Run Api Get Api Run Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Api Get"
+      },
+      "post": {
+        "description": "JSON-body variant avoids placing sequence input in a URL.",
+        "operationId": "run_api_post_api_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APIRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Run Api Post Api Run Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Api Post"
+      }
+    },
+    "/api/v2/engine": {
+      "get": {
+        "operationId": "engine_status_api_v2_engine_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Engine Status Api V2 Engine Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Engine Status"
+      }
+    },
+    "/api/v2/jobs": {
+      "get": {
+        "operationId": "list_jobs_api_v2_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Jobs"
+      },
+      "post": {
+        "operationId": "create_job_api_v2_jobs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummaryModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Job"
+      }
+    },
+    "/api/v2/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job_api_v2_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummaryModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job"
+      }
+    },
+    "/api/v2/jobs/{job_id}/cancel": {
+      "post": {
+        "operationId": "cancel_job_api_v2_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummaryModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job"
+      }
+    },
+    "/api/v2/jobs/{job_id}/retry": {
+      "post": {
+        "operationId": "retry_job_api_v2_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummaryModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Job"
+      }
+    },
+    "/api/v2/results/{job_id}/{artifact}": {
+      "get": {
+        "operationId": "get_result_api_v2_results__job_id___artifact__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact",
+            "required": true,
+            "schema": {
+              "title": "Artifact",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Result"
+      }
+    },
+    "/api/v2/upload/chunk": {
+      "post": {
+        "operationId": "upload_chunk_api_v2_upload_chunk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadChunkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadChunkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Chunk"
+      }
+    },
+    "/api/v2/vcf/query": {
+      "post": {
+        "description": "Server-side VCF filter + sort + pagination (for 1M-row tables).\n\nAccepts an in-RAM ``upload_id`` (from /api/v2/upload/chunk) or inline\n``vcf`` text. Filtering, sorting and slicing all happen on the server;\nonly one page of rows crosses the wire.",
+        "operationId": "vcf_query_api_v2_vcf_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VcfQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VcfQueryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vcf Query"
+      }
+    }
+  }
+}

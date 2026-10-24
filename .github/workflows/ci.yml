@@ -1,27 +1,261 @@
 name: CI — Titan Bioinformatics Suite
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, arena/*, fix/*]
   pull_request:
     branches: [main]
 
+# Diagnostics comment on failure carries full tool output to the PR
+# (the same output the job log shows) so red runs are self-explanatory.
+env:
+  DIAG_MARKER: "<!-- titan-ci-diag -->"
+
 jobs:
-  test:
+  # ── Layer A: Rust crate (fmt / clippy / tests+proptest / maturin wheel) ────
+  rust:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+    defaults:
+      run:
+        working-directory: titan_core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: titan_core
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: cargo fmt
+        shell: bash
+        run: |
+          set +e
+          cargo fmt --all -- --check > /tmp/titan-fmt.log 2>&1
+          status=$?
+          cargo fmt --all
+          git diff > /tmp/titan-fmt.patch
+          echo "fmt-check exit=$status; patch lines=$(wc -l < /tmp/titan-fmt.patch)"
+          exit $status
+      - name: cargo clippy (no default features — rlib links without PyO3)
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          cargo clippy --no-default-features --all-targets -- -D warnings > /tmp/titan-clippy.log 2>&1
+          status=$?
+          cat /tmp/titan-clippy.log
+          exit $status
+      - name: cargo test + proptest fuzzing
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          cargo test --no-default-features > /tmp/titan-test.log 2>&1
+          status=$?
+          cat /tmp/titan-test.log
+          exit $status
+      - name: maturin build (extension-module)
+        shell: bash
+        run: |
+          set +e
+          python -m pip install maturin > /tmp/titan-maturin-install.log 2>&1
+          maturin build --release --out dist > /tmp/titan-maturin.log 2>&1
+          status=$?
+          cat /tmp/titan-maturin.log
+          exit $status
+      - name: Post rust diagnostics comment
+        if: failure()
+        shell: bash
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci_diag_comment.py \
+            --marker "<!-- titan-ci-diag rust -->" \
+            --title "🦀 rust job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
+            --file /tmp/titan-clippy.log --file /tmp/titan-test.log --file /tmp/titan-maturin.log --file /tmp/titan-fmt.log
+      - name: Upload rust diagnostics (logs + applyable rustfmt patch)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-ci-diag
+          path: |
+            /tmp/titan-fmt.log
+            /tmp/titan-fmt.patch
+            /tmp/titan-clippy.log
+            /tmp/titan-test.log
+            /tmp/titan-maturin.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: titan-core-wheel
+          path: titan_core/dist/*.whl
+
+  # ── Python: pyflakes + full pytest (3.10 & 3.11), optional engine absent ──
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+      - name: Install core dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pyflakes httpx
+      - name: Compile
+        run: python -m py_compile pages/*.py Home.py titan_utils/*.py titan_tools/*.py titan_stats/*.py
+      - name: pyflakes (new code must be clean)
+        run: |
+          python -m pyflakes titan_utils/engine.py titan_utils/api_v2.py titan_utils/jobs.py \
+            titan_stats/*.py titan_tools/pro.py pages/98_*.py pages/99_*.py pages/100_*.py scripts/*.py
+      - name: Full test suite
+        run: |
+          set +e
+          pytest tests/ -p no:cacheprovider > /tmp/titan-pytest.log 2>&1
+          status=$?
+          tail -40 /tmp/titan-pytest.log
+          exit $status
+      - name: Upload pytest diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-ci-diag-${{ matrix.python-version }}
+          path: /tmp/titan-pytest.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Post python diagnostics comment
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci_diag_comment.py \
+            --marker "<!-- titan-ci-diag python-${{ matrix.python-version }} -->" \
+            --title "🐍 python ${{ matrix.python-version }} job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
+            --file /tmp/titan-pytest.log
+      - name: Install optional heavy stacks (best effort)
+        run: pip install -r requirements-optional.txt || echo "optional stacks unavailable — fallbacks tested above"
+
+  # ── Layer B: R bridge (testthat) ──────────────────────────────────────────
+  r-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.4"
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: jsonlite, testthat
+      - name: testthat — de_runner.R bridge
+        run: Rscript r/run_tests.R
+
+  # ── Layer C: web (typecheck, vitest, playwright smoke) ───────────────────
+  web:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: npm ci
+      - name: Regenerate OpenAPI types (must be committed & in sync)
+        working-directory: .
+        run: |
+          python -m pip install -r requirements.txt
+          python scripts/export_openapi.py
+          cd web
+          npm run openapi:types
+          if ! git diff --quiet -- web/openapi.json web/src/api/schema.d.ts; then
+            echo "::warning::openapi types drifted — run: python scripts/export_openapi.py && cd web && npm run openapi:types"
+          fi
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Vitest unit tests
+        run: npm test
+      - name: Build production bundle
+        run: npm run build
+      - name: Playwright smoke (chromium)
+        shell: bash
+        run: |
+          npx playwright install --with-deps chromium > /tmp/titan-pw-install.log 2>&1
+          npx playwright test > /tmp/titan-playwright.log 2>&1
+          status=$?
+          tail -40 /tmp/titan-playwright.log
+          exit $status
+      - name: Express gateway smoke
+        run: |
+          node server/index.js &
+          sleep 1
+          curl -fsS http://127.0.0.1:4173/ | grep -q "Titan"
+      - name: Upload web diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-ci-diag
+          path: |
+            /tmp/titan-playwright.log
+            /tmp/titan-pw-install.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Post web diagnostics comment
+        if: failure()
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/ci_diag_comment.py \
+            --marker "<!-- titan-ci-diag web -->" \
+            --title "🌐 web job diagnostics (run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA:0:7})" \
+            --file /tmp/titan-playwright.log --file /tmp/titan-pw-install.log
+
+  # ── Streamlit smoke: app boots, home renders ─────────────────────────────
+  smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           cache: "pip"
-      - name: Install dependencies
+      - name: Install core dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest pyflakes biopython pandas plotly
-      - name: Compile pages
-        run: python -m py_compile pages/*.py Home.py titan_utils/*.py
-      - name: Unit tests — utils, shared helpers, page regressions
-        run: pytest tests/test_titan_suite.py tests/test_ui_helpers.py tests/test_feature_expansion.py -v
-      - name: Interaction tests — every page renders and every button works
-        run: pytest tests/test_page_interactions.py -v
+          pip install pytest
+      - name: Home page renders with zero exceptions
+        run: |
+          python - <<'PY'
+          from streamlit.testing.v1 import AppTest
+          at = AppTest.from_file("Home.py", default_timeout=60).run()
+          assert not at.exception, [e.value for e in at.exception]
+          assert not at.error, [e.value for e in at.error]
+          print("smoke OK: Home renders clean")
+          PY

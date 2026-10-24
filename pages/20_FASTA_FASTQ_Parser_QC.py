@@ -4,9 +4,22 @@ import pandas as pd
 import plotly.express as px
 import io
 from titan_utils import clean_sequence, validate_dna, validate_rna, revcomp, gc_fraction_safe
+from titan_utils import engine as pro_engine
 from titan_utils.i18n import t
 from titan_utils.io import df_to_csv_bytes
 from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
+
+
+class _EngineSeqRecord:
+    """SeqIO-compatible read view built from engine.parse_fastq output."""
+
+    def __init__(self, name: str, seq: str) -> None:
+        self.id = name
+        self.seq = seq
+
+    def __len__(self) -> int:
+        return len(self.seq)
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 📂 TITAN TOOL 13: FASTA/FASTQ PARSER & QC
@@ -14,6 +27,7 @@ from titan_utils.ui import dr_titan_tip, smart_lock, titan_title
 
 titan_title("📂", "FASTA/FASTQ Parser & QC", "Refactored with Titan validation & export.")
 st.markdown(t("Upload your raw sequencing files to instantly parse, validate, and get basic Quality Control (QC) metrics."))
+st.caption(pro_engine.engine_badge(), help="FASTQ parsing runs through titan_utils.engine (Rust titan_core when available, pure-Python fallback otherwise).")
 st.markdown("---")
 
 # --- INPUT SECTION ---
@@ -38,8 +52,13 @@ if uploaded_file is not None:
             # Read file content
             file_content = uploaded_file.getvalue().decode("utf-8")
 
-            # Parse using Biopython
-            records = list(SeqIO.parse(io.StringIO(file_content), file_format))
+            # Parse using the Pro Engine for FASTQ (Rust or pure-Python
+            # fallback) and Biopython for FASTA — identical downstream schema.
+            if file_format == "fastq":
+                parsed = pro_engine.parse_fastq(data=file_content)
+                records = [_EngineSeqRecord(name, seq) for name, seq in zip(parsed["names"], parsed["seqs"])]
+            else:
+                records = list(SeqIO.parse(io.StringIO(file_content), file_format))
 
             if not records:
                 st.error(t("❌ No valid sequences found. Please check the file format."))

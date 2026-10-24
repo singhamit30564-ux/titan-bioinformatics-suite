@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 NAVY = (10, 14, 23, 255)
 GOLD = (212, 175, 55, 255)

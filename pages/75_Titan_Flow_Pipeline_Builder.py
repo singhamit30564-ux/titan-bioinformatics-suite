@@ -27,6 +27,10 @@ titan_title(
 )
 
 # ── Flow selector ───────────────────────────────────────────────────────────
+from titan_utils import engine as pro_engine  # noqa: E402
+
+st.caption(pro_engine.engine_badge(), help="Heavy NGS steps run through titan_utils.engine (Rust titan_core when available, pure-Python fallback otherwise).")
+
 flow_options = [f"{f.emoji} {f.name}" for f in TITAN_FLOWS.values()]
 label_to_id = {f"{f.emoji} {f.name}": fid for fid, f in TITAN_FLOWS.items()}
 

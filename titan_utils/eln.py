@@ -82,6 +82,7 @@ class RunRecord:
     input_size: int = 0
     status: str = "Completed"
     notes: str = ""
+    engine: str = ""
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -97,6 +98,7 @@ class RunRecord:
             "input_size_bytes": self.input_size,
             "status": self.status,
             "notes": self.notes,
+            "engine": self.engine,
         }
 
     def audit_row(self) -> Dict[str, Any]:
@@ -135,8 +137,13 @@ class ELNLog:
         status: str = "Completed",
         notes: str = "",
         input_kind: str = "sequence",
+        engine: str = "",
     ) -> RunRecord:
-        """Create and store a contemporaneous run record with SHA-256 digests."""
+        """Create and store a contemporaneous run record with SHA-256 digests.
+
+        ``engine`` optionally names the compute engine (``python`` | ``rust``
+        | ``R``) so accelerated runs are auditable in the GLP trail.
+        """
         raw = input_data if isinstance(input_data, (bytes, bytearray)) else (input_data or "")
         size = len(raw) if raw is not None else 0
         record = RunRecord(
@@ -152,6 +159,7 @@ class ELNLog:
             input_size=size,
             status=status,
             notes=notes,
+            engine=str(engine or ""),
         )
         self.records.append(record)
         return record

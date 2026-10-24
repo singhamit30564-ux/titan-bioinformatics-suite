@@ -53,6 +53,7 @@ CATEGORIES = [
     ("population", "👥 13 · Population Genetics & Evolution", "72_Population_Genetics_Evolution.py"),
     ("ncbi", "🌐 14 · NCBI & Global Bioinformatics APIs", "73_NCBI_and_Global_Bioinformatics_APIs.py"),
     ("dr_titan", "🤖 15 · Dr. Titan AI & Bio-Copilot", "74_Dr_Titan_AI_Bio_Copilot.py"),
+    ("pro_engine", "⚡ 16 · Pro Engine · Stats · Dashboard", "98_Differential_Expression.py"),
 ]
 
 MASTER_REGISTRY: List[ToolSpec] = [
@@ -3759,6 +3760,81 @@ MASTER_REGISTRY: List[ToolSpec] = [
         handler_name='tool_dr_titan_project_readiness_audit',
         student_tip='Tool #260 (Dr. Titan Comprehensive Bio-Project Readiness Audit) demonstrates critical applied computational techniques in Dr. Titan AI & Bio-Copilot.',
     ),
+    ToolSpec(
+        id=261,
+        name='Pro Fast QC (streaming)',
+        domain='Pro Engine',
+        category_id='pro_engine',
+        category_name='Pro Engine · Stats · Dashboard',
+        description='Tool 261: one-pass streaming FASTQ QC (Rust titan_core with Python fallback) — per-base quality, GC%, adapters, duplication estimate.',
+        console_page='98_Differential_Expression.py',
+        inputs=[
+        ToolInputSpec(id='fastq_data', label='FASTQ data', type='textarea', default='@read1\nACGTACGTACGTACGTACGT\n+\nIIIIIIIIIIIIIIIIIIII\n@read2\nGCGCGCGCGCGCGCGCGCGC\n+\n55555555555555555555\n', help='Paste FASTQ records (or use the default toy reads)'),
+        ToolInputSpec(id='k', label='k-mer size', type='number', default=8, help='K-mer size for over-represented k-mer scan (1-32)'),
+    ],
+        handler_name='tool_pro_fast_qc',
+        student_tip='Streaming QC computes everything in one pass so 50M-read files never need a second read or extra RAM proportional to input size.',
+    ),
+    ToolSpec(
+        id=262,
+        name='Pro Fast VCF (streaming + pushdown)',
+        domain='Pro Engine',
+        category_id='pro_engine',
+        category_name='Pro Engine · Stats · Dashboard',
+        description='Tool 262: streaming VCF/BCF parse with typed INFO/FORMAT decoding and filter pushdown (Rust titan_core with Python fallback).',
+        console_page='98_Differential_Expression.py',
+        inputs=[
+        ToolInputSpec(id='vcf_data', label='VCF content', type='textarea', default='##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\nchr1\t100\trs1\tA\tG\t50\tPASS\tAF=0.25;DP=30\nchr1\t150\trs2\tC\tT\t45\tPASS\tAF=0.01;DP=25\nchr2\t50\trs3\tG\tGAT\t60\tLowQual\tAF=0.9;DP=40\n', help='Paste VCF text (headers + records)'),
+        ToolInputSpec(id='chrom', label='Chromosome filter (optional)', type='text', default='', help='e.g. chr1 — rows are filtered before they are materialized'),
+    ],
+        handler_name='tool_pro_fast_vcf',
+        student_tip='Filter pushdown means a 1M-row VCF can be queried for one chromosome without ever building the full table in RAM.',
+    ),
+    ToolSpec(
+        id=263,
+        name='Pro BAM/SAM Stats (flagstat)',
+        domain='Pro Engine',
+        category_id='pro_engine',
+        category_name='Pro Engine · Stats · Dashboard',
+        description='Tool 263: samtools-flagstat-compatible summary, MAPQ histogram and coverage bins from SAM/BAM (Rust titan_core with Python fallback).',
+        console_page='98_Differential_Expression.py',
+        inputs=[
+        ToolInputSpec(id='sam_data', label='SAM text (or BAM as text paste)', type='textarea', default='@HD\tVN:1.6\n@SQ\tSN:chr1\tLN:1000\nr1\t0\tchr1\t100\t60\t10M\t*\t0\t0\tACGTACGTAC\tIIIIIIIIII\nr2\t4\t*\t0\t0\t*\t*\t0\t0\tACGTACGTAC\tIIIIIIIIII\nr3\t0\tchr1\t500\t30\t10M\t*\t0\t0\tACGTACGTAC\tIIIIIIIIII\n', help='Paste SAM text (BAM binary is supported by the API/Python entry points)'),
+        ToolInputSpec(id='region', label='Region (optional)', type='text', default='', help='e.g. chr1:1-200'),
+    ],
+        handler_name='tool_pro_bam_stats',
+        student_tip='flagstat mirrors samtools flagstat field semantics so results can be cross-checked against the industry standard.',
+    ),
+    ToolSpec(
+        id=264,
+        name='Pro Differential Expression',
+        domain='Pro Engine',
+        category_id='pro_engine',
+        category_name='Pro Engine · Stats · Dashboard',
+        description='Tool 264: differential expression from a counts matrix (PyDESeq2 / R bridge DESeq2·edgeR·limma / labeled fallback-ttest) with provenance.',
+        console_page='98_Differential_Expression.py',
+        inputs=[
+        ToolInputSpec(id='counts_data', label='Counts matrix (CSV)', type='textarea', default='gene,s1,s2,s3,s4\ngeneA,100,120,400,420\ngeneB,200,210,50,60\ngeneC,80,90,85,95\ngeneD,5,4,300,280\n', help='Genes × samples raw counts'),
+        ToolInputSpec(id='metadata', label='Sample metadata (CSV)', type='textarea', default='sample,condition\ns1,control\ns2,control\ns3,treated\ns4,treated\n', help='Sample annotations indexed by the first column'),
+        ToolInputSpec(id='min_count', label='Min count', type='number', default=10, help='Low-count filter threshold'),
+    ],
+        handler_name='tool_pro_differential_expression',
+        student_tip='DE tools model count noise (negative binomial) — a plain t-test on raw counts would call almost everything significant.',
+    ),
+    ToolSpec(
+        id=265,
+        name='Pro Variant ML (pathogenicity, SYNTHETIC)',
+        domain='Pro Engine',
+        category_id='pro_engine',
+        category_name='Pro Engine · Stats · Dashboard',
+        description='Tool 265: educational variant pathogenicity classifier trained on SYNTHETIC data (sklearn/XGBoost with NumPy fallback) + model card.',
+        console_page='99_Variant_ML.py',
+        inputs=[
+        ToolInputSpec(id='n_synthetic', label='SYNTHETIC training rows', type='number', default=1000, help='Number of simulated variants (labels are synthetic)'),
+    ],
+        handler_name='tool_pro_variant_ml',
+        student_tip='SYNTHETIC labels encode the simulator rules — real pathogenicity needs clinical evidence (ACMG/AMP), never a model score alone.',
+    ),
 ]
 
 REGISTRY_BY_ID: Dict[int, ToolSpec] = {t.id: t for t in MASTER_REGISTRY}
@@ -3769,7 +3845,7 @@ for t in MASTER_REGISTRY:
 
 
 def get_all_tools() -> List[ToolSpec]:
-    """Return all 260 registered tools."""
+    """Return all registered tools (260 legacy + Pro Engine tools)."""
     return MASTER_REGISTRY
 
 

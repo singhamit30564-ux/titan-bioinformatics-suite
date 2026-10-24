@@ -1,0 +1,38 @@
+{
+  "name": "titan-bioinformatics-web",
+  "private": true,
+  "version": "3.5.0",
+  "type": "module",
+  "description": "Titan Bioinformatics Suite \u2014 React+TS dashboard over the FastAPI v2 job API (Layer C).",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "openapi:types": "openapi-typescript ../web/openapi.json -o src/api/schema.d.ts",
+    "serve:gateway": "node server/index.js",
+    "start": "node server/index.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "8.20.6",
+    "@tanstack/react-virtual": "3.11.2",
+    "express": "4.21.2",
+    "http-proxy-middleware": "3.0.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1",
+    "@types/express": "5.0.0",
+    "@types/node": "22.10.5",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.3.4",
+    "openapi-typescript": "7.4.4",
+    "typescript": "5.7.2",
+    "vite": "6.0.7",
+    "vitest": "2.1.8"
+  }
+}

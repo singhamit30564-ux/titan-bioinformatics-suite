@@ -188,6 +188,11 @@ cat19_v7_features = [
     "96_Notebooks.py",
     "97_Flash_Duel.py",
 ]
+cat20_pro = [
+    "98_Differential_Expression.py",
+    "99_Variant_ML.py",
+    "100_Expression_Explorer.py",
+]
 
 
 def _render_home():
@@ -198,6 +203,19 @@ def _render_home():
         st.markdown("---")
         st.info(t("Built by **Shivay Singh**\n\nAge 12 · Future CEO"))
         st.caption(t("v3.1 — 260 Tools · Titan Flow · Practice Arena · ELN · Zero Data Retention"))
+        st.markdown("---")
+        # ⚡ Pro Engine — compute engine toggle + availability status card.
+        from titan_utils import engine as pro_engine
+
+        pro_engine.render_engine_toggle(key="home_pro_engine_toggle")
+        with st.container(border=True):
+            st.markdown("#### 🛠️ Engine Status")
+            status = pro_engine.engine_status()
+            st.caption(f"Active: **{status['active']}** · policy: `{status['policy']}`")
+            st.caption(f"Rust titan_core: {'✅ ' + str(status.get('rust_version') or 'available') if status['rust_available'] else '❌ not installed'}")
+            st.caption("Python fallback: ✅ always available")
+            if status.get("features"):
+                st.caption("Rust features: " + ", ".join(status["features"][:6]))
 
     # Hero
     st.title(t("🧬 TITAN BIOINFORMATICS SUITE"))
@@ -250,6 +268,7 @@ def _render_home():
         ("🎓", "17 · Classroom Quiz", "Teacher-led five-question MCQ sessions with four-character join codes, mobile access, and XP leaderboard.", "1 classroom mode"),
         ("🧪", "18 · Learning Lab", "Photo Se Samjhao vision AI (opt-in), spaced-repetition flashcards, and the free Titan Bioinformatics Course with a PDF certificate.", "3 new consoles"),
         ("🎮", "19 · V7 Feature Pack", "Virtual lab, paper explainer, bio-news, teacher dashboard, cell game, globe, plugins, NEET prep, careers, calendar, species tree, achievements, challenges, notebooks, flashcard duel.", "15 new consoles"),
+        ("⚡", "20 · Pro Engine · Stats · Dashboard", "Rust-accelerated FASTQ/BAM/VCF parsing (titan_core with Python fallback), differential expression (PyDESeq2 / R bridge / labeled fallback), variant ML on SYNTHETIC data, expression explorer.", "3 pro consoles"),
     ]
     for i in range(0, len(categories), 2):
         c1, c2 = st.columns(2)
@@ -337,6 +356,7 @@ try:
             t("🎓 17 · Classroom Quiz", selected_language): [_page(f, selected_language) for f in cat17_classroom],
             t("🧪 18 · Learning Lab", selected_language): [_page(f, selected_language) for f in cat18_learning_lab],
             t("🎮 19 · V7 Feature Pack", selected_language): [_page(f, selected_language) for f in cat19_v7_features],
+            t("⚡ 20 · Pro Engine · Stats · Dashboard", selected_language): [_page(f, selected_language) for f in cat20_pro],
         }
     )
 
@@ -357,7 +377,7 @@ except Exception:  # pragma: no cover — older Streamlit
         cat6_agri, cat7_marine, cat8_clinical, cat9_metagenomics,
         cat10_structural, cat11_epigenetics, cat12_synthetic,
         cat13_population, cat14_ncbi, cat15_dr_titan, cat16_studio,
-        cat17_classroom, cat18_learning_lab, cat19_v7_features,
+        cat17_classroom, cat18_learning_lab, cat19_v7_features, cat20_pro,
     ):
         for fname in group[:2]:
             st.page_link(str(PAGES_DIR / fname))
