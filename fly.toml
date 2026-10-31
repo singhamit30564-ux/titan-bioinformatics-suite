@@ -1,0 +1,40 @@
+# ============================================
+# fly.toml — Titan Bioinformatics Suite v3
+# 2 machines + AMS region (sin full tha)
+# ============================================
+
+app = "titan-bioinformatics-suite"
+primary_region = "ams"               # Amsterdam — sin full tha, ye available hai
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8501"
+
+[http_service]
+  internal_port = 8501
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+# 2 machines × 2GB = load balanced
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[scale]
+  count = 2
+
+# Streamlit health check
+[[checks]]
+  [checks.alive]
+    grace_period = "60s"
+    interval = "30s"
+    method = "get"
+    path = "/_stcore/health"
+    timeout = "10s"
+    type = "http"
